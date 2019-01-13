@@ -3,6 +3,8 @@ from battlecode import BCAbstractRobot, SPECS
 import battlecode as bc
 import random
 
+import astar
+
 __pragma__('iconv')
 __pragma__('tconv')
 __pragma__('opov')
