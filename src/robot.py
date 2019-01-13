@@ -26,6 +26,9 @@ class MyRobot(BCAbstractRobot):
     nearest_karbonite = None
     nearest_fuel = None
 
+    target = None
+    path = None
+
     def turn(self):
         """ executed per robot turn """
 
@@ -57,6 +60,10 @@ class MyRobot(BCAbstractRobot):
                 nearest_karbonite = get_nearest_resource(self.karbonite_map)
                 nearest_fuel = get_nearest_resource(self.fuel_map)
 
+                graph = astar.Graph(self.map)
+                target = nearest_karbonite
+                path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
+
             # TODO: check for attacking units and check distance to deposit
             # point
             if on_resource(self.karbonite_map) and self.me.karbonite < 19:
@@ -77,10 +84,23 @@ class MyRobot(BCAbstractRobot):
             # return to 'birth' castle/church
             if self.me.karbonite > 18 or self.me.fuel > 90:
                 # TODO: return to resource deposition point
-                pass
+                target = nearest_deposit
+                path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
 
-            # proceed to nearest resource unit
-            # global resource count available?
+            # check global resources and determine target resource
+            # TODO: temporary - always target carbonite, proper implementation
+            # to follow
+            # TODO: cache the paths to/from resource
+            target = nearest_karbonite
+            path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
+
+            # proceed to target
+            # TODO: handle cases where multiple squares may be moved in a
+            # single turn
+            # TODO: error checking
+            direction = path.pop(0)
+            return self.move((direction[0] - self.me.x,
+                              direction[1] - self.me.y))
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             # self.log("Crusader health: " + str(self.me['health']))
