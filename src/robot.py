@@ -79,11 +79,11 @@ class MyRobot(BCAbstractRobot):
             # always check and update for adjacent deposit points
             # possible to try to build churches in the path between the
             # resource and the original 'birth' castle/church
-            deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
-            if (self.is_adjacent(deposit)
+
+            if (self.is_adjacent(self.nearest_deposit)
                     and (self.me.karbonite or self.me.fuel)):
-                self.nearest_deposit = deposit
-                return self.give(deposit.x - self.me.x, deposit.y - self.me.y,
+                return self.give(self.nearest_deposit.x - self.me.x,
+                                 self.nearest_deposit.y - self.me.y,
                                  self.me.karbonite, self.me.fuel)
 
             # return to 'birth' castle/church
