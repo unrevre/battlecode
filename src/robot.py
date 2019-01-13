@@ -34,10 +34,11 @@ class MyRobot(BCAbstractRobot):
         """ executed per robot turn """
 
         self.step += 1
-        # self.log("START TURN " + self.step)
+        self.log("START TURN " + self.step)
 
         if self.me['unit'] == SPECS['CASTLE']:
-            # self.log("Castle health: " + self.me['health'])
+            self.log("Castle [{}] health: {}".format(
+                self.me.id, self.me.health))
 
             # could be spread out over first 2 turns if necessary
             if self.step == 0:
@@ -49,13 +50,20 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['PILGRIM'], 1, 1)
 
         elif self.me['unit'] == SPECS['CHURCH']:
+            self.log("Church [{}] health: {}".format(
+                self.me.id, self.me.health))
+
             # could be spread out over first 2 turns if necessary
             if self.step == 0:
                 self.nearest_karbonite = self.get_nearest_resource(
                     self.karbonite_map)
                 self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
+            pass
 
         elif self.me['unit'] == SPECS['PILGRIM']:
+            self.log("Pilgrim [{}] health: {}".format(
+                self.me.id, self.me.health))
+
             # save birthplace as nearest deposit time
             if self.step == 0:
                 self.nearest_deposit = self.adjacent_deposit_point()
@@ -111,7 +119,6 @@ class MyRobot(BCAbstractRobot):
                               direction[1] - self.me.y))
 
         elif self.me['unit'] == SPECS['CRUSADER']:
-            # self.log("Crusader health: " + str(self.me['health']))
             pass
 
         elif self.me['unit'] == SPECS['PROPHET']:
