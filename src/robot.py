@@ -70,6 +70,10 @@ class MyRobot(BCAbstractRobot):
 
             # TODO: check for attacking units and check distance to deposit
             # point
+            # TODO: evade attackers if possible - be careful here not to be
+            # overly scared
+
+            # mine resources if safe and appropriate
             if self.on_resource(self.karbonite_map) and self.me.karbonite < 19:
                 return self.mine()
 
@@ -88,7 +92,7 @@ class MyRobot(BCAbstractRobot):
 
             # return to 'birth' castle/church
             if self.me.karbonite > 18 or self.me.fuel > 90:
-                # TODO: return to resource deposition point
+                # TODO: retrace path backwards
                 self.target = self.nearest_deposit
                 self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
