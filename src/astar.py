@@ -34,6 +34,12 @@ class Graph():
     def cost(self, start, end):
         """ cost/heuristic: Chebyshev distance """
 
+        # check if possible to prioritise 2 consecutive straight steps
+        # - e.g.: (0, 0) -> (3, 1)
+        #     [1] (0, 0) -> (2, 0) -> (3, 1) vs.
+        #     [2] (0, 0) -> (1, 0) -> (2, 1) -> (3, 1)
+        # _identical_ fuel cost, but [1] is _faster_
+
         return max(map(lambda r, s: abs(r - s), start, end))
 
 
