@@ -26,6 +26,7 @@ class MyRobot(BCAbstractRobot):
     nearest_karbonite = None
     nearest_fuel = None
 
+    graph = None
     target = None
     path = None
 
@@ -40,8 +41,9 @@ class MyRobot(BCAbstractRobot):
 
             # could be spread out over first 2 turns if necessary
             if self.step == 0:
-                nearest_karbonite = get_nearest_resource(self.karbonite_map)
-                nearest_fuel = get_nearest_resource(self.fuel_map)
+                self.nearest_karbonite = self.get_nearest_resource(
+                    self.karbonite_map)
+                self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
             if self.step < 10:
                 return self.build_unit(SPECS['PILGRIM'], 1, 1)
@@ -49,56 +51,62 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit'] == SPECS['CHURCH']:
             # could be spread out over first 2 turns if necessary
             if self.step == 0:
-                nearest_karbonite = get_nearest_resource(self.karbonite_map)
-                nearest_fuel = get_nearest_resource(self.fuel_map)
+                self.nearest_karbonite = self.get_nearest_resource(
+                    self.karbonite_map)
+                self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
         elif self.me['unit'] == SPECS['PILGRIM']:
             # save birthplace as nearest deposit time
             if self.step == 0:
-                nearest_deposit = adjacent_deposit_point()
+                self.nearest_deposit = self.adjacent_deposit_point()
                 # could be spread out over first few turns if necessary
-                nearest_karbonite = get_nearest_resource(self.karbonite_map)
-                nearest_fuel = get_nearest_resource(self.fuel_map)
+                self.nearest_karbonite = self.get_nearest_resource(
+                    self.karbonite_map)
+                self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
-                graph = astar.Graph(self.map)
-                target = nearest_karbonite
-                path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
+                self.graph = astar.Graph(self.map)
+                self.target = self.nearest_karbonite
+                self.path, _ = astar.astar(
+                    self.graph, (self.me.x, self.me.y), self.target)
 
             # TODO: check for attacking units and check distance to deposit
             # point
-            if on_resource(self.karbonite_map) and self.me.karbonite < 19:
+            if self.on_resource(self.karbonite_map) and self.me.karbonite < 19:
                 return self.mine()
 
-            if on_resource(self.fuel_map) and self.me.fuel < 91:
+            if self.on_resource(self.fuel_map) and self.me.fuel < 91:
                 return self.mine()
 
             # always check and update for adjacent deposit points
             # possible to try to build churches in the path between the
             # resource and the original 'birth' castle/church
             deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
-            if is_adjacent(deposit) and (self.me.karbonite or self.me.fuel):
-                nearest_deposit = deposit
+            if (self.is_adjacent(deposit)
+                    and (self.me.karbonite or self.me.fuel)):
+                self.nearest_deposit = deposit
                 return self.give(deposit.x - self.me.x, deposit.y - self.me.y,
                                  self.me.karbonite, self.me.fuel)
 
             # return to 'birth' castle/church
             if self.me.karbonite > 18 or self.me.fuel > 90:
                 # TODO: return to resource deposition point
-                target = nearest_deposit
-                path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
+                self.target = self.nearest_deposit
+                self.path, _ = astar.astar(
+                    self.graph, (self.me.x, self.me.y), self.target)
 
             # check global resources and determine target resource
             # TODO: temporary - always target carbonite, proper implementation
             # to follow
             # TODO: cache the paths to/from resource
-            target = nearest_karbonite
-            path, _ = astar.astar(graph, (self.me.x, self.me.y), target)
+            self.target = self.nearest_karbonite
+            self.path, _ = astar.astar(
+                self.graph, (self.me.x, self.me.y), self.target)
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
             # single turn
             # TODO: error checking
-            direction = path.pop(0)
+            direction = self.path.pop(0)
             return self.move((direction[0] - self.me.x,
                               direction[1] - self.me.y))
 
@@ -124,7 +132,7 @@ class MyRobot(BCAbstractRobot):
         """
 
         deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
-        if is_adjacent(deposit):
+        if self.is_adjacent(deposit):
             return (deposit.x, deposit.y)
 
     def on_resource(self, resource_map):
