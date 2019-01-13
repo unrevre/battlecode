@@ -12,6 +12,8 @@ __pragma__('opov')
 # don't try to use global variables!!
 
 class MyRobot(BCAbstractRobot):
+    """ main class for battlecode 19 """
+
     step = -1
 
     directions = [
@@ -20,6 +22,8 @@ class MyRobot(BCAbstractRobot):
         ]
 
     def turn(self):
+        """ executed per robot turn """
+
         self.step += 1
         # self.log("START TURN " + self.step)
 
@@ -35,9 +39,8 @@ class MyRobot(BCAbstractRobot):
                 #     + ", " + str(self.me['y']+1))
                 return self.build_unit(SPECS['CRUSADER'], 1, 1)
 
-            else:
-                # self.log("Castle health: " + self.me['health'])
-                pass
+            # self.log("Castle health: " + self.me['health'])
+            pass
 
     def get_nearest_resource(self, resource_map, position):
         """ find nearest resource square
