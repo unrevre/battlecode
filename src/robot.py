@@ -40,11 +40,27 @@ class MyRobot(BCAbstractRobot):
             pass
 
         elif self.me['unit'] == SPECS['PILGRIM']:
+            # TODO: check for attacking units and check distance to deposit
+            # point
+            if on_resource(self.karbonite_map) and self.me.karbonite < 19:
+                return self.mine()
+
+            if on_resource(self.fuel_map) and self.me.fuel < 91:
+                return self.mine()
+
             # minor optimisation: save 'birth' castle/church id
             deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
             if is_adjacent(deposit) and (self.me.karbonite or self.me.fuel):
                 return self.give(deposit.x - self.me.x, deposit.y - self.me.y,
                                  self.me.karbonite, self.me.fuel)
+
+            # return to 'birth' castle/church
+            if self.me.karbonite > 18 or self.me.fuel > 90:
+                # TODO: return to resource deposition point
+                pass
+
+            # proceed to nearest resource unit
+            # global resource count available?
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             # self.log("Crusader health: " + str(self.me['health']))
