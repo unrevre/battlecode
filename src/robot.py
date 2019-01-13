@@ -40,7 +40,11 @@ class MyRobot(BCAbstractRobot):
             pass
 
         elif self.me['unit'] == SPECS['PILGRIM']:
-            pass
+            # minor optimisation: save 'birth' castle/church id
+            deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
+            if is_adjacent(deposit) and (self.me.karbonite or self.me.fuel):
+                return self.give(deposit.x - self.me.x, deposit.y - self.me.y,
+                                 self.me.karbonite, self.me.fuel)
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             # self.log("Crusader health: " + str(self.me['health']))
@@ -53,6 +57,11 @@ class MyRobot(BCAbstractRobot):
 
         elif self.me['unit'] == SPECS['PREACHER']:
             pass
+
+    def is_adjacent(self, unit):
+        """ check if unit is adjacent """
+
+        return max((abs(self.me.x - unit.x), abs(self.me.y - unit.y))) < 2
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
