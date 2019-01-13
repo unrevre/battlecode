@@ -54,13 +54,18 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit'] == SPECS['PREACHER']:
             pass
 
-    def get_nearest_resource(self, resource_map, position):
+    def on_resource(self, resource_map):
+        """ check if current square contains resources """
+
+        return resource_map[self.me.x][self.me.y]
+
+    def get_nearest_resource(self, resource_map):
         """ find nearest resource square
 
         to be called from resource deposition points (castle/church)
         """
 
-        distances = [(x - position[0], y - position[1])
+        distances = [(x - self.me.x, y - self.me.y)
                      for x, row in enumerate(resource_map)
                      for y, _ in enumerate(row)
                      if resource_map[x][y]]
