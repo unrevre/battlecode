@@ -27,19 +27,31 @@ class MyRobot(BCAbstractRobot):
         self.step += 1
         # self.log("START TURN " + self.step)
 
-        if self.me['unit'] == SPECS['CRUSADER']:
-            # self.log("Crusader health: " + str(self.me['health']))
-            direction = random.choice(directions)
-            # self.log('TRYING TO MOVE IN DIRECTION ' + str(direction))
-            return self.move(*choice)
-
-        elif self.me['unit'] == SPECS['CASTLE']:
+        if self.me['unit'] == SPECS['CASTLE']:
             if self.step < 10:
                 # self.log("Building a crusader at " + str(self.me['x']+1)
                 #     + ", " + str(self.me['y']+1))
                 return self.build_unit(SPECS['CRUSADER'], 1, 1)
 
             # self.log("Castle health: " + self.me['health'])
+            pass
+
+        elif self.me['unit'] == SPECS['CHURCH']:
+            pass
+
+        elif self.me['unit'] == SPECS['PILGRIM']:
+            pass
+
+        elif self.me['unit'] == SPECS['CRUSADER']:
+            # self.log("Crusader health: " + str(self.me['health']))
+            direction = random.choice(directions)
+            # self.log('TRYING TO MOVE IN DIRECTION ' + str(direction))
+            return self.move(*choice)
+
+        elif self.me['unit'] == SPECS['PROPHET']:
+            pass
+
+        elif self.me['unit'] == SPECS['PREACHER']:
             pass
 
     def get_nearest_resource(self, resource_map, position):
