@@ -21,6 +21,11 @@ class MyRobot(BCAbstractRobot):
         (0, 1), (-1, 1), (-1, 0), (-1, -1)
         ]
 
+    nearest_deposit = None
+
+    nearest_karbonite = None
+    nearest_fuel = None
+
     def turn(self):
         """ executed per robot turn """
 
@@ -29,12 +34,29 @@ class MyRobot(BCAbstractRobot):
 
         if self.me['unit'] == SPECS['CASTLE']:
             # self.log("Castle health: " + self.me['health'])
-            pass
+
+            # could be spread out over first 2 turns if necessary
+            if self.step == 0:
+                nearest_karbonite = get_nearest_resource(self.karbonite_map)
+                nearest_fuel = get_nearest_resource(self.fuel_map)
+
+            if self.step < 10:
+                return self.build_unit(SPECS['PILGRIM'], 1, 1)
 
         elif self.me['unit'] == SPECS['CHURCH']:
-            pass
+            # could be spread out over first 2 turns if necessary
+            if self.step == 0:
+                nearest_karbonite = get_nearest_resource(self.karbonite_map)
+                nearest_fuel = get_nearest_resource(self.fuel_map)
 
         elif self.me['unit'] == SPECS['PILGRIM']:
+            # save birthplace as nearest deposit time
+            if self.step == 0:
+                nearest_deposit = adjacent_deposit_point()
+                # could be spread out over first few turns if necessary
+                nearest_karbonite = get_nearest_resource(self.karbonite_map)
+                nearest_fuel = get_nearest_resource(self.fuel_map)
+
             # TODO: check for attacking units and check distance to deposit
             # point
             if on_resource(self.karbonite_map) and self.me.karbonite < 19:
@@ -43,9 +65,12 @@ class MyRobot(BCAbstractRobot):
             if on_resource(self.fuel_map) and self.me.fuel < 91:
                 return self.mine()
 
-            # minor optimisation: save 'birth' castle/church id
+            # always check and update for adjacent deposit points
+            # possible to try to build churches in the path between the
+            # resource and the original 'birth' castle/church
             deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
             if is_adjacent(deposit) and (self.me.karbonite or self.me.fuel):
+                nearest_deposit = deposit
                 return self.give(deposit.x - self.me.x, deposit.y - self.me.y,
                                  self.me.karbonite, self.me.fuel)
 
@@ -71,6 +96,16 @@ class MyRobot(BCAbstractRobot):
         """ check if unit is adjacent """
 
         return max((abs(self.me.x - unit.x), abs(self.me.y - unit.y))) < 2
+
+    def adjacent_deposit_point(self):
+        """ return adjacent deposit point (castle/church), if it exists
+
+        to be called when a pilgrim is created
+        """
+
+        deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
+        if is_adjacent(deposit):
+            return (deposit.x, deposit.y)
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
