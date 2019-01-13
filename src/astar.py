@@ -71,7 +71,7 @@ def astar(graph, start, end):
                 head = trace[head]
                 path.append(head)
             path.reverse()
-            return path, F[end]
+            return path
 
         squares_open.remove(head)
         squares_closed.add(head)

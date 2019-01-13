@@ -66,7 +66,7 @@ class MyRobot(BCAbstractRobot):
 
                 self.graph = astar.Graph(self.map)
                 self.target = self.nearest_karbonite
-                self.path, _ = astar.astar(
+                self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
 
             # TODO: check for attacking units and check distance to deposit
@@ -91,7 +91,7 @@ class MyRobot(BCAbstractRobot):
             if self.me.karbonite > 18 or self.me.fuel > 90:
                 # TODO: return to resource deposition point
                 self.target = self.nearest_deposit
-                self.path, _ = astar.astar(
+                self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
 
             # check global resources and determine target resource
@@ -99,7 +99,7 @@ class MyRobot(BCAbstractRobot):
             # to follow
             # TODO: cache the paths to/from resource
             self.target = self.nearest_karbonite
-            self.path, _ = astar.astar(
+            self.path = astar.astar(
                 self.graph, (self.me.x, self.me.y), self.target)
 
             # proceed to target
