@@ -39,5 +39,21 @@ class MyRobot(BCAbstractRobot):
                 # self.log("Castle health: " + self.me['health'])
                 pass
 
+    def get_nearest_resource(self, resource_map, position):
+        """ find nearest resource square
+
+        to be called from resource deposition points (castle/church)
+        """
+
+        distances = [(x - position[0], y - position[1])
+                     for x, row in enumerate(resource_map)
+                     for y, _ in enumerate(row)
+                     if resource_map[x][y]]
+
+        # correct procedure is to perform an A* search for each element of this
+        # list. probably a good idea to store closest n resource squares
+        # permanently
+        return min(distances, key=lambda r, s: min(abs(r, s)))
+
 
 robot = MyRobot()
