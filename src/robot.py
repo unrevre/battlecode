@@ -40,24 +40,12 @@ class MyRobot(BCAbstractRobot):
             self.log("Castle [{}] health: {}".format(
                 self.me.id, self.me.health))
 
-            # could be spread out over first 2 turns if necessary
-            if self.step == 0:
-                self.nearest_karbonite = self.get_nearest_resource(
-                    self.karbonite_map)
-                self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
-
             if self.step < 10:
                 return self.build_unit(SPECS['PILGRIM'], 1, 1)
 
         elif self.me['unit'] == SPECS['CHURCH']:
             self.log("Church [{}] health: {}".format(
                 self.me.id, self.me.health))
-
-            # could be spread out over first 2 turns if necessary
-            if self.step == 0:
-                self.nearest_karbonite = self.get_nearest_resource(
-                    self.karbonite_map)
-                self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
             pass
 
         elif self.me['unit'] == SPECS['PILGRIM']:
@@ -68,10 +56,13 @@ class MyRobot(BCAbstractRobot):
             if self.step == 0:
                 self.nearest_deposit = self.adjacent_deposit_point()
                 # could be spread out over first few turns if necessary
+            if self.step == 1:
                 self.nearest_karbonite = self.get_nearest_resource(
                     self.karbonite_map)
+            if self.step == 2:
                 self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
+            if self.step == 3:
                 self.graph = astar.Graph(self.map)
                 self.target = self.nearest_karbonite
                 self.path = astar.astar(
@@ -107,8 +98,11 @@ class MyRobot(BCAbstractRobot):
             # to follow
             # TODO: cache the paths to/from resource
             self.target = self.nearest_karbonite
-            self.path = astar.astar(
-                self.graph, (self.me.x, self.me.y), self.target)
+            if self.target is not None:
+                self.path = astar.astar(
+                    self.graph, (self.me.x, self.me.y), self.target)
+            else:
+                self.path = [random.choice(self.directions)]
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
