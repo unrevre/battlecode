@@ -124,7 +124,7 @@ class MyRobot(BCAbstractRobot):
     def is_adjacent(self, unit):
         """ check if unit is adjacent """
 
-        return max((abs(self.me.x - unit.x), abs(self.me.y - unit.y))) < 2
+        return abs(self.me.x - unit.x) < 2 and abs(self.me.y - unit.y) < 2
 
     def adjacent_deposit_point(self):
         """ return adjacent deposit point (castle/church), if it exists
