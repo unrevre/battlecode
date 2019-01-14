@@ -54,6 +54,7 @@ class MyRobot(BCAbstractRobot):
 
             # save birthplace as nearest deposit time
             if self.step == 0:
+                self.graph = astar.Graph(self.map)
                 self.nearest_deposit = self.adjacent_deposit_point()
                 # could be spread out over first few turns if necessary
             if self.step == 1:
@@ -63,7 +64,6 @@ class MyRobot(BCAbstractRobot):
                 self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
             if self.step == 3:
-                self.graph = astar.Graph(self.map)
                 self.target = self.nearest_karbonite
                 self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
@@ -86,8 +86,8 @@ class MyRobot(BCAbstractRobot):
 
             if (self.is_adjacent(self.nearest_deposit)
                     and (self.me.karbonite or self.me.fuel)):
-                return self.give(self.nearest_deposit.x - self.me.x,
-                                 self.nearest_deposit.y - self.me.y,
+                return self.give(self.nearest_deposit[0] - self.me.x,
+                                 self.nearest_deposit[1] - self.me.y,
                                  self.me.karbonite, self.me.fuel)
 
             # return to 'birth' castle/church
@@ -101,7 +101,7 @@ class MyRobot(BCAbstractRobot):
             # TODO: temporary - always target carbonite, proper implementation
             # to follow
             # TODO: cache the paths to/from resource
-            self.target = self.nearest_karbonite
+
             if self.target is not None:
                 self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
@@ -112,9 +112,10 @@ class MyRobot(BCAbstractRobot):
             # TODO: handle cases where multiple squares may be moved in a
             # single turn
             # TODO: error checking
-            direction = self.path.pop(0)
-            return self.move((direction[0] - self.me.x,
-                              direction[1] - self.me.y))
+            if self.path:
+                direction = self.path.pop(0)
+                return self.move((direction[0] - self.me.x,
+                                  direction[1] - self.me.y))
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             pass
