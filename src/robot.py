@@ -62,7 +62,6 @@ class MyRobot(BCAbstractRobot):
                 self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
                 self.target = self.nearest_karbonite
-                self.path = self.jps((self.me.x, self.me.y), self.target)
 
             # TODO: check for attacking units and check distance to deposit
             # point
@@ -95,7 +94,6 @@ class MyRobot(BCAbstractRobot):
             if self.me.karbonite > 18 or self.me.fuel > 90:
                 # TODO: retrace path backwards
                 self.target = self.nearest_deposit
-                self.path = self.jps((self.me.x, self.me.y), self.target)
 
             # check global resources and determine target resource
             # TODO: temporary - always target carbonite, proper implementation
@@ -104,10 +102,6 @@ class MyRobot(BCAbstractRobot):
 
             if self.target is not None:
                 self.path = self.jps((self.me.x, self.me.y), self.target)
-            else:
-                movable = self.adjacent_empty_passable()
-                if movable:
-                    self.path = [random.choice(movable)]
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
