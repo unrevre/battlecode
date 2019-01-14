@@ -19,6 +19,8 @@ class MyRobot(BCAbstractRobot):
         (-1, 1), (-1, -1), (1, -1), (1, 1)
         ]
 
+    movement_speed = [0, 0, 4, 9, 4, 4]
+
     nearest_deposit = None
 
     nearest_karbonite = None
@@ -102,8 +104,9 @@ class MyRobot(BCAbstractRobot):
             # TODO: cache the paths to/from resource
 
             if self.target is not None:
-                self.path = self.jps((self.me.x, self.me.y), self.target)
-                # TODO: interpolate paths according to movement speed
+                self.path = self.waypoints(
+                    self.jps((self.me.x, self.me.y), self.target),
+                    self.movement_speed[self.me.unit])
                 self.path_index = 0
 
             # proceed to target
