@@ -27,6 +27,7 @@ class MyRobot(BCAbstractRobot):
     graph = None
     target = None
     path = None
+    path_index = None
 
     def turn(self):
         """ executed per robot turn """
@@ -103,13 +104,15 @@ class MyRobot(BCAbstractRobot):
             if self.target is not None:
                 self.path = self.jps((self.me.x, self.me.y), self.target)
                 # TODO: interpolate paths according to movement speed
+                self.path_index = 0
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
             # single turn
             # TODO: error checking
             if self.path:
-                direction = self.path.pop(0)
+                self.path_index += 1
+                direction = self.path[self.path_index]
                 self.log("  - moving in direction: ({}, {})".format(
                     direction[0], direction[1]))
                 return self.move(direction[0] - self.me.x,
