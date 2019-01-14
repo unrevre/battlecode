@@ -128,6 +128,15 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit'] == SPECS['PREACHER']:
             pass
 
+    def is_passable(self, square):
+        """ check if square is passable """
+
+        if (0 <= square[0] < len(self.map[0])
+                and 0 <= square[1] < len(self.map)):
+            return self.map[square[1]][square[0]]
+
+        return False
+
     def is_adjacent(self, unit):
         """ check if unit is adjacent """
 
@@ -260,6 +269,93 @@ class MyRobot(BCAbstractRobot):
                 F[square] = G[square] + H
 
         return None
+
+    def identify_jump_points(self, head, end):
+        """ identify jump points (prune nodes) """
+
+        jumps = []
+
+        squares = self.get_adjacent_passable_squares(head)
+        for s in squares:
+            dx = s[0] - head[0]
+            dy = s[1] - head[1]
+
+            jump_point = self.jump(head, dx, dy, end)
+
+            if jump_point:
+                jumps.append(jump_point)
+
+        return jumps
+
+    def jump(self, square, dx, dy, end):
+        """ jump ahead (prune) nodes """
+
+        probe_x = square[0] + dx
+        probe_y = square[1] + dy
+        if not self.map[probe_y][probe_x]:
+            return None
+
+        if (probe_x, probe_y) == end:
+            return end
+
+        head_x = probe_x
+        head_y = probe_y
+
+        # probe diagonal direction
+        if dx * dy != 0:
+            while True:
+                if ((self.is_passable((head_x - dx, head_y + dy))
+                     and not self.is_passable((head_x - dx, head_y)))
+                        or (self.is_passable((head_x + dx, head_y - dy))
+                            and not self.is_passable((head_x, head_y - dy)))):
+                    return (head_x, head_y)
+
+                if (self.jump((head_x, head_y), dx, 0, end) is not None
+                        or self.jump((head_x, head_y), 0, dy, end)):
+                    return (head_x, head_y)
+
+                head_x += dx
+                head_y += dy
+
+                if not self.is_passable((head_x, head_y)):
+                    return None
+
+                if (head_x, head_y) == end:
+                    return end
+
+        # probe horizontal direction
+        elif dx != 0:
+            while True:
+                if ((self.is_passable((head_x + dx, probe_y + 1))
+                     and not self.is_passable((head_x, probe_y + 1)))
+                        or (self.is_passable((head_x + dx, probe_y - 1))
+                            and not self.is_passable((head_x, probe_y - 1)))):
+                    return (head_x, probe_y)
+
+                head_x += dx
+
+                if not self.is_passable((head_x, probe_y)):
+                    return None
+
+                if (head_x, probe_y) == end:
+                    return end
+
+        # probe vertical direction
+        else:
+            while True:
+                if ((self.is_passable((probe_x + 1, probe_y + dy))
+                     and not self.is_passable((probe_x + 1, probe_y)))
+                        or (self.is_passable((probe_x - 1, probe_y + dy))
+                            and not self.is_passable((probe_x - 1, probe_y)))):
+                    return (probe_x, head_y)
+
+                head_y += dy
+
+                if not self.is_passable((probe_x, head_y)):
+                    return None
+
+                if (probe_x, head_y) == end:
+                    return end
 
 
 robot = MyRobot()
