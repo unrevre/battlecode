@@ -57,14 +57,10 @@ class MyRobot(BCAbstractRobot):
             # save birthplace as nearest deposit time
             if self.step == 0:
                 self.nearest_deposit = self.adjacent_deposit_point()
-                # could be spread out over first few turns if necessary
-            if self.step == 1:
                 self.nearest_karbonite = self.get_nearest_resource(
                     self.karbonite_map)
-            if self.step == 2:
                 self.nearest_fuel = self.get_nearest_resource(self.fuel_map)
 
-            if self.step == 3:
                 self.target = self.nearest_karbonite
                 self.path = self.jps((self.me.x, self.me.y), self.target)
 
