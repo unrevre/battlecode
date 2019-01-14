@@ -3,8 +3,6 @@ from battlecode import BCAbstractRobot, SPECS
 import battlecode as bc
 import random
 
-import astar
-
 __pragma__('iconv')
 __pragma__('tconv')
 __pragma__('opov')
@@ -58,7 +56,6 @@ class MyRobot(BCAbstractRobot):
 
             # save birthplace as nearest deposit time
             if self.step == 0:
-                self.graph = astar.Graph(self.map)
                 self.nearest_deposit = self.adjacent_deposit_point()
                 # could be spread out over first few turns if necessary
             if self.step == 1:
@@ -69,8 +66,7 @@ class MyRobot(BCAbstractRobot):
 
             if self.step == 3:
                 self.target = self.nearest_karbonite
-                self.path = astar.astar(
-                    self.graph, (self.me.x, self.me.y), self.target)
+                self.path = self.astar((self.me.x, self.me.y), self.target)
 
             # TODO: check for attacking units and check distance to deposit
             # point
@@ -100,8 +96,7 @@ class MyRobot(BCAbstractRobot):
             if self.me.karbonite > 18 or self.me.fuel > 90:
                 # TODO: retrace path backwards
                 self.target = self.nearest_deposit
-                self.path = astar.astar(
-                    self.graph, (self.me.x, self.me.y), self.target)
+                self.path = self.astar((self.me.x, self.me.y), self.target)
 
             # check global resources and determine target resource
             # TODO: temporary - always target carbonite, proper implementation
@@ -109,8 +104,7 @@ class MyRobot(BCAbstractRobot):
             # TODO: cache the paths to/from resource
 
             if self.target is not None:
-                self.path = astar.astar(
-                    self.graph, (self.me.x, self.me.y), self.target)
+                self.path = self.astar((self.me.x, self.me.y), self.target)
             else:
                 movable = self.adjacent_empty_passable()
                 if movable:
@@ -159,6 +153,17 @@ class MyRobot(BCAbstractRobot):
                 if 0 <= self.me.x + d[0] < width
                 and 0 <= self.me.y + d[1] < height]
 
+    def get_adjacent_passable_squares(self, position):
+        """ return adjacent passable squares """
+
+        height = len(self.map)
+        width = len(self.map[0])
+
+        squares = [(position[0] + d[0], position[1] + d[1])
+            for d in self.directions]
+        return [s for s in squares if 0 <= s[0] < width and 0 <= s[1] < height
+            and self.map[s[1]][s[0]]]
+
     def adjacent_empty_passable(self):
         """ return adjacent buildable (empty, passable) square """
 
@@ -168,6 +173,20 @@ class MyRobot(BCAbstractRobot):
 
         return [s for s in squares if
                 passable[s[1]][s[0]] and not robots[s[1]][s[0]]]
+
+    def distance(self, start, end):
+        """ Chebyshev distance
+
+        used as cost/heuristic for A* pathfinding
+        """
+
+        # check if possible to prioritise 2 consecutive straight steps
+        # - e.g.: (0, 0) -> (3, 1)
+        #     [1] (0, 0) -> (2, 0) -> (3, 1) vs.
+        #     [2] (0, 0) -> (1, 0) -> (2, 1) -> (3, 1)
+        # _identical_ fuel cost, but [1] is _faster_
+
+        return max(map(lambda r, s: abs(r - s), start, end))
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
@@ -189,6 +208,58 @@ class MyRobot(BCAbstractRobot):
         # list. probably a good idea to store closest n resource squares
         # permanently
         return min(distances, key=lambda r, s: min(abs(r, s)))
+
+    def astar(self, start, end):
+        """ A* search algorithm """
+
+        G = {}
+        F = {}
+
+        G[start] = 0
+        F[start] = self.distance(start, end)
+
+        squares_closed = set()
+        squares_open = set([start])
+        trace = {}
+
+        while squares_open:
+            head = None
+            score = None
+
+            for square in squares_open:
+                if head is None or F[square] < score:
+                    head = square
+                    score = F[square]
+
+            if head == end:
+                path = [head]
+                while head in trace:
+                    head = trace[head]
+                    path.append(head)
+                path.reverse()
+                return path
+
+            squares_open.remove(head)
+            squares_closed.add(head)
+
+            for square in self.get_adjacent_passable_squares(head):
+                if square in squares_closed:
+                    continue
+
+                total = G[head] + self.distance(head, square)
+
+                if square not in squares_open:
+                    squares_open.add(square)
+                elif total >= G[square]:
+                    continue
+
+                trace[square] = head
+                G[square] = total
+
+                H = self.distance(square, end)
+                F[square] = G[square] + H
+
+        return None
 
 
 robot = MyRobot()
