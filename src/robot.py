@@ -357,5 +357,44 @@ class MyRobot(BCAbstractRobot):
                 if (probe_x, head_y) == end:
                     return end
 
+    def jps(self, start, end):
+        """ A* search algorithm """
+
+        G = {}
+        G[start] = 0
+
+        checkpoints = [start]
+        closed = set()
+        trace = {}
+
+        while checkpoints:
+            head = checkpoints.pop(0)
+
+            if head == end:
+                path = [head]
+                while head in trace:
+                    head = trace[head]
+                    path.append(head)
+                path.reverse()
+                return path
+
+            closed.add(head)
+
+            points = self.identify_jump_points(head, end)
+
+            for point in points:
+                if point in closed:
+                    continue
+
+                total = G[head] + self.distance(head, point)
+
+                if total >= G[point]:
+                    continue
+
+                trace[point] = head
+                G[point] = total
+
+        return None
+
 
 robot = MyRobot()
