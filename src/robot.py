@@ -15,8 +15,8 @@ class MyRobot(BCAbstractRobot):
     step = -1
 
     directions = [
-        (0, -1), (1, -1), (1, 0), (1, 1),
-        (0, 1), (-1, 1), (-1, 0), (-1, -1)
+        (0, -1), (1, 0), (-1, 0), (0, 1),
+        (-1, 1), (-1, -1), (1, -1), (1, 1)
         ]
 
     nearest_deposit = None
