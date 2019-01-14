@@ -75,11 +75,11 @@ class MyRobot(BCAbstractRobot):
 
             # mine resources if safe and appropriate
             if self.on_resource(self.karbonite_map) and self.me.karbonite < 19:
-                target = None
+                self.target = None
                 return self.mine()
 
             if self.on_resource(self.fuel_map) and self.me.fuel < 91:
-                target = None
+                self.target = None
                 return self.mine()
 
             # always check and update for adjacent deposit points
