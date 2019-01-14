@@ -148,8 +148,8 @@ class MyRobot(BCAbstractRobot):
     def get_adjacent_squares(self):
         """ return adjacent squares """
 
-        width = len(self.map)
-        height = len(self.map[0])
+        height = len(self.map)
+        width = len(self.map[0])
 
         return [(self.me.x + d[0], self.me.y + d[1]) for d in self.directions
                 if 0 <= self.me.x + d[0] < width
@@ -163,12 +163,12 @@ class MyRobot(BCAbstractRobot):
         robots = self.get_visible_robot_map()
 
         return [s for s in squares if
-                passable[s[0]][s[1]] and not robots[s[0]][s[1]]]
+                passable[s[1]][s[0]] and not robots[s[1]][s[0]]]
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
 
-        return resource_map[self.me.x][self.me.y]
+        return resource_map[self.me.y][self.me.x]
 
     def get_nearest_resource(self, resource_map):
         """ find nearest resource square
@@ -179,7 +179,7 @@ class MyRobot(BCAbstractRobot):
         distances = [(x - self.me.x, y - self.me.y)
                      for x, row in enumerate(resource_map)
                      for y, _ in enumerate(row)
-                     if resource_map[x][y]]
+                     if resource_map[y][x]]
 
         # correct procedure is to perform an A* search for each element of this
         # list. probably a good idea to store closest n resource squares

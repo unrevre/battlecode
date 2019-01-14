@@ -10,8 +10,8 @@ class Graph():
         """ initialisation """
 
         self.graph = graph
-        self.width = len(graph)
-        self.height = len(graph[0])
+        self.width = len(graph[0])
+        self.height = len(graph)
 
     def get_neighbours(self, position):
         """ eight adjacent squares """
@@ -24,7 +24,7 @@ class Graph():
             if x < 0 or x > self.width - 1 or y < 0 or y > self.height - 1:
                 continue
 
-            if not self.graph[x][y]:
+            if not self.graph[y][x]:
                 continue
 
             n.append((x, y))
