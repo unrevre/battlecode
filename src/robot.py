@@ -160,9 +160,9 @@ class MyRobot(BCAbstractRobot):
         width = len(self.map[0])
 
         squares = [(position[0] + d[0], position[1] + d[1])
-            for d in self.directions]
+                   for d in self.directions]
         return [s for s in squares if 0 <= s[0] < width and 0 <= s[1] < height
-            and self.map[s[1]][s[0]]]
+                and self.map[s[1]][s[0]]]
 
     def adjacent_empty_passable(self):
         """ return adjacent buildable (empty, passable) square """
