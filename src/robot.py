@@ -79,7 +79,7 @@ class MyRobot(BCAbstractRobot):
                 self.log("  - mining fuel")
                 return self.mine()
 
-            # always check and update for adjacent deposit points
+            # TODO: always check and update for adjacent deposit points
             # possible to try to build churches in the path between the
             # resource and the original 'birth' castle/church
 
@@ -102,6 +102,7 @@ class MyRobot(BCAbstractRobot):
 
             if self.target is not None:
                 self.path = self.jps((self.me.x, self.me.y), self.target)
+                # TODO: interpolate paths according to movement speed
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
