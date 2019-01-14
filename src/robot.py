@@ -152,6 +152,8 @@ class MyRobot(BCAbstractRobot):
         if self.is_adjacent(deposit):
             return (deposit.x, deposit.y)
 
+        return None
+
     def get_adjacent_squares(self):
         """ return adjacent squares """
 
