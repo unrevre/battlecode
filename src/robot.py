@@ -79,9 +79,11 @@ class MyRobot(BCAbstractRobot):
 
             # mine resources if safe and appropriate
             if self.on_resource(self.karbonite_map) and self.me.karbonite < 19:
+                target = None
                 return self.mine()
 
             if self.on_resource(self.fuel_map) and self.me.fuel < 91:
+                target = None
                 return self.mine()
 
             # always check and update for adjacent deposit points
@@ -110,7 +112,9 @@ class MyRobot(BCAbstractRobot):
                 self.path = astar.astar(
                     self.graph, (self.me.x, self.me.y), self.target)
             else:
-                self.path = [random.choice(self.directions)]
+                movable = self.adjacent_empty_passable()
+                if movable:
+                    self.path = [random.choice(movable)]
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
