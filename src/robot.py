@@ -122,8 +122,8 @@ class MyRobot(BCAbstractRobot):
             # TODO: error checking
             if self.path:
                 direction = self.path.pop(0)
-                return self.move((direction[0] - self.me.x,
-                                  direction[1] - self.me.y))
+                return self.move(direction[0] - self.me.x,
+                                 direction[1] - self.me.y)
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             pass
