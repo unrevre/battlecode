@@ -41,7 +41,11 @@ class MyRobot(BCAbstractRobot):
                 self.me.id, self.me.health))
 
             if self.step < 10:
-                return self.build_unit(SPECS['PILGRIM'], 1, 1)
+                buildable = self.adjacent_empty_passable()
+                if buildable:
+                    return self.build_unit(SPECS['PILGRIM'],
+                                           buildable[0][0] - self.me.x,
+                                           buildable[0][1] - self.me.y)
 
         elif self.me['unit'] == SPECS['CHURCH']:
             self.log("Church [{}] health: {}".format(
@@ -140,6 +144,26 @@ class MyRobot(BCAbstractRobot):
         deposit = next(r for r in self.get_visible_robots() if r.unit < 2)
         if self.is_adjacent(deposit):
             return (deposit.x, deposit.y)
+
+    def get_adjacent_squares(self):
+        """ return adjacent squares """
+
+        width = len(self.map)
+        height = len(self.map[0])
+
+        return [(self.me.x + d[0], self.me.y + d[1]) for d in self.directions
+                if 0 <= self.me.x + d[0] < width
+                and 0 <= self.me.y + d[1] < height]
+
+    def adjacent_empty_passable(self):
+        """ return adjacent buildable (empty, passable) square """
+
+        squares = self.get_adjacent_squares()
+        passable = self.get_passable_map()
+        robots = self.get_visible_robot_map()
+
+        return [s for s in squares if
+                passable[s[0]][s[1]] and not robots[s[0]][s[1]]]
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
