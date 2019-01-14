@@ -51,8 +51,8 @@ class MyRobot(BCAbstractRobot):
             pass
 
         elif self.me['unit'] == SPECS['PILGRIM']:
-            self.log("Pilgrim [{}] health: {}".format(
-                self.me.id, self.me.health))
+            self.log("Pilgrim [{}] health: {} at ({}, {})".format(
+                self.me.id, self.me.health, self.me.x, self.me.y))
 
             # save birthplace as nearest deposit time
             if self.step == 0:
@@ -72,10 +72,12 @@ class MyRobot(BCAbstractRobot):
             # mine resources if safe and appropriate
             if self.on_resource(self.karbonite_map) and self.me.karbonite < 19:
                 self.target = None
+                self.log("  - mining karbonite")
                 return self.mine()
 
             if self.on_resource(self.fuel_map) and self.me.fuel < 91:
                 self.target = None
+                self.log("  - mining fuel")
                 return self.mine()
 
             # always check and update for adjacent deposit points
@@ -84,6 +86,7 @@ class MyRobot(BCAbstractRobot):
 
             if (self.is_adjacent(self.nearest_deposit)
                     and (self.me.karbonite or self.me.fuel)):
+                self.log("  - depositing resources")
                 return self.give(self.nearest_deposit[0] - self.me.x,
                                  self.nearest_deposit[1] - self.me.y,
                                  self.me.karbonite, self.me.fuel)
@@ -112,6 +115,8 @@ class MyRobot(BCAbstractRobot):
             # TODO: error checking
             if self.path:
                 direction = self.path.pop(0)
+                self.log("  - moving in direction: ({}, {})".format(
+                    direction[0], direction[1]))
                 return self.move(direction[0] - self.me.x,
                                  direction[1] - self.me.y)
 
