@@ -186,13 +186,15 @@ class MyRobot(BCAbstractRobot):
         used as cost/heuristic for A* pathfinding
         """
 
-        # check if possible to prioritise 2 consecutive straight steps
-        # - e.g.: (0, 0) -> (3, 1)
-        #     [1] (0, 0) -> (2, 0) -> (3, 1) vs.
-        #     [2] (0, 0) -> (1, 0) -> (2, 1) -> (3, 1)
-        # _identical_ fuel cost, but [1] is _faster_
-
         return max(map(lambda r, s: abs(r - s), start, end))
+
+    def rsquared_distance(self, start, end):
+        """ Euclidean distance
+
+        for determining fuel cost, movement range
+        """
+
+        return sum(map(lambda r, s: (r - s) * (r - s), start, end))
 
     def on_resource(self, resource_map):
         """ check if current square contains resources """
@@ -395,6 +397,37 @@ class MyRobot(BCAbstractRobot):
                 checkpoints.append(point)
 
         return None
+
+    def waypoints(self, path, speed):
+        """ find intermediate waypoints on path """
+
+        differences = [(s[0] - r[0], s[1] - r[1])
+                       for r, s in zip(path, path[1:])]
+
+        points = []
+        for p in path:
+            points.append(p)
+
+            if not differences:
+                continue
+
+            diff = differences.pop(0)
+            n = max(abs(diff[0]), abs(diff[1]))
+            step = (diff[0] / n, diff[1] / n)
+            for i in range(1, n):
+                points.append((p[0] + i * step[0], p[1] + i * step[1]))
+
+        last = points[0]
+        waypoints = [points[0]]
+        for i in range(len(points) - 1):
+            probe = points[i + 1]
+            if self.rsquared_distance(probe, last) > speed:
+                waypoints.append(points[i])
+                last = points[i]
+
+        waypoints.append(points[-1])
+
+        return waypoints
 
 
 robot = MyRobot()
