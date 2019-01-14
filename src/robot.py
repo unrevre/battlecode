@@ -292,7 +292,8 @@ class MyRobot(BCAbstractRobot):
 
         probe_x = square[0] + dx
         probe_y = square[1] + dy
-        if not self.map[probe_y][probe_x]:
+
+        if not self.is_passable((probe_x, probe_y)):
             return None
 
         if (probe_x, probe_y) == end:
@@ -393,6 +394,8 @@ class MyRobot(BCAbstractRobot):
 
                 trace[point] = head
                 G[point] = total
+
+                checkpoints.append(point)
 
         return None
 
