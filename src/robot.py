@@ -29,7 +29,6 @@ class MyRobot(BCAbstractRobot):
     graph = None
     target = None
     path = None
-    path_index = None
 
     def turn(self):
         """ executed per robot turn """
@@ -107,19 +106,17 @@ class MyRobot(BCAbstractRobot):
                 self.path = self.waypoints(
                     self.jps((self.me.x, self.me.y), self.target),
                     self.movement_speed[self.me.unit])
-                self.path_index = 0
 
             # proceed to target
             # TODO: handle cases where multiple squares may be moved in a
             # single turn
             # TODO: error checking
             if self.path:
-                self.path_index += 1
-                direction = self.path[self.path_index]
-                self.log("  - moving in direction: ({}, {})".format(
-                    direction[0], direction[1]))
-                return self.move(direction[0] - self.me.x,
-                                 direction[1] - self.me.y)
+                destination = self.path[1]
+                self.log("  - moving in destination: ({}, {})".format(
+                    destination[0], destination[1]))
+                return self.move(destination[0] - self.me.x,
+                                 destination[1] - self.me.y)
 
         elif self.me['unit'] == SPECS['CRUSADER']:
             pass
