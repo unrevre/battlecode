@@ -420,7 +420,7 @@ class MyRobot(BCAbstractRobot):
 
             diff = differences.pop(0)
             n = max(abs(diff[0]), abs(diff[1]))
-            step = (diff[0] / n, diff[1] / n)
+            step = (diff[0] // n, diff[1] // n)
             for i in range(1, n):
                 points.append((p[0] + i * step[0], p[1] + i * step[1]))
 
