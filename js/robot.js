@@ -11,6 +11,8 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
+        this.symmetry = null;
+
         this.castles = 0;
         this.pilgrims = 0;
 
@@ -21,8 +23,8 @@ class MyRobot extends BCAbstractRobot {
         this.nearest_karbonite = null;
         this.nearest_fuel = null;
 
-        this.friendly_castles = null;
-        this.enemy_castles = null;
+        this.friends = [];
+        this.enemies = [];
 
         this.target = null;
         this.path = null;
@@ -37,13 +39,6 @@ class MyRobot extends BCAbstractRobot {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            if (step == 0) {
-                // TODO: track resource locations
-                this.karbonite_deposits = this.get_resources(
-                    this.karbonite_map);
-                this.fuel_deposits = this.get_resources(this.fuel_map);
-            }
-
             // TODO: listen for castle talk from other castles/churches for
             // accounting of pilgrims - avoid overbuilding
             var visibles = this.get_visible_robots();
@@ -57,7 +52,7 @@ class MyRobot extends BCAbstractRobot {
                     if (castle_talk != 0x00) {
                         if (step == 1) {
                             this.castles++;
-                            this.friendly_castles.push([
+                            this.friends.push([
                                 (castle_talk & 0x0f) << 2, castle_talk >> 2]);
                         }
                     }
@@ -66,6 +61,31 @@ class MyRobot extends BCAbstractRobot {
                 else if (robot.unit == 2) {
                     if (robot.castle_talk == 0x01) {
                         this.pilgrims++;
+                    }
+                }
+            }
+
+            if (step == 0) {
+                // TODO: track resource locations
+                this.karbonite_deposits = this.get_resources(
+                    this.karbonite_map);
+                this.fuel_deposits = this.get_resources(this.fuel_map);
+
+                this.symmetry = this.guess_map_symmetry();
+            }
+
+            else if (step == 1) {
+                var width = this.map[0].length;
+                var height = this.map.length;
+
+                for (var i = 0; i < this.friends.length; i++) {
+                    var coords = this.friends[i];
+                    if (this.symmetry == 0) {
+                        this.enemies[i] = [width - 1 - coords[0], coords[1]];
+                    }
+
+                    else if (this.symmetry == 1) {
+                        this.enemies[i] = [coords[0], height - 1 - coords[1]];
                     }
                 }
             }
@@ -239,6 +259,31 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
         }
+
+        return null;
+    }
+
+    guess_map_symmetry() {
+        var karbonite_map = this.karbonite_map;
+        var karbonite_coords = this.get_resources(karbonite_map);
+
+        var width = karbonite_map[0].length;
+        var height = karbonite_map.length;
+
+        for (var i = 0; i < karbonite_coords.length; i++) {
+            var coords = karbonite_coords[i];
+            if (karbonite_map[coords[1]][width - 1 - coords[0]]
+                    && !(karbonite_map[height - 1 - coords[1]][coords[0]])) {
+                return 0;
+            }
+
+            else if (!(karbonite_map[coords[1]][width - 1 - coords[0]])
+                    && karbonite_map[height - 1 - coords[1]][coords[0]]) {
+                return 1;
+            }
+        }
+
+        // TODO: full map symmetry scan
 
         return null;
     }
