@@ -38,6 +38,17 @@ class MyRobot extends BCAbstractRobot {
                 this.fuel_deposits = this.get_resources(this.fuel_map);
             }
 
+            // TODO: listen for castle talk from other castles/churches for
+            // accounting of pilgrims - avoid overbuilding
+            var visibles = this.get_visible_robots();
+            for (var i = 0; i < visibles.length; i++) {
+                var robot = visibles[i].unit;
+                if (robot.unit < 2) {
+                    this.log('  unit [' + robot.id + '], message: '
+                        + robot.castle_talk);
+                }
+            }
+
             // TODO: decide when to build pilgrims
             if (step < 2) {
                 var buildable = this.get_adjacent_passable_empty_squares();
