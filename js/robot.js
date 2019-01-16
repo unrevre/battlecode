@@ -125,7 +125,6 @@ class MyRobot extends BCAbstractRobot {
 
             if (this.target != null) {
                 this.path = this.astar([this.me.x, this.me.y], this.target);
-                this.log('  path: ' + this.path);
             }
 
             // proceed to target
@@ -133,7 +132,7 @@ class MyRobot extends BCAbstractRobot {
             // single turn
             // TODO: error checking
             if (this.path != null && this.path.length > 0) {
-                var destination = this.path[0];
+                var destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: ('
                     + destination[0] + ', ' + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -279,11 +278,11 @@ class MyRobot extends BCAbstractRobot {
         return adjacent;
     }
 
-    distance(r, s) {
+    metric(r, s) {
         return Math.max(Math.abs(r[0] - s[0]), Math.abs(r[1] - s[1]));
     }
 
-    rsquared_distance(r, s) {
+    distance(r, s) {
         return (r[0] - s[0]) * (r[0] - s[0]) + (r[1] - s[1]) * (r[1] - s[1]);
     }
 
@@ -317,9 +316,9 @@ class MyRobot extends BCAbstractRobot {
         // list. probably a good idea to store closest n resource squares
         // permanently
         var now = [this.me.x, this.me.y];
-        var min_dist = this.distance(now, resources[0]);
+        var min_dist = this.metric(now, resources[0]);
         for (var i = 1; i < resources.length; i++) {
-            var dist = this.distance(now, resources[i]);
+            var dist = this.metric(now, resources[i]);
             if (dist < min_dist) {
                 closest = resources[i];
                 min_dist = dist;
@@ -336,7 +335,7 @@ class MyRobot extends BCAbstractRobot {
         var open_squares = {};
 
         G[start] = 0;
-        open_squares[start] = this.distance(start, end);
+        open_squares[start] = this.metric(start, end);
 
         var closed_squares = {};
 
@@ -374,7 +373,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                var total = parseInt(G[head]) + this.distance(head, square);
+                var total = parseInt(G[head]) + this.metric(head, square);
 
                 if (open_squares[square] != undefined
                         && total >= parseInt(G[square])) {
@@ -384,11 +383,29 @@ class MyRobot extends BCAbstractRobot {
                 trace[square] = head;
 
                 G[square] = total;
-                open_squares[square] = total + this.distance(square, end);
+                open_squares[square] = total + this.metric(square, end);
             }
         }
 
         this.log('ERROR: no path found!');
         return null;
+    }
+
+    take_step(path, speed) {
+        const movement_speed = [0, 0, 4, 9, 4, 4];
+        const range = movement_speed[this.me.unit];
+
+        var next = null;
+        for (var i = 1; i < path.length; i++) {
+            if (this.distance([this.me.x, this.me.y], path[i]) > range) {
+                next = path[i - 1];
+            }
+        }
+
+        if (next == null) {
+            next = path[path.length - 1];
+        }
+
+        return next;
     }
 }
