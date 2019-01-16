@@ -40,7 +40,8 @@ class MyRobot extends BCAbstractRobot {
         }
 
         else if (this.me.unit == SPECS.CHURCH) {
-            this.log('Church [' + this.me.id + '] health: ' + this.me.health);
+            this.log('Church [' + this.me.id + '] health: ' + this.me.health
+                + ' at (' + this.me.x + ', ' + this.me.y + ')');
         }
 
         else if (this.me.unit == SPECS.PILGRIM) {
@@ -119,15 +120,18 @@ class MyRobot extends BCAbstractRobot {
         }
 
         else if (this.me.unit == SPECS.CRUSADER) {
-            ;
+            this.log('Crusader [' + this.me.id + '] health: ' + this.me.health
+                + ' at (' + this.me.x + ', ' + this.me.y + ')');
         }
 
         else if (this.me.unit == SPECS.PROPHET) {
-            ;
+            this.log('Prophet [' + this.me.id + '] health: ' + this.me.health
+                + ' at (' + this.me.x + ', ' + this.me.y + ')');
         }
 
         else if (this.me.unit == SPECS.PREACHER) {
-            ;
+            this.log('Preacher [' + this.me.id + '] health: ' + this.me.health
+                + ' at (' + this.me.x + ', ' + this.me.y + ')');
         }
     }
 
