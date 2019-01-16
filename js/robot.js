@@ -252,6 +252,17 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit == SPECS.CRUSADER) {
             this.log('Crusader [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
+
+            // basic attacks
+            var enemies = this.get_visible_enemies();
+            for (var i = 0; i < enemies.length; i++) {
+                var enemy = enemies[i];
+                this.log('  - attack unit [' + enemy.id + '], type ('
+                    + enemy.unit + ') at ' + enemy.x - this.me.x + ', '
+                    + enemy.y - this.me.y);
+                return this.attack(enemy.x - this.me.x,
+                                   enemy.y - this.me.y);
+            }
         }
 
         else if (this.me.unit == SPECS.PROPHET) {
@@ -593,5 +604,18 @@ class MyRobot extends BCAbstractRobot {
 
     decode_coordinates(signal) {
         return [signal & 0x003f, (signal & 0x0f30) >> 6];
+    }
+
+    get_visible_enemies() {
+        var enemies = [];
+
+        var visibles = this.get_visible_robots();
+        for (var i = 0; i < visibles.length; i++) {
+            if (visibles[i].team != this.me.team) {
+                enemies.push(visibles[i]);
+            }
+        }
+
+        return enemies;
     }
 }
