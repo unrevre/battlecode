@@ -83,13 +83,13 @@ class MyRobot extends BCAbstractRobot {
 
             else if (step == 1) {
                 for (var i = 0; i < this.friends.length; i++) {
-                    var coords = this.friends[i];
+                    var coord = this.friends[i];
                     if (this.symmetry == 0) {
-                        this.enemies[i] = [this.size - 1 - coords[0], coords[1]];
+                        this.enemies[i] = [this.size - 1 - coord[0], coord[1]];
                     }
 
                     else if (this.symmetry == 1) {
-                        this.enemies[i] = [coords[0], this.size - 1 - coords[1]];
+                        this.enemies[i] = [coord[0], this.size - 1 - coord[1]];
                     }
                 }
             }
@@ -121,7 +121,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (target_unit != null) {
-                if (target_square != null && !this.is_buildable(target_square)) {
+                if (target_square != null
+                        && !this.is_buildable(target_square)) {
                     var target_adjacent =
                         this.get_adjacent_passable_empty_squares_at(
                             target_square);
@@ -173,7 +174,8 @@ class MyRobot extends BCAbstractRobot {
             // overly scared
 
             // mine resources if safe and appropriate
-            if (this.on_resource(this.karbonite_map) && this.me.karbonite < 19) {
+            if (this.on_resource(this.karbonite_map)
+                    && this.me.karbonite < 19) {
                 this.target = null;
                 this.log('  - mining karbonite');
                 return this.mine();
@@ -307,14 +309,14 @@ class MyRobot extends BCAbstractRobot {
         var karbonite_coords = this.get_resources(karbonite_map);
 
         for (var i = 0; i < karbonite_coords.length; i++) {
-            var coords = karbonite_coords[i];
-            if (karbonite_map[coords[1]][this.size - 1 - coords[0]]
-                    && !(karbonite_map[this.size - 1 - coords[1]][coords[0]])) {
+            var coord = karbonite_coords[i];
+            if (karbonite_map[coord[1]][this.size - 1 - coord[0]]
+                    && !(karbonite_map[this.size - 1 - coord[1]][coord[0]])) {
                 return 0;
             }
 
-            else if (!(karbonite_map[coords[1]][this.size - 1 - coords[0]])
-                    && karbonite_map[this.size - 1 - coords[1]][coords[0]]) {
+            else if (!(karbonite_map[coord[1]][this.size - 1 - coord[0]])
+                    && karbonite_map[this.size - 1 - coord[1]][coord[0]]) {
                 return 1;
             }
         }
@@ -324,7 +326,7 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
-    filter_by_map_symmetry(coords) {
+    filter_by_map_symmetry(squares) {
         if (this.symmetry == null) {
             return [];
         }
@@ -333,9 +335,9 @@ class MyRobot extends BCAbstractRobot {
         var side = (square[this.symmetry] > this.map.length / 2);
 
         var filtered = [];
-        for (var i = 0; i < coords.length; i++) {
-            if ((coords[i][this.symmetry] > this.map.length / 2) == side) {
-                filtered.push(coords[i]);
+        for (var i = 0; i < squares.length; i++) {
+            if ((squares[i][this.symmetry] > this.map.length / 2) == side) {
+                filtered.push(squares[i]);
             }
         }
 
