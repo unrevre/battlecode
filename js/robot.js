@@ -123,6 +123,9 @@ class MyRobot extends BCAbstractRobot {
 
             else {
                 target_unit = SPECS.CRUSADER;
+                if (this.enemies.length > 0) {
+                    signal_value = this.encode_coordinates(this.enemies[0]);
+                }
             }
 
             if (target_unit != null) {
@@ -259,6 +262,20 @@ class MyRobot extends BCAbstractRobot {
             this.log('Crusader [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            if (step === 0) {
+                var visibles = this.get_visible_robots();
+                for (var i = 0; i < visibles.length; i++) {
+                    if (visibles[i].team == this.me.team
+                            && visibles[i].unit < 2
+                            && this.is_radioing(visibles[i])) {
+                        this.target = this.decode_coordinates(
+                            visibles[i].signal);
+                        this.birthmark = this.target;
+                        break;
+                    }
+                }
+            }
+
             // basic attacks
             var enemies = this.get_visible_enemies();
             for (var i = 0; i < enemies.length; i++) {
@@ -268,6 +285,20 @@ class MyRobot extends BCAbstractRobot {
                     + enemy.y - this.me.y);
                 return this.attack(enemy.x - this.me.x,
                                    enemy.y - this.me.y);
+            }
+
+            if (this.target != null) {
+                this.path = this.astar([this.me.x, this.me.y], this.target,
+                    this.get_adjacent_passable_empty_squares_at.bind(this));
+            }
+
+            // proceed to target destination
+            if (this.path != null && this.path.length > 0) {
+                var destination = this.take_step(this.path, this.me.unit);
+                this.log('  - moving to destination: ('
+                    + destination[0] + ', ' + destination[1] + ')');
+                return this.move(destination[0] - this.me.x,
+                                 destination[1] - this.me.y);
             }
         }
 
