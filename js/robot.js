@@ -97,14 +97,14 @@ class MyRobot extends BCAbstractRobot {
             // clear castle talk by default
             this.castle_talk(0x00);
 
-            // broadcast coordinates
+            // broadcast coordinates (highest 4 bits)
             if (step == 0) {
                 this.castle_talk((this.me.x >> 2) | (this.me.y >> 2) << 4);
             }
 
             // build on closest buildable square to target
-            var target_square = null;
             // TODO: decide what to build
+            var target_square = null;
             var target_unit = null;
             if (step == 0) {
                 target_square = this.ordered_karbonite[0][1];
@@ -174,6 +174,7 @@ class MyRobot extends BCAbstractRobot {
             // overly scared
 
             // mine resources if safe and appropriate
+            // TODO: safety check
             if (this.on_resource(this.karbonite_map)
                     && this.me.karbonite < 19) {
                 this.target = null;
@@ -199,16 +200,12 @@ class MyRobot extends BCAbstractRobot {
                                  this.me.karbonite, this.me.fuel);
             }
 
-            // return to 'birth' castle/church
+            // return to nearest resource deposit point
             if (this.me.karbonite > 18 || this.me.fuel > 90) {
-                // TODO: retrace path backwards
                 this.target = this.nearest_deposit;
             }
 
-            // check global resources and determine target resource
-            // TODO: temporary - always target carbonite, proper implementation
-            // to follow
-            // TODO: cache the paths to/from resource
+            // TODO: check global resources and determine target resource
 
             this.log('  target: ' + this.target);
 
@@ -218,8 +215,6 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // proceed to target
-            // TODO: handle cases where multiple squares may be moved in a
-            // single turn
             // TODO: error checking
             if (this.path != null && this.path.length > 0) {
                 var destination = this.take_step(this.path, this.me.unit);
