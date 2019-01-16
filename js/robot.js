@@ -21,6 +21,9 @@ class MyRobot extends BCAbstractRobot {
         this.nearest_karbonite = null;
         this.nearest_fuel = null;
 
+        this.friendly_castles = null;
+        this.enemy_castles = null;
+
         this.target = null;
         this.path = null;
     }
@@ -49,17 +52,31 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2) {
                     this.log('  unit [' + robot.id + '], message: '
                         + robot.castle_talk);
-                    if (robot.castle_talk == 0x01) {
-                        this.pilgrims++;
+
+                    var castle_talk = robot.castle_talk;
+                    if (castle_talk != 0x00) {
                         if (step == 1) {
                             this.castles++;
+                            this.friendly_castles.push([
+                                (castle_talk & 0x0f) << 2, castle_talk >> 2]);
                         }
+                    }
+                }
+
+                else if (robot.unit == 2) {
+                    if (robot.castle_talk == 0x01) {
+                        this.pilgrims++;
                     }
                 }
             }
 
             // clear castle talk by default
             this.castle_talk(0x00);
+
+            // broadcast coordinates
+            if (step == 0) {
+                this.castle_talk((this.me.x >> 2) | (this.me.y >> 2) << 4);
+            }
 
             var buildable = this.get_adjacent_passable_empty_squares();
 
@@ -70,9 +87,6 @@ class MyRobot extends BCAbstractRobot {
             var target_unit = null;
             if (step < 2) {
                 target_unit = SPECS.PILGRIM;
-
-                // castle talk to increment pilgrim number
-                this.castle_talk(0x01);
             }
 
             else {
