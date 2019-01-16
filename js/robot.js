@@ -100,14 +100,17 @@ class MyRobot extends BCAbstractRobot {
                 this.castle_talk((this.me.x >> 2) | (this.me.y >> 2) << 4);
             }
 
-            var buildable = this.get_adjacent_passable_empty_squares();
-
-            // TODO: find closest buildable square to target
-            var target_square = buildable[0];
-
+            // build on closest buildable square to target
+            var target_square = null;
             // TODO: decide what to build
             var target_unit = null;
-            if (step < 2) {
+            if (step == 0) {
+                target_square = this.ordered_karbonite[0][1];
+                target_unit = SPECS.PILGRIM;
+            }
+
+            else if (step == 1) {
+                target_square = this.ordered_fuel[0][1];
                 target_unit = SPECS.PILGRIM;
             }
 
@@ -115,10 +118,31 @@ class MyRobot extends BCAbstractRobot {
                 target_unit = SPECS.CRUSADER;
             }
 
-            if (target_square != null) {
-                return this.build_unit(target_unit,
-                                       target_square[0] - this.me.x,
-                                       target_square[1] - this.me.y);
+            if (target_unit != null) {
+                if (target_square != null && !this.is_buildable(target_square)) {
+                    var target_adjacent =
+                        this.get_adjacent_passable_empty_squares_at(
+                            target_square);
+                    for (var i = 0; i < target_adjacent.length; i++) {
+                        if (this.is_adjacent(target_adjacent[i])) {
+                            target_square = target_adjacent[i];
+                            break;
+                        }
+                    }
+                }
+
+                if (target_square == null) {
+                    var buildable = this.get_buildable_squares();
+                    if (buildable.length > 0) {
+                        target_square = buildable[0];
+                    }
+                }
+
+                if (target_square != null) {
+                    return this.build_unit(target_unit,
+                                           target_square[0] - this.me.x,
+                                           target_square[1] - this.me.y);
+                }
             }
         }
 
@@ -240,11 +264,23 @@ class MyRobot extends BCAbstractRobot {
 
     is_passable(x, y) {
         var map = this.map;
+        var width = map[0].length;
+        var height = map.length;
+
         if (0 <= x && x < width && 0 <= y && y < height) {
             return map[y][x];
         }
 
         return false;
+    }
+
+    is_buildable(square) {
+        if (!this.is_passable(square[0], square[1])) {
+            return false;
+        }
+
+        var nonempty = this.get_visible_robot_map();
+        return !nonempty[square[1]][square[0]];
     }
 
     is_adjacent(square) {
@@ -385,6 +421,10 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return adjacent;
+    }
+
+    get_buildable_squares() {
+        return this.get_adjacent_passable_empty_squares();
     }
 
     metric(r, s) {
