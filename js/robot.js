@@ -604,6 +604,7 @@ class MyRobot extends BCAbstractRobot {
         for (var i = 1; i < path.length; i++) {
             if (this.distance([this.me.x, this.me.y], path[i]) > range) {
                 next = path[i - 1];
+                break;
             }
         }
 
