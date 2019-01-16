@@ -11,6 +11,9 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
+        this.castles = 0;
+        this.pilgrims = 0;
+
         this.karbonite_deposits = null;
         this.fuel_deposits = null;
 
@@ -42,22 +45,38 @@ class MyRobot extends BCAbstractRobot {
             // accounting of pilgrims - avoid overbuilding
             var visibles = this.get_visible_robots();
             for (var i = 0; i < visibles.length; i++) {
-                var robot = visibles[i].unit;
+                var robot = visibles[i];
                 if (robot.unit < 2) {
                     this.log('  unit [' + robot.id + '], message: '
                         + robot.castle_talk);
+                    if (robot.castle_talk == 0x01) {
+                        this.pilgrims++;
+                        if (step == 1) {
+                            this.castles++;
+                        }
+                    }
                 }
             }
+
+            var target = null;
+
+            // clear castle talk by default
+            this.castle_talk(0x00);
 
             // TODO: decide when to build pilgrims
             if (step < 2) {
                 var buildable = this.get_adjacent_passable_empty_squares();
                 // TODO: find closest buildable square to target
-                var build_target = buildable[0];
-                // TODO: castle talk to increment pilgrim number
+                target = buildable[0];
+
+                // castle talk to increment pilgrim number
+                this.castle_talk(0x01);
+            }
+
+            if (target != null) {
                 return this.build_unit(SPECS.PILGRIM,
-                                       build_target[0] - this.me.x,
-                                       build_target[1] - this.me.y);
+                                       target[0] - this.me.x,
+                                       target[1] - this.me.y);
             }
         }
 
@@ -158,6 +177,10 @@ class MyRobot extends BCAbstractRobot {
 
     build_unit(unit, dx, dy) {
         return this.buildUnit(unit, dx, dy);
+    }
+
+    castle_talk(value) {
+        return this.castleTalk(value);
     }
 
     get_visible_robots() {
