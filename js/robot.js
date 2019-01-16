@@ -11,6 +11,7 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
+        this.size = null;
         this.symmetry = null;
 
         this.castles = 0;
@@ -34,6 +35,10 @@ class MyRobot extends BCAbstractRobot {
         step++;
 
         this.log('START TURN ' + step);
+
+        if (step == 0) {
+            this.size = this.map.length;
+        }
 
         if (this.me.unit == SPECS.CASTLE) {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
@@ -77,17 +82,14 @@ class MyRobot extends BCAbstractRobot {
             }
 
             else if (step == 1) {
-                var width = this.map[0].length;
-                var height = this.map.length;
-
                 for (var i = 0; i < this.friends.length; i++) {
                     var coords = this.friends[i];
                     if (this.symmetry == 0) {
-                        this.enemies[i] = [width - 1 - coords[0], coords[1]];
+                        this.enemies[i] = [this.size - 1 - coords[0], coords[1]];
                     }
 
                     else if (this.symmetry == 1) {
-                        this.enemies[i] = [coords[0], height - 1 - coords[1]];
+                        this.enemies[i] = [coords[0], this.size - 1 - coords[1]];
                     }
                 }
             }
@@ -264,10 +266,8 @@ class MyRobot extends BCAbstractRobot {
 
     is_passable(x, y) {
         var map = this.map;
-        var width = map[0].length;
-        var height = map.length;
 
-        if (0 <= x && x < width && 0 <= y && y < height) {
+        if (0 <= x && x < this.size && 0 <= y && y < this.size) {
             return map[y][x];
         }
 
@@ -306,18 +306,15 @@ class MyRobot extends BCAbstractRobot {
         var karbonite_map = this.karbonite_map;
         var karbonite_coords = this.get_resources(karbonite_map);
 
-        var width = karbonite_map[0].length;
-        var height = karbonite_map.length;
-
         for (var i = 0; i < karbonite_coords.length; i++) {
             var coords = karbonite_coords[i];
-            if (karbonite_map[coords[1]][width - 1 - coords[0]]
-                    && !(karbonite_map[height - 1 - coords[1]][coords[0]])) {
+            if (karbonite_map[coords[1]][this.size - 1 - coords[0]]
+                    && !(karbonite_map[this.size - 1 - coords[1]][coords[0]])) {
                 return 0;
             }
 
-            else if (!(karbonite_map[coords[1]][width - 1 - coords[0]])
-                    && karbonite_map[height - 1 - coords[1]][coords[0]]) {
+            else if (!(karbonite_map[coords[1]][this.size - 1 - coords[0]])
+                    && karbonite_map[this.size - 1 - coords[1]][coords[0]]) {
                 return 1;
             }
         }
@@ -346,15 +343,12 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_squares() {
-        var width = this.map[0].length;
-        var height = this.map.length;
-
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = this.me.x + this.compass[i][0];
             var adjy = this.me.y + this.compass[i][1];
-            if (0 <= adjx && adjx < width
-                    && 0 <= adjy && adjy < height) {
+            if (0 <= adjx && adjx < this.size
+                    && 0 <= adjy && adjy < this.size) {
                 adjacent.push([adjx, adjy]);
             }
         }
@@ -364,17 +358,14 @@ class MyRobot extends BCAbstractRobot {
 
     get_adjacent_passable_empty_squares() {
         var map = this.map;
-        var width = map[0].length;
-        var height = map.length;
-
         var nonempty = this.get_visible_robot_map();
 
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = this.me.x + this.compass[i][0];
             var adjy = this.me.y + this.compass[i][1];
-            if (0 <= adjx && adjx < width
-                    && 0 <= adjy && adjy < height
+            if (0 <= adjx && adjx < this.size
+                    && 0 <= adjy && adjy < this.size
                     && map[adjy][adjx] && !nonempty[adjy][adjx]) {
                 adjacent.push([adjx, adjy]);
             }
@@ -385,15 +376,13 @@ class MyRobot extends BCAbstractRobot {
 
     get_adjacent_passable_squares_at(square) {
         var map = this.map;
-        var width = map[0].length;
-        var height = map.length;
 
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = square[0] + this.compass[i][0];
             var adjy = square[1] + this.compass[i][1];
-            if (0 <= adjx && adjx < width
-                    && 0 <= adjy && adjy < height
+            if (0 <= adjx && adjx < this.size
+                    && 0 <= adjy && adjy < this.size
                     && map[adjy][adjx]) {
                 adjacent.push([adjx, adjy]);
             }
@@ -404,17 +393,14 @@ class MyRobot extends BCAbstractRobot {
 
     get_adjacent_passable_empty_squares_at(square) {
         var map = this.map;
-        var width = map[0].length;
-        var height = map.length;
-
         var nonempty = this.get_visible_robot_map();
 
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = square[0] + this.compass[i][0];
             var adjy = square[1] + this.compass[i][1];
-            if (0 <= adjx && adjx < width
-                    && 0 <= adjy && adjy < height
+            if (0 <= adjx && adjx < this.size
+                    && 0 <= adjy && adjy < this.size
                     && map[adjy][adjx] && !nonempty[adjy][adjx]) {
                 adjacent.push([adjx, adjy]);
             }
@@ -440,12 +426,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_resources(resource_map) {
-        var width = resource_map[0].length;
-        var height = resource_map.length;
-
         var resources = [];
-        for (var i = 0; i < height; i++) {
-            for (var j = 0; j < width; j++) {
+        for (var i = 0; i < this.size; i++) {
+            for (var j = 0; j < this.size; j++) {
                 if (resource_map[i][j]) {
                     resources.push([j, i]);
                 }
