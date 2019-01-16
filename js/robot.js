@@ -58,21 +58,25 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            var target_square = null;
-            var target_unit = null;
-
             // clear castle talk by default
             this.castle_talk(0x00);
 
-            // TODO: decide when to build pilgrims
+            var buildable = this.get_adjacent_passable_empty_squares();
+
+            // TODO: find closest buildable square to target
+            var target_square = buildable[0];
+
+            // TODO: decide what to build
+            var target_unit = null;
             if (step < 2) {
-                var buildable = this.get_adjacent_passable_empty_squares();
-                // TODO: find closest buildable square to target
-                target_square = buildable[0];
                 target_unit = SPECS.PILGRIM;
 
                 // castle talk to increment pilgrim number
                 this.castle_talk(0x01);
+            }
+
+            else {
+                target_unit = SPECS.CRUSADER;
             }
 
             if (target_square != null) {
