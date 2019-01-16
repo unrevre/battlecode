@@ -186,6 +186,13 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            // clear target destination after arrival
+            if (this.target != null
+                    && this.target[0] == this.me.x
+                    && this.target[1] == this.me.y) {
+                this.target == null;
+            }
+
             // TODO: check for attacking units and check distance to deposit
             // point
             // TODO: evade attackers if possible - be careful here not to be
@@ -193,17 +200,17 @@ class MyRobot extends BCAbstractRobot {
 
             // mine resources if safe and appropriate
             // TODO: safety check
-            if (this.on_resource(this.karbonite_map)
-                    && this.me.karbonite < 19) {
-                this.target = null;
-                this.log('  - mining karbonite');
-                return this.mine();
-            }
+            if (this.target == null) {
+                if (this.on_resource(this.karbonite_map)
+                        && this.me.karbonite < 19) {
+                    this.log('  - mining karbonite');
+                    return this.mine();
+                }
 
-            if (this.on_resource(this.fuel_map) && this.me.fuel < 91) {
-                this.target = null;
-                this.log('  - mining fuel');
-                return this.mine();
+                if (this.on_resource(this.fuel_map) && this.me.fuel < 91) {
+                    this.log('  - mining fuel');
+                    return this.mine();
+                }
             }
 
             // TODO: always check and update for adjacent deposit points
@@ -225,7 +232,7 @@ class MyRobot extends BCAbstractRobot {
 
             // attempt to target remembered resource after any interruption
             // (deposition, evasion, etc..)
-            if (this.birthmark != null) {
+            if (this.target == null && this.birthmark != null) {
                 this.target = this.birthmark;
             }
 
@@ -239,7 +246,6 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // proceed to target
-            // TODO: error checking
             if (this.path != null && this.path.length > 0) {
                 var destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: ('
