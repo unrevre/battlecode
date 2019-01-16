@@ -21,8 +21,7 @@ class MyRobot extends BCAbstractRobot {
         this.ordered_fuel = [];
 
         this.nearest_deposit = null;
-        this.nearest_karbonite = null;
-        this.nearest_fuel = null;
+        this.birthmark = null;
 
         this.friends = [];
         this.enemies = [];
@@ -106,14 +105,20 @@ class MyRobot extends BCAbstractRobot {
             // TODO: decide what to build
             var target_square = null;
             var target_unit = null;
+            // signal target location to built unit
+            var signal_value = null;
             if (step == 0) {
                 target_square = this.ordered_karbonite[0][1];
                 target_unit = SPECS.PILGRIM;
+                signal_value = this.encode_coordinates(
+                    this.ordered_karbonite[0][0]);
             }
 
             else if (step == 1) {
                 target_square = this.ordered_fuel[0][1];
                 target_unit = SPECS.PILGRIM;
+                signal_value = this.encode_coordinates(
+                    this.ordered_fuel[0][0]);
             }
 
             else {
@@ -142,6 +147,11 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (target_square != null) {
+                    if (signal_value != null) {
+                        this.signal(signal_value, this.distance(
+                            [this.me.x, this.me.y], target_square));
+                    }
+
                     return this.build_unit(target_unit,
                                            target_square[0] - this.me.x,
                                            target_square[1] - this.me.y);
@@ -159,13 +169,21 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             // save birthplace as nearest deposit time
+            // listen to radio for directions from the castle/church
             if (step === 0) {
                 this.nearest_deposit = this.get_adjacent_deposit_point();
-                this.nearest_karbonite = this.get_nearest_resource(
-                    this.karbonite_map);
-                this.nearest_fuel = this.get_nearest_resource(this.fuel_map);
 
-                this.target = this.nearest_karbonite;
+                var visibles = this.get_visible_robots();
+                for (var i = 0; i < visibles.length; i++) {
+                    if (visibles[i].team == this.me.team
+                            && visibles[i].unit < 2
+                            && this.is_radioing(visibles[i])) {
+                        this.target = this.decode_coordinates(
+                            visibles[i].signal);
+                        this.birthmark = this.target;
+                        break;
+                    }
+                }
             }
 
             // TODO: check for attacking units and check distance to deposit
@@ -203,6 +221,12 @@ class MyRobot extends BCAbstractRobot {
             // return to nearest resource deposit point
             if (this.me.karbonite > 18 || this.me.fuel > 90) {
                 this.target = this.nearest_deposit;
+            }
+
+            // attempt to target remembered resource after any interruption
+            // (deposition, evasion, etc..)
+            if (this.birthmark != null) {
+                this.target = this.birthmark;
             }
 
             // TODO: check global resources and determine target resource
@@ -247,6 +271,10 @@ class MyRobot extends BCAbstractRobot {
 
     castle_talk(value) {
         return this.castleTalk(value);
+    }
+
+    is_radioing(robot) {
+        return this.isRadioing(robot);
     }
 
     get_visible_robots() {
@@ -557,5 +585,13 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return ordered_resources;
+    }
+
+    encode_coordinates(square) {
+        return (square[0] | square[1] << 6);
+    }
+
+    decode_coordinates(signal) {
+        return [signal & 0x003f, (signal & 0x0f30) >> 6];
     }
 }
