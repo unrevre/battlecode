@@ -16,8 +16,8 @@ class MyRobot extends BCAbstractRobot {
         this.castles = 0;
         this.pilgrims = 0;
 
-        this.karbonite_deposits = null;
-        this.fuel_deposits = null;
+        this.ordered_karbonite = [];
+        this.ordered_fuel = [];
 
         this.nearest_deposit = null;
         this.nearest_karbonite = null;
@@ -66,12 +66,14 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (step == 0) {
-                // TODO: track resource locations
-                this.karbonite_deposits = this.get_resources(
-                    this.karbonite_map);
-                this.fuel_deposits = this.get_resources(this.fuel_map);
-
                 this.symmetry = this.guess_map_symmetry();
+
+                this.ordered_karbonite = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_resources(
+                        this.karbonite_map)));
+                this.ordered_fuel = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_resources(
+                        this.fuel_map)));
             }
 
             else if (step == 1) {
@@ -183,7 +185,8 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                this.path = this.astar([this.me.x, this.me.y], this.target);
+                this.path = this.astar([this.me.x, this.me.y], this.target,
+                    this.get_adjacent_passable_empty_squares_at.bind(this));
             }
 
             // proceed to target
@@ -286,6 +289,24 @@ class MyRobot extends BCAbstractRobot {
         // TODO: full map symmetry scan
 
         return null;
+    }
+
+    filter_by_map_symmetry(coords) {
+        if (this.symmetry == null) {
+            return [];
+        }
+
+        var square = [this.me.x, this.me.y];
+        var side = (square[this.symmetry] > this.map.length / 2);
+
+        var filtered = [];
+        for (var i = 0; i < coords.length; i++) {
+            if ((coords[i][this.symmetry] > this.map.length / 2) == side) {
+                filtered.push(coords[i]);
+            }
+        }
+
+        return filtered;
     }
 
     get_adjacent_squares() {
@@ -416,7 +437,7 @@ class MyRobot extends BCAbstractRobot {
         return closest;
     }
 
-    astar(start, end) {
+    astar(start, end, adjacency) {
         var trace = {};
 
         var G = {};
@@ -453,9 +474,9 @@ class MyRobot extends BCAbstractRobot {
             delete open_squares[head];
             closed_squares[head] = 0;
 
-            var apsquares = this.get_adjacent_passable_empty_squares_at(head);
-            for (var i = 0; i < apsquares.length; i++) {
-                var square = apsquares[i];
+            var adjacent = adjacency(head);
+            for (var i = 0; i < adjacent.length; i++) {
+                var square = adjacent[i];
 
                 if (closed_squares[square] == 0) {
                     continue;
@@ -495,5 +516,26 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return next;
+    }
+
+    order_resources(resources) {
+        var resource_paths = [];
+        for (var i = 0; i < resources.length; i++) {
+            resource_paths[i] = (this.astar(
+                [this.me.x, this.me.y], resources[i],
+                this.get_adjacent_passable_squares_at.bind(this)));
+        }
+
+        resource_paths.sort(function(r, s) {
+            return r.length - s.length; });
+
+        var ordered_resources = [];
+        for (var i = 0; i < resource_paths.length; i++) {
+            var path = resource_paths[i];
+            ordered_resources.push(
+                [path[path.length - 1], path[0], path.length]);
+        }
+
+        return ordered_resources;
     }
 }
