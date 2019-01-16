@@ -11,8 +11,10 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
-        this.nearest_deposit = null;
+        this.karbonite_deposits = null;
+        this.fuel_deposits = null;
 
+        this.nearest_deposit = null;
         this.nearest_karbonite = null;
         this.nearest_fuel = null;
 
@@ -29,13 +31,22 @@ class MyRobot extends BCAbstractRobot {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            if (step < 10) {
+            if (step == 0) {
+                // TODO: track resource locations
+                this.karbonite_deposits = this.get_resources(
+                    this.karbonite_map);
+                this.fuel_deposits = this.get_resources(this.fuel_map);
+            }
+
+            // TODO: decide when to build pilgrims
+            if (step < 2) {
                 var buildable = this.get_adjacent_passable_empty_squares();
-                if (buildable.length > 0) {
-                    return this.build_unit(SPECS.PILGRIM,
-                                           buildable[0][0] - this.me.x,
-                                           buildable[0][1] - this.me.y);
-                }
+                // TODO: find closest buildable square to target
+                var build_target = buildable[0];
+                // TODO: castle talk to increment pilgrim number
+                return this.build_unit(SPECS.PILGRIM,
+                                       build_target[0] - this.me.x,
+                                       build_target[1] - this.me.y);
             }
         }
 
@@ -269,7 +280,7 @@ class MyRobot extends BCAbstractRobot {
         return resource_map[this.me.y][this.me.x];
     }
 
-    get_nearest_resource(resource_map) {
+    get_resources(resource_map) {
         var width = resource_map[0].length;
         var height = resource_map.length;
 
@@ -281,6 +292,12 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
         }
+
+        return resources;
+    }
+
+    get_nearest_resource(resource_map) {
+        var resources = this.get_resources(resource_map);
 
         // NOTE: assume resources cannot be an empty array
         var closest = resources[0];
