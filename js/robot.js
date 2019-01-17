@@ -280,11 +280,13 @@ class MyRobot extends BCAbstractRobot {
             var enemies = this.get_visible_enemies();
             for (var i = 0; i < enemies.length; i++) {
                 var enemy = enemies[i];
-                this.log('  - attack unit [' + enemy.id + '], type ('
-                    + enemy.unit + ') at ' + enemy.x - this.me.x + ', '
-                    + enemy.y - this.me.y);
-                return this.attack(enemy.x - this.me.x,
-                                   enemy.y - this.me.y);
+                if (this.in_attack_range([enemy.x, enemy.y])) {
+                    this.log('  - attack unit [' + enemy.id + '], type ('
+                        + enemy.unit + ') at ' + enemy.x - this.me.x + ', '
+                        + enemy.y - this.me.y);
+                    return this.attack(enemy.x - this.me.x,
+                                       enemy.y - this.me.y);
+                }
             }
 
             if (this.target != null) {
@@ -655,5 +657,14 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return enemies;
+    }
+
+    in_attack_range(square) {
+        const min_attack_range = [0, 0, 0, 1, 16, 1];
+        const max_attack_range = [0, 0, 0, 16, 64, 16];
+
+        var range = this.distance([this.me.x, this.me.y], square);
+        return ((range <= max_attack_range[this.me.unit])
+            && (range >= min_attack_range[this.me.unit]));
     }
 }
