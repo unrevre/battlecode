@@ -439,7 +439,7 @@ class MyRobot extends BCAbstractRobot {
             var adjy = this.me.y + this.compass[i][1];
             if (0 <= adjx && adjx < this.size
                     && 0 <= adjy && adjy < this.size
-                    && map[adjy][adjx] && !nonempty[adjy][adjx]) {
+                    && map[adjy][adjx] && nonempty[adjy][adjx] < 1) {
                 adjacent.push([adjx, adjy]);
             }
         }
@@ -474,7 +474,7 @@ class MyRobot extends BCAbstractRobot {
             var adjy = square[1] + this.compass[i][1];
             if (0 <= adjx && adjx < this.size
                     && 0 <= adjy && adjy < this.size
-                    && map[adjy][adjx] && !nonempty[adjy][adjx]) {
+                    && map[adjy][adjx] && nonempty[adjy][adjx] < 1) {
                 adjacent.push([adjx, adjy]);
             }
         }
