@@ -11,7 +11,7 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
-        this.unit_karbonite_costs = [0, 50, 10, 20, 25, 30];
+        this.unit_karbonite_costs = [0, 50, 10, 15, 25, 30];
         this.unit_fuel_costs = [0, 200, 50, 50, 50, 50];
 
         this.size = null;
@@ -934,8 +934,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     in_attack_range(square) {
-        const min_attack_range = [0, 0, 0, 1, 16, 1];
-        const max_attack_range = [0, 0, 0, 16, 64, 16];
+        const min_attack_range = [1, 0, 0, 1, 16, 1];
+        const max_attack_range = [64, 0, 0, 16, 64, 16];
 
         var range = this.distance([this.me.x, this.me.y], square);
         return ((range <= max_attack_range[this.me.unit])
