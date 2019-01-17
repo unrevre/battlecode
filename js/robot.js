@@ -374,10 +374,11 @@ class MyRobot extends BCAbstractRobot {
         return this.getPassableMap();
     }
 
-    is_passable(x, y) {
+    is_passable(square) {
         var map = this.map;
 
-        if (0 <= x && x < this.size && 0 <= y && y < this.size) {
+        if (0 <= square[0] && square[0] < this.size
+                && 0 <= square[1] && square[1] < this.size) {
             return map[y][x];
         }
 
@@ -385,7 +386,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_buildable(square) {
-        if (!this.is_passable(square[0], square[1])) {
+        if (!this.is_passable(square)) {
             return false;
         }
 
