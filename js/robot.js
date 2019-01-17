@@ -323,6 +323,19 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
+                if (this.in_vision(this.target)) {
+                    // TODO: attack mode: find best angle of attack - least
+                    // dangerous square in range of target
+                    // TODO: prefer spreading out units (same team)
+                    // TODO: assume target is stationary (castle/church) -
+                    // chasing is mostly pointless and rather dangerous
+                    this.target = this.smear_centred(this.target);
+                }
+
+                else if (!this.is_passable(this.target)) {
+                    this.target = this.smear_directed(this.target);
+                }
+
                 this.path = this.astar([this.me.x, this.me.y], this.target,
                     this.get_adjacent_passable_empty_squares_at.bind(this));
             }
@@ -525,6 +538,38 @@ class MyRobot extends BCAbstractRobot {
         return (r[0] - s[0]) * (r[0] - s[0]) + (r[1] - s[1]) * (r[1] - s[1]);
     }
 
+    smear_centred(square) {
+        var x = square[0];
+        var y = square[1];
+
+        var reachables = [];
+        for (var i = 0; i < 8; i++) {
+            var adjx = square[0] + this.compass[i][0];
+            var adjy = square[1] + this.compass[i][1];
+            if (this.is_passable_and_empty([adjx, adjy])) {
+                reachables.push([adjx, adjy]);
+            }
+        }
+
+        return reachables[Math.floor(Math.random() * reachables.length)];
+    }
+
+    smear_directed(square) {
+        var x = square[0];
+        var y = square[1];
+
+        var reachables = [];
+        for (var i = 0; i < 4; i++) {
+            for (var j = 0; j < 4; j++) {
+                if (this.is_passable_and_empty([x + i, y + j])) {
+                    reachables.push([x + i, y + j]);
+                }
+            }
+        }
+
+        return reachables[Math.floor(Math.random() * reachables.length)];
+    }
+
     on_resource(resource_map) {
         return resource_map[this.me.y][this.me.x];
     }
@@ -677,6 +722,10 @@ class MyRobot extends BCAbstractRobot {
 
     decode_coordinates(signal) {
         return [signal & 0x003f, (signal & 0x0fc0) >> 6];
+    }
+
+    in_vision(square) {
+        return this.get_visible_robot_map()[square[1]][square[0]] != -1;
     }
 
     get_visible_enemies() {
