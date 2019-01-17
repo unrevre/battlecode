@@ -263,8 +263,8 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                this.path = this.astar([this.me.x, this.me.y], this.target,
-                    this.get_adjacent_passable_empty_squares_at.bind(this));
+                this.path = this.jump_point_search([this.me.x, this.me.y],
+                                                   this.target);
             }
 
             // proceed to target
@@ -336,15 +336,16 @@ class MyRobot extends BCAbstractRobot {
                     this.target = this.smear_directed(this.target);
                 }
 
-                this.path = this.astar([this.me.x, this.me.y], this.target,
-                    this.get_adjacent_passable_empty_squares_at.bind(this));
+                this.path = this.jump_point_search([this.me.x, this.me.y],
+                                                   this.target);
             }
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.path, this.me.unit);
-                this.log('  - moving to destination: ('
-                    + destination[0] + ', ' + destination[1] + ')');
+                var destination = this.take_step(this.pixelate(this.path),
+                                                 this.me.unit);
+                this.log('  - moving to destination: (' + destination[0] + ', '
+                    + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
                                  destination[1] - this.me.y);
             }
@@ -609,8 +610,6 @@ class MyRobot extends BCAbstractRobot {
         return closest;
     }
 
-    // TODO: implement jump point search and compare performance
-
     // TODO: modify adjacency functions to enable teleportation during
     // pathfinding
     astar(start, end, adjacency) {
@@ -676,6 +675,156 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
+    identify_jump_points(head, end) {
+        var jump_points = [];
+
+        var squares = this.get_adjacent_passable_squares_at(head);
+        for (var i = 0; i < squares.length; i++) {
+            var dx = squares[i][0] - head[0]
+            var dy = squares[i][1] - head[1]
+
+            var jump_point = this.jump(head, dx, dy, end);
+            if (jump_point != null) {
+                jump_points.push(jump_point);
+            }
+        }
+
+        return jump_points;
+    }
+
+    jump(square, dx, dy, end) {
+        var probe_x = square[0] + dx;
+        var probe_y = square[1] + dy;
+
+        if (!this.is_passable([probe_x, probe_y])) {
+            return null;
+        }
+
+        if (probe_x == end[0] && probe_y == end[1]) {
+            return end;
+        }
+
+        var head_x = probe_x;
+        var head_y = probe_y;
+
+        if (dx * dy != 0) {
+            while (true) {
+                if ((this.is_passable([head_x - dx, head_y + dy])
+                     && !this.is_passable([head_x - dx, head_y]))
+                        || (this.is_passable([head_x + dx, head_y - dy])
+                            && !this.is_passable([head_x, head_y - dy]))) {
+                    return [head_x, head_y];
+                }
+
+                if (this.jump([head_x, head_y], dx, 0, end) != null
+                        || this.jump([head_x, head_y], 0, dy, end) != null) {
+                    return [head_x, head_y];
+                }
+
+                head_x += dx;
+                head_y += dy;
+
+                if (!this.is_passable([head_x, head_y])) {
+                    return null;
+                }
+
+                if (probe_x == end[0] && probe_y == end[1]) {
+                    return end;
+                }
+            }
+        }
+
+        else if (dx != 0) {
+            while (true) {
+                if ((this.is_passable([head_x + dx, probe_y + 1])
+                     && !this.is_passable([head_x, probe_y + 1]))
+                        || (this.is_passable([head_x + dx, probe_y - 1])
+                            && !this.is_passable([head_x, probe_y - 1]))) {
+                    return [head_x, probe_y];
+                }
+
+                head_x += dx;
+
+                if (!this.is_passable([head_x, probe_y])) {
+                    return null;
+                }
+
+                if (probe_x == end[0] && probe_y == end[1]) {
+                    return end;
+                }
+            }
+        }
+
+        else {
+            while (true) {
+                if ((this.is_passable([probe_x + 1, probe_y + dy])
+                     && !this.is_passable([probe_x + 1, probe_y]))
+                        || (this.is_passable([probe_x - 1, probe_y + dy])
+                            && !this.is_passable([probe_x - 1, probe_y]))) {
+                    return [probe_x, head_y];
+                }
+
+                head_y += dy;
+
+                if (!this.is_passable([probe_x, head_y])) {
+                    return null;
+                }
+
+                if (probe_x == end[0] && probe_y == end[1]) {
+                    return end;
+                }
+            }
+        }
+    }
+
+    jump_point_search(start, end) {
+        var trace = {};
+
+        var G = {};
+        var closed = {};
+        var points = [start];
+
+        G[start] = 0;
+
+        while (points.length > 0) {
+            var head = points[0];
+            points.splice(0, 1);
+
+            if (head[0] == end[0] && head[1] == end[1]) {
+                var path = [head];
+                while (head in trace) {
+                    head = trace[head];
+                    path.push(head);
+                }
+                path.reverse();
+                return path;
+            }
+
+            closed[head] = 0;
+
+            var squares = this.identify_jump_points(head, end);
+            for (var i = 0; i < squares.length; i++) {
+                var square = squares[i];
+
+                if (closed[square] == 0) {
+                    continue;
+                }
+
+                var total = parseInt(G[head]) + this.metric(head, square);
+                if (total >= parseInt(G[square])) {
+                    continue;
+                }
+
+                G[square] = total;
+                points.push(square);
+                trace[square] = head;
+            }
+        }
+
+        this.log('ERROR: no path found!');
+        return null;
+    }
+
     take_step(path, speed) {
         const movement_speed = [0, 0, 4, 9, 4, 4];
         const range = movement_speed[this.me.unit];
@@ -693,6 +842,24 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return next;
+    }
+
+    pixelate(path) {
+        var points = [];
+        for (var i = 1; i < path.length; i++) {
+            var diff = [path[i][0] - path[i - 1][0],
+                        path[i][1] - path[i - 1][1]];
+            var steps = Math.max(Math.abs(diff[0]), Math.abs(diff[1]));
+            var direction = [diff[0] / steps, diff[1] / steps];
+            for (var j = 0; j < steps; j++) {
+                points.push([parseInt(path[i - 1][0] + j * direction[0]),
+                             parseInt(path[i - 1][1] + j * direction[1])]);
+            }
+        }
+
+        points.push(path[path.length - 1]);
+
+        return points;
     }
 
     order_resources(resources) {
