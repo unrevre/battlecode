@@ -73,6 +73,8 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            // TODO: restrict ordering to nearby resources - minimise time
+            // required for pathing
             if (step == 0) {
                 this.symmetry = this.guess_map_symmetry();
 
@@ -106,11 +108,15 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // build on closest buildable square to target
-            // TODO: decide what to build
             var target_square = null;
             var target_unit = null;
+
             // signal target location to built unit
             var signal_value = null;
+
+            // TODO: decide units/target resource based on distribution of
+            // resources
+            // TODO: defend with (stationary) prophets against enemies
             if (step == 0) {
                 target_square = this.ordered_karbonite[0][1];
                 target_unit = SPECS.PILGRIM;
@@ -129,6 +135,7 @@ class MyRobot extends BCAbstractRobot {
                 if (this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     target_unit = SPECS.CRUSADER;
+                    // TODO: compress more castle locations in signal value
                     if (this.enemies.length > 0) {
                         signal_value = this.encode_coordinates(this.enemies[0]);
                     }
@@ -228,6 +235,9 @@ class MyRobot extends BCAbstractRobot {
             // possible to try to build churches in the path between the
             // resource and the original 'birth' castle/church
 
+            // TODO: deposit resources more frequently if close to
+            // castle/church so that units may be built earlier
+
             if (this.is_adjacent(this.nearest_deposit)
                     && (this.me.karbonite || this.me.fuel)) {
                 this.target = null;
@@ -286,6 +296,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // basic attacks
+            // TODO: prioritise targets
+            // TODO: smart targeting - rush castles
             var enemies = this.get_visible_enemies();
             for (var i = 0; i < enemies.length; i++) {
                 var enemy = enemies[i];
@@ -297,6 +309,16 @@ class MyRobot extends BCAbstractRobot {
                                        enemy.y - this.me.y);
                 }
             }
+
+            // TODO: fuzzy target destinations to surround enemies properly
+            // TODO: target random square within 4x4 block in (+, +) direction
+            // to account for truncated coordinate information (communications
+            // limitation)
+
+            // TODO: wrap around defenders (if possible) to attack castle
+            // TODO: consider using pilgrims for vision
+
+            // TODO: scout/hunt pilgrims if idle
 
             this.log('  target: ' + this.target);
 
@@ -323,6 +345,8 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit == SPECS.PREACHER) {
             this.log('Preacher [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
+
+            // TODO: special aoe targetting for preachers
         }
     }
 
@@ -546,6 +570,10 @@ class MyRobot extends BCAbstractRobot {
         return closest;
     }
 
+    // TODO: implement jump point search and compare performance
+
+    // TODO: modify adjacency functions to enable teleportation during
+    // pathfinding
     astar(start, end, adjacency) {
         var trace = {};
 
