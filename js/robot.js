@@ -24,6 +24,7 @@ class MyRobot extends BCAbstractRobot {
         this.ordered_fuel = [];
 
         this.nearest_deposit = null;
+        this.birthplace = null;
         this.birthmark = null;
 
         this.friends = [];
@@ -190,6 +191,7 @@ class MyRobot extends BCAbstractRobot {
                         this.target = this.decode_coordinates(
                             visibles[i].signal);
                         this.birthmark = this.target;
+                        this.birthplace = [this.me.x, this.me.y];
                         break;
                     }
                 }
@@ -237,7 +239,7 @@ class MyRobot extends BCAbstractRobot {
 
             // return to nearest resource deposit point
             if (this.me.karbonite > 18 || this.me.fuel > 90) {
-                this.target = this.nearest_deposit;
+                this.target = this.birthplace;
             }
 
             // attempt to target remembered resource after any interruption
