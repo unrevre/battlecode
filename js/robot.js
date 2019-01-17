@@ -79,10 +79,10 @@ class MyRobot extends BCAbstractRobot {
                 this.symmetry = this.guess_map_symmetry();
 
                 this.ordered_karbonite = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
                         this.karbonite_map)));
                 this.ordered_fuel = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
             }
 
@@ -589,26 +589,17 @@ class MyRobot extends BCAbstractRobot {
         return resources;
     }
 
-    get_nearest_resource(resource_map) {
+    get_local_resources(resource_map) {
+        var local_resources = [];
+
         var resources = this.get_resources(resource_map);
-
-        // NOTE: assume resources cannot be an empty array
-        var closest = resources[0];
-
-        // correct procedure is to perform pathing for each element of this
-        // list. probably a good idea to store closest n resource squares
-        // permanently
-        var now = [this.me.x, this.me.y];
-        var min_dist = this.metric(now, resources[0]);
-        for (var i = 1; i < resources.length; i++) {
-            var dist = this.metric(now, resources[i]);
-            if (dist < min_dist) {
-                closest = resources[i];
-                min_dist = dist;
+        for (var i = 0; i < resources.length; i++) {
+            if (this.metric([this.me.x, this.me.y], resources[i]) < 9) {
+                local_resources.push(resources[i]);
             }
         }
 
-        return closest;
+        return local_resources;
     }
 
     // TODO: modify adjacency functions to enable teleportation during
