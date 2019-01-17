@@ -117,14 +117,14 @@ class MyRobot extends BCAbstractRobot {
             // TODO: decide units/target resource based on distribution of
             // resources
             // TODO: defend with (stationary) prophets against enemies
-            if (step == 0) {
+            if (step == 0 && this.ordered_karbonite.length > 0) {
                 target_square = this.ordered_karbonite[0][1];
                 target_unit = SPECS.PILGRIM;
                 signal_value = this.encode_coordinates(
                     this.ordered_karbonite[0][0]);
             }
 
-            else if (step == 1) {
+            else if (step == 1 && this.ordered_fuel.length > 0) {
                 target_square = this.ordered_fuel[0][1];
                 target_unit = SPECS.PILGRIM;
                 signal_value = this.encode_coordinates(
@@ -454,6 +454,7 @@ class MyRobot extends BCAbstractRobot {
 
         // TODO: full map symmetry scan
 
+        this.log('WARNING: map symmetry not determined');
         return null;
     }
 
