@@ -466,8 +466,7 @@ class MyRobot extends BCAbstractRobot {
         for (var i = 0; i < 8; i++) {
             var adjx = this.me.x + this.compass[i][0];
             var adjy = this.me.y + this.compass[i][1];
-            if (0 <= adjx && adjx < this.size
-                    && 0 <= adjy && adjy < this.size) {
+            if (this.is_passable([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
         }
@@ -476,16 +475,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_empty_squares() {
-        var map = this.map;
-        var nonempty = this.get_visible_robot_map();
-
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = this.me.x + this.compass[i][0];
             var adjy = this.me.y + this.compass[i][1];
-            if (0 <= adjx && adjx < this.size
-                    && 0 <= adjy && adjy < this.size
-                    && map[adjy][adjx] && nonempty[adjy][adjx] < 1) {
+            if (this.is_passable_and_empty([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
         }
@@ -494,15 +488,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_squares_at(square) {
-        var map = this.map;
-
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = square[0] + this.compass[i][0];
             var adjy = square[1] + this.compass[i][1];
-            if (0 <= adjx && adjx < this.size
-                    && 0 <= adjy && adjy < this.size
-                    && map[adjy][adjx]) {
+            if (this.is_passable([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
         }
@@ -511,16 +501,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_empty_squares_at(square) {
-        var map = this.map;
-        var nonempty = this.get_visible_robot_map();
-
         var adjacent = [];
         for (var i = 0; i < 8; i++) {
             var adjx = square[0] + this.compass[i][0];
             var adjy = square[1] + this.compass[i][1];
-            if (0 <= adjx && adjx < this.size
-                    && 0 <= adjy && adjy < this.size
-                    && map[adjy][adjx] && nonempty[adjy][adjx] < 1) {
+            if (this.is_passable_and_empty([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
         }
