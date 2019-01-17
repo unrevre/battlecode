@@ -199,7 +199,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.target != null
                     && this.target[0] == this.me.x
                     && this.target[1] == this.me.y) {
-                this.target == null;
+                this.target = null;
             }
 
             // TODO: check for attacking units and check distance to deposit
