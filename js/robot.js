@@ -323,7 +323,7 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                if (this.in_vision(this.target)) {
+                if (this.is_visible(this.target)) {
                     // TODO: attack mode: find best angle of attack - least
                     // dangerous square in range of target
                     // TODO: prefer spreading out units (same team)
@@ -883,7 +883,7 @@ class MyRobot extends BCAbstractRobot {
         return [signal & 0x003f, (signal & 0x0fc0) >> 6];
     }
 
-    in_vision(square) {
+    is_visible(square) {
         return this.get_visible_robot_map()[square[1]][square[0]] != -1;
     }
 
