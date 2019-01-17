@@ -228,6 +228,7 @@ class MyRobot extends BCAbstractRobot {
 
             if (this.is_adjacent(this.nearest_deposit)
                     && (this.me.karbonite || this.me.fuel)) {
+                this.target = null;
                 this.log('  - depositing resources');
                 return this.give(this.nearest_deposit[0] - this.me.x,
                                  this.nearest_deposit[1] - this.me.y,
