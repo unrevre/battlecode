@@ -375,23 +375,31 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_passable(square) {
-        var map = this.map;
+        var x = square[0];
+        var y = square[1];
 
-        if (0 <= square[0] && square[0] < this.size
-                && 0 <= square[1] && square[1] < this.size) {
-            return map[y][x];
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
+            return false;
         }
 
-        return false;
+        return this.map[y][x];
     }
 
-    is_buildable(square) {
-        if (!this.is_passable(square)) {
+    is_passable_and_empty(square) {
+        var x = square[0];
+        var y = square[1];
+
+        if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return false;
         }
 
         var nonempty = this.get_visible_robot_map();
-        return !nonempty[square[1]][square[0]];
+
+        return this.map[y][x] && (nonempty[y][x] < 1);
+    }
+
+    is_buildable(square) {
+        return this.is_passable_and_empty(square);
     }
 
     is_adjacent(square) {
