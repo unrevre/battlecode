@@ -269,8 +269,8 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                this.path = this.jump_point_search([this.me.x, this.me.y],
-                                                   this.target);
+                this.path = this.astar([this.me.x, this.me.y], this.target,
+                    this.get_adjacent_passable_empty_squares_at.bind(this));
             }
 
             // proceed to target
@@ -371,8 +371,8 @@ class MyRobot extends BCAbstractRobot {
                     this.target = this.smear_directed(this.target);
                 }
 
-                this.path = this.jump_point_search([this.me.x, this.me.y],
-                                                   this.target);
+                this.path = this.astar([this.me.x, this.me.y], this.target,
+                    this.get_adjacent_passable_empty_squares_at.bind(this));
             }
 
             // proceed to target destination
