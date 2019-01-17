@@ -641,7 +641,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     decode_coordinates(signal) {
-        return [signal & 0x003f, (signal & 0x0f30) >> 6];
+        return [signal & 0x003f, (signal & 0x0fc0) >> 6];
     }
 
     get_visible_enemies() {
