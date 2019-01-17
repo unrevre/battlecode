@@ -11,6 +11,9 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
+        this.unit_karbonite_costs = [0, 50, 10, 20, 25, 30];
+        this.unit_fuel_costs = [0, 200, 50, 50, 50, 50];
+
         this.size = null;
         this.symmetry = null;
 
@@ -122,9 +125,12 @@ class MyRobot extends BCAbstractRobot {
             }
 
             else {
-                target_unit = SPECS.CRUSADER;
-                if (this.enemies.length > 0) {
-                    signal_value = this.encode_coordinates(this.enemies[0]);
+                if (this.karbonite >= this.unit_karbonite_costs[3]
+                        && this.fuel >= this.unit_fuel_costs[3]) {
+                    target_unit = SPECS.CRUSADER;
+                    if (this.enemies.length > 0) {
+                        signal_value = this.encode_coordinates(this.enemies[0]);
+                    }
                 }
             }
 
