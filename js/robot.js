@@ -78,6 +78,7 @@ class MyRobot extends BCAbstractRobot {
             if (step == 0) {
                 this.symmetry = this.guess_map_symmetry();
 
+                // TODO: contingency for when no resources are found
                 this.ordered_karbonite = this.order_resources(
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.karbonite_map)));
@@ -117,18 +118,22 @@ class MyRobot extends BCAbstractRobot {
             // TODO: decide units/target resource based on distribution of
             // resources
             // TODO: defend with (stationary) prophets against enemies
-            if (step == 0 && this.ordered_karbonite.length > 0) {
-                target_square = this.ordered_karbonite[0][1];
-                target_unit = SPECS.PILGRIM;
-                signal_value = this.encode_coordinates(
-                    this.ordered_karbonite[0][0]);
+            if (step == 0) {
+                if (this.ordered_karbonite.length > 0) {
+                    target_unit = SPECS.PILGRIM;
+                    target_square = this.ordered_karbonite[0][1];
+                    signal_value = this.encode_coordinates(
+                        this.ordered_karbonite[0][0]);
+                }
             }
 
-            else if (step == 1 && this.ordered_fuel.length > 0) {
-                target_square = this.ordered_fuel[0][1];
-                target_unit = SPECS.PILGRIM;
-                signal_value = this.encode_coordinates(
-                    this.ordered_fuel[0][0]);
+            else if (step == 1) {
+                if (this.ordered_fuel.length > 0) {
+                    target_unit = SPECS.PILGRIM;
+                    target_square = this.ordered_fuel[0][1];
+                    signal_value = this.encode_coordinates(
+                        this.ordered_fuel[0][0]);
+                }
             }
 
             else {
