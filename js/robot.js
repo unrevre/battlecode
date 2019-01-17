@@ -917,7 +917,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_visible(square) {
-        return this.get_visible_robot_map()[square[1]][square[0]] != -1;
+        const vision_range = [100, 100, 100, 49, 64, 16];
+
+        return (this.distance([this.me.x, this.me.y], square)
+            <= vision_range[this.me.unit]);
     }
 
     get_visible_enemies() {
