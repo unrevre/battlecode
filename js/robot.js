@@ -49,6 +49,7 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: listen for castle talk from other castles/churches for
             // accounting of pilgrims - avoid overbuilding
+            // TODO: listen for crusaders asking for another target
             var visibles = this.get_visible_robots();
             for (var i = 0; i < visibles.length; i++) {
                 var robot = visibles[i];
@@ -300,19 +301,50 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // basic attacks
-            // TODO: prioritise targets
-            // TODO: smart targeting - rush castles
             var enemies = this.get_visible_enemies();
-            for (var i = 0; i < enemies.length; i++) {
-                var enemy = enemies[i];
-                if (this.in_attack_range([enemy.x, enemy.y])) {
-                    this.log('  - attack unit [' + enemy.id + '], type ('
-                        + enemy.unit + ') at ' + enemy.x - this.me.x + ', '
-                        + enemy.y - this.me.y);
-                    return this.attack(enemy.x - this.me.x,
-                                       enemy.y - this.me.y);
+
+            // close to target
+            if (this.target != null
+                    && this.metric([this.me.x, this.me.y], this.target) < 3) {
+                // identify enemy castle
+                var objective = null;
+                for (var i = 0; i < enemies.length; i++) {
+                    if (enemies[i].unit == 0) {
+                        objective = enemies[i];
+                        // TODO: check turn priorities to determine target,
+                        // instead of blindly attacking castle
+                        if (this.in_attack_range(
+                                [objective.x, objective.y])) {
+                            this.log('  - attack unit [' + objective.id
+                                + '], type (' + objective.unit + ') at '
+                                + (objective.x - this.me.x) + ', '
+                                + objective.y - this.me.y);
+                            return this.attack(objective.x - this.me.x,
+                                               objective.y - this.me.y);
+                        }
+
+                        break;
+                    }
                 }
+
+                // ask castle for another target if enemy castle is destroyed
+                if (objective == null) {
+                    this.target = null;
+                    this.castle_talk(0xCD);
+                }
+            }
+
+            // basic attacks
+            // TODO: prioritise targets, instead of attacking first target
+            // TODO: decide target to attack, somehow..
+            var attackables = this.filter_by_attack_range(enemies);
+            if (attackables.length > 0) {
+                var attackable = attackables[0];
+                this.log('  - attack unit [' + attackable.id + '], type ('
+                    + attackable.unit + ') at ' + attackable.x - this.me.x
+                    + ', ' + attackable.y - this.me.y);
+                return this.attack(attackable.x - this.me.x,
+                                   attackable.y - this.me.y);
             }
 
             // TODO: fuzzy target destinations to surround enemies properly
@@ -322,8 +354,6 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: wrap around defenders (if possible) to attack castle
             // TODO: consider using pilgrims for vision
-
-            // TODO: scout/hunt pilgrims if idle
 
             this.log('  target: ' + this.target);
 
@@ -910,5 +940,16 @@ class MyRobot extends BCAbstractRobot {
         var range = this.distance([this.me.x, this.me.y], square);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
+    }
+
+    filter_by_attack_range(enemies) {
+        var attackables = [];
+        for (var i = 0; i < enemies.range; i++) {
+            if (this.in_attack_range([enemies.x, enemies.y])) {
+                attackables.push(enemies);
+            }
+        }
+
+        return attackables;
     }
 }
