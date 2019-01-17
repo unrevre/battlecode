@@ -669,11 +669,9 @@ class MyRobot extends BCAbstractRobot {
 
     identify_jump_points(head, end) {
         var jump_points = [];
-
-        var squares = this.get_adjacent_passable_squares_at(head);
-        for (var i = 0; i < squares.length; i++) {
-            var dx = squares[i][0] - head[0]
-            var dy = squares[i][1] - head[1]
+        for (var i = 0; i < 8; i++) {
+            var dx = this.compass[i][0];
+            var dy = this.compass[i][1];
 
             var jump_point = this.jump(head, dx, dy, end);
             if (jump_point != null) {
