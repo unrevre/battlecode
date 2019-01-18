@@ -295,7 +295,6 @@ class MyRobot extends BCAbstractRobot {
                             && this.is_radioing(visibles[i])) {
                         this.target = this.decode_coordinates(
                             visibles[i].signal);
-                        this.birthmark = this.target;
                         break;
                     }
                 }
@@ -303,36 +302,37 @@ class MyRobot extends BCAbstractRobot {
 
             var enemies = this.get_visible_enemies();
 
-            // close to target
-            if (this.target != null
+            // positive identification of target is guaranteed at this range
+            if (this.target != null && this.birthmark == null
                     && this.metric([this.me.x, this.me.y], this.target) < 3) {
                 // identify enemy castle
-                var objective = null;
                 for (var i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
-                        this.target = enemies[i];
-                        objective = this.target;
-                        // TODO: check turn priorities to determine target,
-                        // instead of blindly attacking castle
-                        if (this.in_attack_range(
-                                [objective.x, objective.y])) {
-                            this.log('  - attack unit [' + objective.id
-                                + '], type (' + objective.unit + ') at '
-                                + (objective.x - this.me.x) + ', '
-                                + objective.y - this.me.y);
-                            return this.attack(objective.x - this.me.x,
-                                               objective.y - this.me.y);
-                        }
+                        this.birthmark = enemies[i];
+                        this.target = [this.birthmark.x, this.birthmark.y];
 
                         break;
                     }
                 }
 
                 // ask castle for another target if enemy castle is destroyed
-                if (objective == null) {
+                if (this.birthmark == null) {
                     this.target = null;
                     this.castle_talk(0xCD);
                 }
+            }
+
+            // TODO: check turn priorities to determine target, instead of
+            // blindly attacking castle
+            if (this.birthmark != null
+                    && this.in_attack_range([this.birthmark.x,
+                                             this.birthmark.y])) {
+                this.log('  - attack unit [' + this.birthmark.id
+                    + '], type (' + this.birthmark.unit + ') at '
+                    + (this.birthmark.x - this.me.x) + ', '
+                    + this.birthmark.y - this.me.y);
+                return this.attack(this.birthmark.x - this.me.x,
+                                   this.birthmark.y - this.me.y);
             }
 
             // basic attacks
