@@ -302,24 +302,22 @@ class MyRobot extends BCAbstractRobot {
 
             var enemies = this.get_visible_enemies();
 
-            // positive identification of target is guaranteed at this range
-            if (this.target != null && this.birthmark == null
-                    && this.metric([this.me.x, this.me.y], this.target) < 3) {
+            // identify objective if possible
+            if (this.target != null && this.birthmark == null) {
                 // identify enemy castle
                 for (var i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
                         this.birthmark = enemies[i];
                         this.target = [this.birthmark.x, this.birthmark.y];
-
                         break;
                     }
                 }
+            }
 
-                // ask castle for another target if enemy castle is destroyed
-                if (this.birthmark == null) {
-                    this.target = null;
-                    this.castle_talk(0xCD);
-                }
+            // ask castle for another target if enemy castle is destroyed
+            if (this.birthmark != null && this.birthmark.health == 0) {
+                this.target = null;
+                this.castle_talk(0xCD);
             }
 
             // TODO: check turn priorities to determine target, instead of
