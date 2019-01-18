@@ -359,7 +359,7 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                if (!this.is_passable(this.target)) {
+                if (!this.is_passable_and_empty(this.target)) {
                     this.target = this.smear_centred(this.target);
                 }
 
