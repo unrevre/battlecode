@@ -114,6 +114,7 @@ class MyRobot extends BCAbstractRobot {
             var target_unit = null;
 
             // signal target location to built unit
+            // TODO: radio exact coordinates, since communications are cheap
             var signal_value = null;
 
             // TODO: decide units/target resource based on distribution of
