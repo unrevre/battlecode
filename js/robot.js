@@ -315,23 +315,25 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // ask castle for another target if enemy castle is destroyed
-            if (this.birthmark != null && this.birthmark.health == 0) {
-                this.target = null;
-                this.castle_talk(0xCD);
-            }
-
             // TODO: check turn priorities to determine target, instead of
             // blindly attacking castle
             if (this.birthmark != null
                     && this.in_attack_range([this.birthmark.x,
                                              this.birthmark.y])) {
-                this.log('  - attack unit [' + this.birthmark.id
-                    + '], type (' + this.birthmark.unit + ') at '
-                    + (this.birthmark.x - this.me.x) + ', '
-                    + this.birthmark.y - this.me.y);
-                return this.attack(this.birthmark.x - this.me.x,
-                                   this.birthmark.y - this.me.y);
+                // ask castle for another target if enemy castle is destroyed
+                if (!this.is_visible_and_alive(this.birthmark)) {
+                    this.target = null;
+                    this.castle_talk(0xCD);
+                }
+
+                else {
+                    this.log('  - attack unit [' + this.birthmark.id
+                        + '], type (' + this.birthmark.unit + ') at '
+                        + (this.birthmark.x - this.me.x) + ', '
+                        + this.birthmark.y - this.me.y);
+                    return this.attack(this.birthmark.x - this.me.x,
+                                       this.birthmark.y - this.me.y);
+                }
             }
 
             // basic attacks
@@ -1015,6 +1017,17 @@ class MyRobot extends BCAbstractRobot {
 
     decode_coordinates(signal) {
         return [signal & 0x003f, (signal & 0x0fc0) >> 6];
+    }
+
+    is_visible_and_alive(robot) {
+        var visibles = this.get_visible_robots();
+        for (var i = 0; i < visibles.length; i++) {
+            if (visibles[i].id == robot.id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     is_visible(square) {
