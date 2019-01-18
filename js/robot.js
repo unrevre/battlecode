@@ -627,8 +627,6 @@ class MyRobot extends BCAbstractRobot {
         return local_resources;
     }
 
-    // TODO: modify adjacency functions to enable teleportation during
-    // pathfinding
     astar(start, end, adjacency) {
         var trace = {};
 
@@ -667,6 +665,120 @@ class MyRobot extends BCAbstractRobot {
             closed_squares[head] = 0;
 
             var adjacent = adjacency(head);
+            for (var i = 0; i < adjacent.length; i++) {
+                var square = adjacent[i];
+
+                if (closed_squares[square] == 0) {
+                    continue;
+                }
+
+                var total = parseInt(G[head]) + this.metric(head, square);
+
+                if (open_squares[square] != undefined
+                        && total >= parseInt(G[square])) {
+                    continue;
+                }
+
+                trace[square] = head;
+
+                G[square] = total;
+                open_squares[square] = total + this.metric(square, end);
+            }
+        }
+
+        this.log('ERROR: no path found!');
+        return null;
+    }
+
+    get_onion_rings_around(square) {
+        const ring_three = [
+            [0, -3], [1, -2], [2, -2], [2, -1],
+            [3, 0], [2, 1], [2, 2], [1, 2],
+            [0, 3], [-1, 2], [-2, 2], [-2, 1],
+            [-3, 0], [-2, -1], [-2, -2], [-1, -2]];
+        const ring_two = [
+            [0, -2], [1, -1], [2, 0], [1, 1],
+            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
+        const ring_one = [
+            [0, -1], [1, 0], [0, 1], [-1, 0]];
+
+        // FIXME: test efficiency of pruning
+        const ring_two_exclusions = [
+            [[-1, -2], [0, -3], [1, -2]], [[1, -2], [2, -1]],
+            [[2, -1], [3, 0], [2, 1]], [[2, 1], [1, 2]],
+            [[1, 2], [0, 3], [-1, 2]], [[-1, 2], [-2, 1]],
+            [[-2, 1], [-3, 0], [-2, -1]], [[-2, -1], [-1, -2]]];
+        const ring_one_exclusions = [
+            [[-1, -1], [0, -2], [1, -1]], [[1, -1], [2, 0], [1, 1]],
+            [[1, 1], [0, 2], [-1, 1]], [[-1, 1], [-2, 0], [-1, -1]]];
+
+        var adjacent = [];
+        for (var i = 0; i < 16; i++) {
+            var rngx = square[0] + ring_three[i][0];
+            var rngy = square[1] + ring_three[i][1];
+            if (this.is_passable_and_empty([rngx, rngy])) {
+                adjacent.push([rngx, rngy]);
+            }
+        }
+
+        for (var i = 0; i < 8; i++) {
+            var rngx = square[0] + ring_two[i][0];
+            var rngy = square[1] + ring_two[i][1];
+            if (this.is_passable_and_empty([rngx, rngy])) {
+                adjacent.push([rngx, rngy]);
+            }
+        }
+
+        for (var i = 0; i < 4; i++) {
+            var rngx = square[0] + ring_one[i][0];
+            var rngy = square[1] + ring_one[i][1];
+            if (this.is_passable_and_empty([rngx, rngy])) {
+                adjacent.push([rngx, rngy]);
+            }
+        }
+
+        return adjacent;
+    }
+
+    onion_search(start, end, range) {
+        var trace = {};
+
+        var G = {};
+        var open_squares = {};
+
+        G[start] = 0;
+        open_squares[start] = this.metric(start, end);
+
+        var closed_squares = {};
+
+        while (Object.keys(open_squares).length > 0) {
+            var head = null;
+            var score = 0;
+
+            for (var square in open_squares) {
+                var square_score = parseInt(open_squares[square]);
+                if (head == null || square_score < score) {
+                    head = JSON.parse('[' + square + ']');
+                    score = square_score;
+                }
+            }
+
+            // if (this.distance(head, end) <= range) {
+            if (head[0] == end[0] && head[1] == end[1]) {
+                var path = [head];
+                while (head in trace) {
+                    head = trace[head];
+                    path.push(head);
+                }
+                path.reverse();
+                path.splice(0, 1);
+                return path;
+            }
+
+            delete open_squares[head];
+            closed_squares[head] = 0;
+
+            var adjacent = this.get_onion_rings_around(head);
             for (var i = 0; i < adjacent.length; i++) {
                 var square = adjacent[i];
 
