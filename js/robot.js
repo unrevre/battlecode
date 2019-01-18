@@ -644,7 +644,7 @@ class MyRobot extends BCAbstractRobot {
             var score = 0;
 
             for (var square in open_squares) {
-                var square_score = parseInt(open_squares[square]);
+                var square_score = open_squares[square];
                 if (head == null || square_score < score) {
                     head = JSON.parse('[' + square + ']');
                     score = square_score;
@@ -673,10 +673,9 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                var total = parseInt(G[head]) + this.distance(head, square);
+                var total = G[head] + this.distance(head, square);
 
-                if (open_squares[square] != undefined
-                        && total >= parseInt(G[square])) {
+                if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
                 }
 
@@ -757,7 +756,7 @@ class MyRobot extends BCAbstractRobot {
             var score = 0;
 
             for (var square in open_squares) {
-                var square_score = parseInt(open_squares[square]);
+                var square_score = open_squares[square];
                 if (head == null || square_score < score) {
                     head = JSON.parse('[' + square + ']');
                     score = square_score;
@@ -786,10 +785,9 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                var total = parseInt(G[head]) + this.distance(head, square);
+                var total = G[head] + this.distance(head, square);
 
-                if (open_squares[square] != undefined
-                        && total >= parseInt(G[square])) {
+                if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
                 }
 
@@ -831,8 +829,8 @@ class MyRobot extends BCAbstractRobot {
             var steps = Math.max(Math.abs(diff[0]), Math.abs(diff[1]));
             var direction = [diff[0] / steps, diff[1] / steps];
             for (var j = 0; j < steps; j++) {
-                points.push([parseInt(path[i - 1][0] + j * direction[0]),
-                             parseInt(path[i - 1][1] + j * direction[1])]);
+                points.push([path[i - 1][0] + j * direction[0],
+                             path[i - 1][1] + j * direction[1]]);
             }
         }
 
