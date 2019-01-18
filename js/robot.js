@@ -364,8 +364,8 @@ class MyRobot extends BCAbstractRobot {
                     this.target = this.smear_centred(this.target);
                 }
 
-                this.path = this.astar([this.me.x, this.me.y], this.target,
-                    this.get_adjacent_passable_empty_squares_at.bind(this));
+                this.path = this.onion_search([this.me.x, this.me.y],
+                                              this.target, 9);
             }
 
             // proceed to target destination
@@ -764,9 +764,8 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // if (this.distance(head, end) <= range) {
-            if (head[0] == end[0] && head[1] == end[1]) {
-                var path = [head];
+            if (this.distance(head, end) <= range) {
+                var path = [end, head];
                 while (head in trace) {
                     head = trace[head];
                     path.push(head);
