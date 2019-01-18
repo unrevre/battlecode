@@ -17,7 +17,7 @@ class MyRobot extends BCAbstractRobot {
         this.size = null;
         this.symmetry = null;
 
-        this.castles = 0;
+        this.castles = 1;
         this.pilgrims = 0;
 
         this.ordered_karbonite = [];
@@ -27,8 +27,7 @@ class MyRobot extends BCAbstractRobot {
         this.birthplace = null;
         this.birthmark = null;
 
-        this.friends = [];
-        this.enemies = [];
+        this.mirror = null;
 
         this.target = null;
         this.path = null;
@@ -47,29 +46,40 @@ class MyRobot extends BCAbstractRobot {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            // signal target location to built unit
+            // TODO: radio exact coordinates, since communications are cheap
+            var signal_value = null;
+            var signal_veto = false;
+
             // TODO: listen for castle talk from other castles/churches for
             // accounting of pilgrims - avoid overbuilding
             // TODO: listen for crusaders asking for another target
             var visibles = this.get_visible_robots();
             for (var i = 0; i < visibles.length; i++) {
                 var robot = visibles[i];
-                if (robot.unit < 2) {
-                    this.log('  unit [' + robot.id + '], message: '
-                        + robot.castle_talk);
-
-                    var castle_talk = robot.castle_talk;
-                    if (castle_talk != 0x00) {
-                        if (step == 1) {
-                            this.castles++;
-                            this.friends.push([((castle_talk & 0x0f) << 2) + 2,
-                                               (castle_talk >> 2) + 2]);
-                        }
+                if (robot.unit < 2 && robot != this.me) {
+                    if (step == 1 && robot.castle_talk != 0x00) {
+                        this.castles++;
                     }
                 }
 
                 else if (robot.unit == 2) {
                     if (robot.castle_talk == 0x01) {
                         this.pilgrims++;
+                    }
+                }
+
+                else if (robot.unit > 2) {
+                    if (robot.signal == 0x00CD) {
+                        // radio signal of mirror castle coordinates if robot
+                        // is far from this mirror
+                        if (this.distance([robot.x, robot.y],
+                                          this.mirror) > 36) {
+                            this.signal(this.encode_coordinates(this.mirror),
+                                        this.distance([this.me.x, this.me.y],
+                                                      target_square));
+                            signal_veto = true;
+                        }
                     }
                 }
             }
@@ -86,18 +96,13 @@ class MyRobot extends BCAbstractRobot {
                 this.ordered_fuel = this.order_resources(
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
-            }
 
-            else if (step == 1) {
-                for (var i = 0; i < this.friends.length; i++) {
-                    var coord = this.friends[i];
-                    if (this.symmetry == 0) {
-                        this.enemies[i] = [this.size - 1 - coord[0], coord[1]];
-                    }
+                if (this.symmetry == 0) {
+                    this.mirror = [this.size - 1 - this.me.x, this.me.y];
+                }
 
-                    else if (this.symmetry == 1) {
-                        this.enemies[i] = [coord[0], this.size - 1 - coord[1]];
-                    }
+                else if (this.symmetry == 1) {
+                    this.mirror = [this.me.x, this.size - 1 - this.me.y];
                 }
             }
 
@@ -112,10 +117,6 @@ class MyRobot extends BCAbstractRobot {
             // build on closest buildable square to target
             var target_square = null;
             var target_unit = null;
-
-            // signal target location to built unit
-            // TODO: radio exact coordinates, since communications are cheap
-            var signal_value = null;
 
             // TODO: decide units/target resource based on distribution of
             // resources
@@ -142,9 +143,8 @@ class MyRobot extends BCAbstractRobot {
                 if (this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     target_unit = SPECS.CRUSADER;
-                    // TODO: compress more castle locations in signal value
-                    if (this.enemies.length > 0) {
-                        signal_value = this.encode_coordinates(this.enemies[0]);
+                    if (this.mirror != null) {
+                        signal_value = this.encode_coordinates(this.mirror);
                     }
                 }
             }
@@ -171,7 +171,7 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (target_square != null) {
-                    if (signal_value != null) {
+                    if (signal_value != null && !signal_veto) {
                         this.signal(signal_value, this.distance(
                             [this.me.x, this.me.y], target_square));
                     }
