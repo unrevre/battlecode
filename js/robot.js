@@ -747,7 +747,7 @@ class MyRobot extends BCAbstractRobot {
         var open_squares = {};
 
         G[start] = 0;
-        open_squares[start] = this.metric(start, end);
+        open_squares[start] = this.distance(start, end);
 
         var closed_squares = {};
 
@@ -786,7 +786,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                var total = parseInt(G[head]) + this.metric(head, square);
+                var total = parseInt(G[head]) + this.distance(head, square);
 
                 if (open_squares[square] != undefined
                         && total >= parseInt(G[square])) {
@@ -796,7 +796,7 @@ class MyRobot extends BCAbstractRobot {
                 trace[square] = head;
 
                 G[square] = total;
-                open_squares[square] = total + this.metric(square, end);
+                open_squares[square] = total + this.distance(square, end);
             }
         }
 
