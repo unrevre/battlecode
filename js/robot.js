@@ -61,8 +61,8 @@ class MyRobot extends BCAbstractRobot {
                     if (castle_talk != 0x00) {
                         if (step == 1) {
                             this.castles++;
-                            this.friends.push([
-                                (castle_talk & 0x0f) << 2, castle_talk >> 2]);
+                            this.friends.push([((castle_talk & 0x0f) << 2) + 2,
+                                               (castle_talk >> 2) + 2]);
                         }
                     }
                 }
@@ -310,7 +310,8 @@ class MyRobot extends BCAbstractRobot {
                 var objective = null;
                 for (var i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
-                        objective = enemies[i];
+                        this.target = enemies[i];
+                        objective = this.target;
                         // TODO: check turn priorities to determine target,
                         // instead of blindly attacking castle
                         if (this.in_attack_range(
@@ -358,17 +359,8 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.target != null) {
-                if (this.is_visible(this.target)) {
-                    // TODO: attack mode: find best angle of attack - least
-                    // dangerous square in range of target
-                    // TODO: prefer spreading out units (same team)
-                    // TODO: assume target is stationary (castle/church) -
-                    // chasing is mostly pointless and rather dangerous
+                if (!this.is_passable(this.target)) {
                     this.target = this.smear_centred(this.target);
-                }
-
-                else if (!this.is_passable(this.target)) {
-                    this.target = this.smear_directed(this.target);
                 }
 
                 this.path = this.astar([this.me.x, this.me.y], this.target,
@@ -588,18 +580,16 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        return reachables[Math.floor(Math.random() * reachables.length)];
-    }
-
-    smear_directed(square) {
-        var x = square[0];
-        var y = square[1];
-
-        var reachables = [];
-        for (var i = 0; i < 4; i++) {
-            for (var j = 0; j < 4; j++) {
-                if (this.is_passable_and_empty([x + i, y + j])) {
-                    reachables.push([x + i, y + j]);
+        if (reachables.length == 0) {
+            const ring_two = [
+                [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2],
+                [-2, -1], [2, -1], [-2, 0], [2, 0], [-2, 1], [2, 1],
+                [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]];
+            for (var i = 0; i < 16; i++) {
+                var rngx = square[0] + ring_two[i][0];
+                var rngy = square[1] + ring_two[i][1];
+                if (this.is_passable_and_empty([rngx, rngy])) {
+                    reachables.push([rngx, rngy]);
                 }
             }
         }
