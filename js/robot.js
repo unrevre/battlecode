@@ -207,17 +207,19 @@ class MyRobot extends BCAbstractRobot {
             // listen to radio for directions from the castle/church
             if (step === 0) {
                 this.fountain = this.get_adjacent_deposit_point();
+            }
 
-                var visibles = this.get_visible_robots();
-                for (var i = 0; i < visibles.length; i++) {
-                    var robot = visibles[i];
-                    if (robot.team == this.me.team && robot.unit < 2
-                            && this.is_radioing(robot)) {
-                        this.target = this.decode_coordinates(robot.signal);
-                        this.birthmark = this.target;
-                        this.birthplace = [this.me.x, this.me.y];
-                        break;
-                    }
+            var visibles = this.get_visible_robots();
+
+            // TODO: check if enemies are included
+            var radioing = this.filter_radioing_robots(visibles);
+            for (var i = 0; i < radioing.length; i++) {
+                var robot = radioing[i];
+                if (robot.unit < 2 && this.target == null) {
+                    this.target = this.decode_coordinates(robot.signal);
+                    this.birthmark = this.target;
+                    this.birthplace = [this.me.x, this.me.y];
+                    break;
                 }
             }
 
@@ -316,9 +318,8 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            var enemies = this.get_visible_enemies();
-
             // identify objective if possible
+            var enemies = this.filter_visible_enemies(visibles);
             if (this.target != null && this.birthmark == null) {
                 // identify enemy castle
                 for (var i = 0; i < enemies.length; i++) {
@@ -429,12 +430,20 @@ class MyRobot extends BCAbstractRobot {
         return this.isRadioing(robot);
     }
 
+    is_visible(robot) {
+        return this.isVisible(robot);
+    }
+
     get_visible_robots() {
         return this.getVisibleRobots();
     }
 
     get_visible_robot_map() {
         return this.getVisibleRobotMap();
+    }
+
+    get_robot(id) {
+        return this.getRobot(id);
     }
 
     get_passable_map() {
@@ -964,35 +973,20 @@ class MyRobot extends BCAbstractRobot {
         return radioing;
     }
 
-    is_visible_and_alive(robot) {
-        var visibles = this.get_visible_robots();
-        for (var i = 0; i < visibles.length; i++) {
-            if (visibles[i].id == robot.id) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    is_visible(square) {
-        const vision_range = [100, 100, 100, 49, 64, 16];
-
-        return (this.distance([this.me.x, this.me.y], square)
-            <= vision_range[this.me.unit]);
-    }
-
-    get_visible_enemies() {
+    filter_visible_enemies(visibles) {
         var enemies = [];
-
-        var visibles = this.get_visible_robots();
         for (var i = 0; i < visibles.length; i++) {
-            if (visibles[i].team != this.me.team) {
-                enemies.push(visibles[i]);
+            var robot = visibles[i];
+            if (this.is_visible(robot) && robot.team != this.me.team) {
+                enemies.push(robot);
             }
         }
 
         return enemies;
+    }
+
+    is_visible_and_alive(robot) {
+        return this.get_robot(robot.id) != null;
     }
 
     in_attack_range(square) {
