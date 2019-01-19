@@ -17,10 +17,13 @@ class MyRobot extends BCAbstractRobot {
         this.size = null;
         this.symmetry = null;
 
-        this.castles = 1;
-        this.throne_id = [];
-        this.throne_x = [];
-        this.throne_y = [];
+        this.castles = 0;
+        this.castle_id = [];
+        this.castle_x = [];
+        this.castle_y = [];
+
+        this.objectives = [];
+        this.objective = null;
 
         this.ordered_karbonite = [];
         this.ordered_fuel = [];
@@ -35,8 +38,6 @@ class MyRobot extends BCAbstractRobot {
         this.fountain = null;
         this.birthplace = null;
         this.birthmark = null;
-
-        this.mirror = null;
 
         this.target = null;
         this.path = null;
@@ -65,14 +66,6 @@ class MyRobot extends BCAbstractRobot {
                 this.ordered_fuel = this.order_resources(
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
-
-                if (this.symmetry == 0) {
-                    this.mirror = [this.size - 1 - this.me.x, this.me.y];
-                }
-
-                else if (this.symmetry == 1) {
-                    this.mirror = [this.me.x, this.size - 1 - this.me.y];
-                }
             }
 
             var visibles = this.get_visible_robots();
@@ -98,20 +91,27 @@ class MyRobot extends BCAbstractRobot {
             var castling = this.filter_castling_robots(visibles);
             for (var i = 0; i < castling.length; i++) {
                 var robot = castling[i];
-                if (robot.unit < 2 && robot != this.me) {
-                    if (step == 0) {
+                if (robot.unit < 2) {
+                    if (step == 1) {
                         this.castles++;
-                        this.throne_id.push(robot.id);
-                    }
-
-                    else if (step == 1) {
-                        this.throne_x.push(robot.castle_talk);
+                        this.castle_id.push(robot.id);
+                        this.castle_x.push(robot.castle_talk);
                     }
 
                     else if (step == 2) {
-                        this.throne_y.push(robot.castle_talk);
+                        this.castle_y.push(robot.castle_talk);
                     }
                 }
+            }
+
+            if (step == 2) {
+                for (var i = 0; i < this.castles; i++) {
+                    var coords = [this.castle_x.shift(), this.castle_y.shift()];
+                    this.objectives.push(
+                        this.reflect_about_symmetry_axis(coords));
+                }
+
+                this.objective = this.objectives[0];
             }
 
             // check radioing units - team available for castles
@@ -123,12 +123,13 @@ class MyRobot extends BCAbstractRobot {
                     var fallen = this.decode_coordinates(
                         radio_signal - 0xd000);
                     // check coordinates
-                    if (fallen[0] == this.mirror[0]
-                            && fallen[1] == this.mirror[1]
-                            && this.throne_x.length > 0
-                            && this.throne_y.length > 0) {
-                        this.mirror = [this.throne_x[0], this.throne_y[0]];
-                        this.signal(this.encode_coordinates(this.mirror),
+                    if (fallen[0] == this.objective[0]
+                            && fallen[1] == this.objective[1]
+                            && this.castle_x.length > 0
+                            && this.castle_y.length > 0) {
+                        this.objectives.shift();
+                        this.objective = this.objectives[0];
+                        this.signal(this.encode_coordinates(this.objective),
                                     this.distance([this.me.x, this.me.y],
                                                   [robot.x, robot.y]));
                         signal_veto = true;
@@ -154,10 +155,13 @@ class MyRobot extends BCAbstractRobot {
             if (step == 0) {
                 this.enqueue_unit(SPECS.PILGRIM, 0, null);
                 this.enqueue_unit(SPECS.PILGRIM, 1, null);
+            }
+
+            else if (step == 2) {
                 this.enqueue_unit(SPECS.CRUSADER, 0,
-                    this.encode_coordinates(this.mirror));
+                    this.encode_coordinates(this.objective));
                 this.enqueue_unit(SPECS.CRUSADER, 0,
-                    this.encode_coordinates(this.mirror));
+                    this.encode_coordinates(this.objective));
             }
 
             if (this.queue_unit.length == 0) {
@@ -174,7 +178,7 @@ class MyRobot extends BCAbstractRobot {
                 else if (this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.mirror));
+                        this.encode_coordinates(this.objective));
                 }
             }
 
@@ -552,6 +556,14 @@ class MyRobot extends BCAbstractRobot {
 
         this.log('WARNING: map symmetry not determined');
         return null;
+    }
+
+    reflect_about_symmetry_axis(square) {
+        if (this.symmetry == 0) {
+            return [this.size - 1 - this.me.x, this.me.y];
+        }
+
+        return [this.me.x, this.size - 1 - this.me.y];
     }
 
     filter_by_map_symmetry(squares) {
