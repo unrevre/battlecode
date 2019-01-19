@@ -60,12 +60,13 @@ class MyRobot extends BCAbstractRobot {
             // signal veto to avoid multiple broadcasts overriding each other
             var signal_veto = false;
 
-            // check castle talk - abuse all information available
             var visibles = this.get_visible_robots();
-            for (var i = 0; i < visibles.length; i++) {
-                var robot = visibles[i];
-                if (robot.unit < 2 && robot.team == this.me.team
-                        && robot != this.me) {
+
+            // check castle talk - abuse all information available
+            var castling = this.filter_castling_robots(visibles);
+            for (var i = 0; i < castling.length; i++) {
+                var robot = castling[i];
+                if (robot.unit < 2 && robot != this.me) {
                     if (step == 0) {
                         this.castles++;
                     }
@@ -76,6 +77,30 @@ class MyRobot extends BCAbstractRobot {
 
                     else if (step == 2) {
                         this.objective_y.push(robot.castle_talk);
+                    }
+                }
+            }
+
+            // check radioing units - team available for castles
+            var radioing = this.filter_radioing_robots(visibles);
+            for (var i = 0; i < radioing.length; i++) {
+                var robot = radioing[i];
+                var radio_signal = robot.signal;
+                if (radio_signal >= 0xd000) {
+                    var fallen = this.decode_coordinates(
+                        radio_signal - 0xd000);
+                    // check coordinates
+                    if (fallen[0] == this.mirror[0]
+                            && fallen[1] == this.mirror[1]) {
+                        if (this.objective_x.length > 0
+                                && this.objective_y.length > 0) {
+                            this.mirror = [this.objective_x[0],
+                                           this.objective_y[0]];
+                            this.signal(this.encode_coordinates(this.mirror),
+                                        this.distance([this.me.x, this.me.y],
+                                                      [robot.x, robot.y]));
+                            signal_veto = true;
+                        }
                     }
                 }
             }
@@ -156,6 +181,7 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (target_square != null) {
+                    // TODO: handle signal vetoes properly
                     if (target_signal != null && !signal_veto) {
                         this.signal(target_signal, this.distance(
                             [this.me.x, this.me.y], target_square));
@@ -277,10 +303,12 @@ class MyRobot extends BCAbstractRobot {
             }
 
             var visibles = this.get_visible_robots();
-            for (var i = 0; i < visibles.length; i++) {
-                var robot = visibles[i];
-                if (robot.team == this.me.team && robot.unit == 0
-                        && this.is_radioing(robot)) {
+
+            var radioing = this.filter_all_radioing_robots(visibles);
+            for (var i = 0; i < radioing.length; i++) {
+                var robot = radioing[i];
+                if (robot.unit == 0 && robot.x == this.fountain[0]
+                        && robot.y == this.fountain[1]) {
                     if (this.target == null) {
                         this.target = this.decode_coordinates(robot.signal);
                         break;
@@ -309,6 +337,13 @@ class MyRobot extends BCAbstractRobot {
                                              this.birthmark.y])) {
                 // ask castle for another target if enemy castle is destroyed
                 if (!this.is_visible_and_alive(this.birthmark)) {
+                    // TODO: replace by castle talk, requiring some form of
+                    // castle ordering
+                    this.signal(
+                        this.encode_coordinates(
+                            [this.birthmark.x, this.birthmark.y]) + 0xd000,
+                            this.distance([this.me.x, this.me.y],
+                                          this.fountain));
                     this.birthmark == null;
                     this.target = null;
                 }
@@ -891,6 +926,42 @@ class MyRobot extends BCAbstractRobot {
 
     decode_coordinates(signal) {
         return [signal & 0x003f, (signal & 0x0fc0) >> 6];
+    }
+
+    filter_castling_robots(visibles) {
+        var castling = [];
+        for (var i = 0; i < visibles.length; i++) {
+            var robot = visibles[i];
+            if (robot.team == this.me.team && robot.castle_talk != 0) {
+                castling.push(robot);
+            }
+        }
+
+        return castling;
+    }
+
+    filter_radioing_robots(visibles) {
+        var radioing = [];
+        for (var i = 0; i < visibles.length; i++) {
+            var robot = visibles[i];
+            if (this.is_radioing(robot) && robot.team == this.me.team) {
+                radioing.push(robot);
+            }
+        }
+
+        return radioing;
+    }
+
+    filter_all_radioing_robots(visibles) {
+        var radioing = [];
+        for (var i = 0; i < visibles.length; i++) {
+            var robot = visibles[i];
+            if (this.is_radioing(robot)) {
+                radioing.push(robot);
+            }
+        }
+
+        return radioing;
     }
 
     is_visible_and_alive(robot) {
