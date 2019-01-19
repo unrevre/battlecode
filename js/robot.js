@@ -53,14 +53,14 @@ class MyRobot extends BCAbstractRobot {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            // signal target location to built unit
-            // TODO: radio exact coordinates, since communications are cheap
-            var signal_value = null;
+            // TODO: castle defensive actions
+            // TODO: defend with (stationary) prophets against enemies
+
+            // signal veto to avoid multiple broadcasts overriding each other
             var signal_veto = false;
 
-            // TODO: listen for castle talk from other castles/churches for
+            // listen for castle talk from other castles/churches for
             // accounting of pilgrims - avoid overbuilding
-            // TODO: listen for crusaders asking for another target
             var visibles = this.get_visible_robots();
             for (var i = 0; i < visibles.length; i++) {
                 var robot = visibles[i];
@@ -91,8 +91,6 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // TODO: restrict ordering to nearby resources - minimise time
-            // required for pathing
             if (step == 0) {
                 this.symmetry = this.guess_map_symmetry();
 
