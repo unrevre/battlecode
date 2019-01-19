@@ -124,15 +124,14 @@ class MyRobot extends BCAbstractRobot {
                         radio_signal - 0xd000);
                     // check coordinates
                     if (fallen[0] == this.mirror[0]
-                            && fallen[1] == this.mirror[1]) {
-                        if (this.throne_x.length > 0
-                                && this.throne_y.length > 0) {
-                            this.mirror = [this.throne_x[0], this.throne_y[0]];
-                            this.signal(this.encode_coordinates(this.mirror),
-                                        this.distance([this.me.x, this.me.y],
-                                                      [robot.x, robot.y]));
-                            signal_veto = true;
-                        }
+                            && fallen[1] == this.mirror[1]
+                            && this.throne_x.length > 0
+                            && this.throne_y.length > 0) {
+                        this.mirror = [this.throne_x[0], this.throne_y[0]];
+                        this.signal(this.encode_coordinates(this.mirror),
+                                    this.distance([this.me.x, this.me.y],
+                                                  [robot.x, robot.y]));
+                        signal_veto = true;
                     }
                 }
             }
@@ -356,10 +355,9 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: check turn priorities to determine target, instead of
             // blindly attacking castle
-            if (this.birthmark != null
-                    && this.in_attack_range(this.birthmark)) {
-                // ask castle for another target if enemy castle is destroyed
+            if (this.birthmark != null) {
                 if (!this.is_visible_and_alive(this.birthmark)) {
+                    // request another target if enemy castle is destroyed
                     // TODO: replace by castle talk, requiring some form of
                     // castle ordering
                     this.signal(
@@ -371,7 +369,7 @@ class MyRobot extends BCAbstractRobot {
                     this.target = null;
                 }
 
-                else {
+                else if (this.in_attack_range(this.birthmark)) {
                     this.log('  - attack unit [' + this.birthmark.id
                         + '], type (' + this.birthmark.unit + ') at '
                         + (this.birthmark.x - this.me.x) + ', '
