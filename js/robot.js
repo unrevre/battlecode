@@ -360,6 +360,10 @@ class MyRobot extends BCAbstractRobot {
                                               this.target, 9);
             }
 
+            else {
+                this.path = null;
+            }
+
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
                 var destination = this.take_step(this.path, this.me.unit);
