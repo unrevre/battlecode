@@ -17,7 +17,7 @@ class MyRobot extends BCAbstractRobot {
         this.size = null;
         this.symmetry = null;
 
-        this.castles = 0;
+        this.castles = 1;
         this.castle_id = [];
         this.castle_x = [];
         this.castle_y = [];
@@ -66,6 +66,11 @@ class MyRobot extends BCAbstractRobot {
                 this.ordered_fuel = this.order_resources(
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
+
+                this.castle_id.push(this.me.id);
+                this.objectives.push(this.reflect_about_symmetry_axis(
+                    [this.me.x, this.me.y]));
+                this.objective = this.objectives[0];
             }
 
             var visibles = this.get_visible_robots();
@@ -91,7 +96,7 @@ class MyRobot extends BCAbstractRobot {
             var castling = this.filter_castling_robots(visibles);
             for (var i = 0; i < castling.length; i++) {
                 var robot = castling[i];
-                if (robot.unit < 2) {
+                if (robot.unit < 2 && robot.id != this.me.id) {
                     if (step == 1) {
                         this.castles++;
                         this.castle_id.push(robot.id);
@@ -105,13 +110,11 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (step == 2) {
-                for (var i = 0; i < this.castles; i++) {
+                for (var i = 0; i < this.castles - 1; i++) {
                     var coords = [this.castle_x.shift(), this.castle_y.shift()];
                     this.objectives.push(
                         this.reflect_about_symmetry_axis(coords));
                 }
-
-                this.objective = this.objectives[0];
             }
 
             // check radioing units - team available for castles
@@ -158,9 +161,6 @@ class MyRobot extends BCAbstractRobot {
             if (step == 0) {
                 this.enqueue_unit(SPECS.PILGRIM, 0, null);
                 this.enqueue_unit(SPECS.PILGRIM, 1, null);
-            }
-
-            else if (step == 2) {
                 this.enqueue_unit(SPECS.CRUSADER, 0,
                     this.encode_coordinates(this.objective));
                 this.enqueue_unit(SPECS.CRUSADER, 0,
