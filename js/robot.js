@@ -213,7 +213,7 @@ class MyRobot extends BCAbstractRobot {
             var radioing = this.filter_radioing_robots(visibles);
             for (var i = 0; i < radioing.length; i++) {
                 var robot = radioing[i];
-                if (robot.unit < 2 && this.target == null) {
+                if (robot.unit < 2 && this.birthmark == null) {
                     this.target = this.decode_coordinates(robot.signal);
                     this.birthmark = this.target;
                     this.birthplace = [this.me.x, this.me.y];
