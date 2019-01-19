@@ -275,9 +275,19 @@ class MyRobot extends BCAbstractRobot {
                 this.target = this.birthmark;
             }
 
-            // TODO: check global resources and determine target resource
-
             this.log('  target: ' + this.target);
+
+            // handle cases where target is blocked by another unit
+            if (!this.is_passable_and_empty(this.target)) {
+                if (this.target[0] == this.fountain[0]
+                        && this.target[1] == this.fountain[1]) {
+                    this.target = this.smear_centred(this.fountain);
+                }
+
+                else {
+                    this.target = this.smear_centred(this.target);
+                }
+            }
 
             if (this.target != null) {
                 this.path = this.astar([this.me.x, this.me.y], this.target,
