@@ -723,7 +723,7 @@ class MyRobot extends BCAbstractRobot {
 
         var resources = this.get_resources(resource_map);
         for (var i = 0; i < resources.length; i++) {
-            if (this.distance([this.me.x, this.me.y], resources[i]) < 49) {
+            if (this.distance([this.me.x, this.me.y], resources[i]) < 25) {
                 local_resources.push(resources[i]);
             }
         }
