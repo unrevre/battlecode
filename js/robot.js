@@ -399,7 +399,7 @@ class MyRobot extends BCAbstractRobot {
                             [this.birthmark.x, this.birthmark.y]) + 0xd000,
                             this.distance([this.me.x, this.me.y],
                                           this.fountain));
-                    this.birthmark == null;
+                    this.birthmark = null;
                     this.target = null;
                 }
 
