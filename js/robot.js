@@ -999,7 +999,8 @@ class MyRobot extends BCAbstractRobot {
         var radioing = [];
         for (var i = 0; i < visibles.length; i++) {
             var robot = visibles[i];
-            if (this.is_radioing(robot) && robot.team == this.me.team) {
+            if (this.is_radioing(robot) && robot.team == this.me.team
+                    && robot.id != this.me.id) {
                 radioing.push(robot);
             }
         }
