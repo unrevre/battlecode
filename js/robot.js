@@ -75,13 +75,24 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            var visibles = this.get_visible_robots();
+
             // TODO: castle defensive actions
+            var enemies = this.filter_visible_enemies(visibles);
+
+            var attackables = this.filter_enemy_attackables(enemies);
+            for (var i = 0; i < attackables.length; i++) {
+                var attackable = attackables[i];
+                if (attackable.unit == SPECS.PROPHET) {
+                    return this.attack(attackable.x - this.me.x,
+                                       attackable.y - this.me.y);
+                }
+            }
+
             // TODO: defend with (stationary) prophets against enemies
 
             // signal veto to avoid multiple broadcasts overriding each other
             var signal_veto = false;
-
-            var visibles = this.get_visible_robots();
 
             // check castle talk - abuse all information available
             var castling = this.filter_castling_robots(visibles);
@@ -346,8 +357,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: check turn priorities to determine target, instead of
             // blindly attacking castle
             if (this.birthmark != null
-                    && this.in_attack_range([this.birthmark.x,
-                                             this.birthmark.y])) {
+                    && this.in_attack_range(this.birthmark)) {
                 // ask castle for another target if enemy castle is destroyed
                 if (!this.is_visible_and_alive(this.birthmark)) {
                     // TODO: replace by castle talk, requiring some form of
@@ -374,7 +384,7 @@ class MyRobot extends BCAbstractRobot {
             // basic attacks
             // TODO: prioritise targets, instead of attacking first target
             // TODO: decide target to attack, somehow..
-            var attackables = this.filter_by_attack_range(enemies);
+            var attackables = this.filter_enemy_attackables(enemies);
             if (attackables.length > 0) {
                 var attackable = attackables[0];
                 this.log('  - attack unit [' + attackable.id + '], type ('
@@ -997,27 +1007,41 @@ class MyRobot extends BCAbstractRobot {
         return enemies;
     }
 
-    is_visible_and_alive(robot) {
-        return this.get_robot(robot.id) != null;
+    filter_visible_enemies_in_attack_range(visibles) {
+        var enemies = [];
+        for (var i = 0; i < visibles.length; i++) {
+            var robot = visibles[i];
+            if (this.is_visible(robot) && robot.team != this.me.team
+                    && this.in_attack_range(robot)) {
+                enemies.push(robot);
+            }
+        }
+
+        return enemies;
     }
 
-    in_attack_range(square) {
-        const min_attack_range = [1, 0, 0, 1, 16, 1];
-        const max_attack_range = [64, 0, 0, 16, 64, 16];
-
-        var range = this.distance([this.me.x, this.me.y], square);
-        return ((range <= max_attack_range[this.me.unit])
-            && (range >= min_attack_range[this.me.unit]));
-    }
-
-    filter_by_attack_range(enemies) {
+    filter_enemy_attackables(enemies) {
         var attackables = [];
-        for (var i = 0; i < enemies.range; i++) {
-            if (this.in_attack_range([enemies.x, enemies.y])) {
-                attackables.push(enemies);
+        for (var i = 0; i < enemies.length; i++) {
+            var enemy = enemies[i];
+            if (this.in_attack_range(enemy)) {
+                attackables.push(enemy);
             }
         }
 
         return attackables;
+    }
+
+    is_visible_and_alive(robot) {
+        return this.get_robot(robot.id) != null;
+    }
+
+    in_attack_range(robot) {
+        const min_attack_range = [1, 0, 0, 1, 16, 1];
+        const max_attack_range = [64, 0, 0, 16, 64, 16];
+
+        var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        return ((range <= max_attack_range[this.me.unit])
+            && (range >= min_attack_range[this.me.unit]));
     }
 }
