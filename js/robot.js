@@ -154,14 +154,28 @@ class MyRobot extends BCAbstractRobot {
             if (step == 0) {
                 this.enqueue_unit(SPECS.PILGRIM, 0, null);
                 this.enqueue_unit(SPECS.PILGRIM, 1, null);
-            }
-
-            // produce crusaders by default
-            if (this.queue_unit.length == 0
-                    && this.karbonite >= this.unit_karbonite_costs[3]
-                    && this.fuel >= this.unit_fuel_costs[3]) {
                 this.enqueue_unit(SPECS.CRUSADER, 0,
                     this.encode_coordinates(this.mirror));
+                this.enqueue_unit(SPECS.CRUSADER, 0,
+                    this.encode_coordinates(this.mirror));
+            }
+
+            if (this.queue_unit.length == 0) {
+                if (this.index_karbonite < this.ordered_karbonite.length) {
+                    this.enqueue_unit(SPECS.PILGRIM, 0, null);
+                }
+
+                else if (this.index_fuel < this.ordered_fuel.length
+                        && this.index_fuel < 4) {
+                    this.enqueue_unit(SPECS.PILGRIM, 1, null);
+                }
+
+                // produce crusaders by default
+                else if (this.karbonite >= this.unit_karbonite_costs[3]
+                        && this.fuel >= this.unit_fuel_costs[3]) {
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.mirror));
+                }
             }
 
             if (this.queue_unit.length > 0) {
