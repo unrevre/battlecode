@@ -77,7 +77,7 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 else if (robot.unit > 2) {
-                    if (robot.signal == 0x00CD) {
+                    if (robot.castle_talk == 0xCD) {
                         // radio signal of mirror castle coordinates if robot
                         // is far from this mirror
                         if (this.distance([robot.x, robot.y],
