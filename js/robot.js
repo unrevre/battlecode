@@ -18,8 +18,9 @@ class MyRobot extends BCAbstractRobot {
         this.symmetry = null;
 
         this.castles = 1;
-        this.objective_x = [];
-        this.objective_y = [];
+        this.throne_id = [];
+        this.throne_x = [];
+        this.throne_y = [];
 
         this.ordered_karbonite = [];
         this.ordered_fuel = [];
@@ -89,14 +90,15 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2 && robot != this.me) {
                     if (step == 0) {
                         this.castles++;
+                        this.throne_id.push(robot.id);
                     }
 
                     else if (step == 1) {
-                        this.objective_x.push(robot.castle_talk);
+                        this.throne_x.push(robot.castle_talk);
                     }
 
                     else if (step == 2) {
-                        this.objective_y.push(robot.castle_talk);
+                        this.throne_y.push(robot.castle_talk);
                     }
                 }
             }
@@ -112,10 +114,9 @@ class MyRobot extends BCAbstractRobot {
                     // check coordinates
                     if (fallen[0] == this.mirror[0]
                             && fallen[1] == this.mirror[1]) {
-                        if (this.objective_x.length > 0
-                                && this.objective_y.length > 0) {
-                            this.mirror = [this.objective_x[0],
-                                           this.objective_y[0]];
+                        if (this.throne_x.length > 0
+                                && this.throne_y.length > 0) {
+                            this.mirror = [this.throne_x[0], this.throne_y[0]];
                             this.signal(this.encode_coordinates(this.mirror),
                                         this.distance([this.me.x, this.me.y],
                                                       [robot.x, robot.y]));
