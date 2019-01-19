@@ -54,6 +54,26 @@ class MyRobot extends BCAbstractRobot {
             this.log('Castle [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            if (step == 0) {
+                this.symmetry = this.guess_map_symmetry();
+
+                // TODO: contingency for when no resources are found
+                this.ordered_karbonite = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
+                        this.karbonite_map)));
+                this.ordered_fuel = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
+                        this.fuel_map)));
+
+                if (this.symmetry == 0) {
+                    this.mirror = [this.size - 1 - this.me.x, this.me.y];
+                }
+
+                else if (this.symmetry == 1) {
+                    this.mirror = [this.me.x, this.size - 1 - this.me.y];
+                }
+            }
+
             // TODO: castle defensive actions
             // TODO: defend with (stationary) prophets against enemies
 
@@ -102,26 +122,6 @@ class MyRobot extends BCAbstractRobot {
                             signal_veto = true;
                         }
                     }
-                }
-            }
-
-            if (step == 0) {
-                this.symmetry = this.guess_map_symmetry();
-
-                // TODO: contingency for when no resources are found
-                this.ordered_karbonite = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.karbonite_map)));
-                this.ordered_fuel = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.fuel_map)));
-
-                if (this.symmetry == 0) {
-                    this.mirror = [this.size - 1 - this.me.x, this.me.y];
-                }
-
-                else if (this.symmetry == 1) {
-                    this.mirror = [this.me.x, this.size - 1 - this.me.y];
                 }
             }
 
