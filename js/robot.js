@@ -23,6 +23,13 @@ class MyRobot extends BCAbstractRobot {
         this.ordered_karbonite = [];
         this.ordered_fuel = [];
 
+        this.index_karbonite = 0;
+        this.index_fuel = 0;
+
+        this.queue_unit = [];
+        this.queue_spawn = [];
+        this.queue_signal = [];
+
         this.nearest_deposit = null;
         this.birthplace = null;
         this.birthmark = null;
@@ -114,47 +121,34 @@ class MyRobot extends BCAbstractRobot {
                 this.castle_talk((this.me.x >> 2) | (this.me.y >> 2) << 4);
             }
 
-            // build on closest buildable square to target
-            var target_square = null;
-            var target_unit = null;
-
             // TODO: decide units/target resource based on distribution of
             // resources
-            // TODO: defend with (stationary) prophets against enemies
+
             if (step == 0) {
-                if (this.ordered_karbonite.length > 0) {
-                    target_unit = SPECS.PILGRIM;
-                    target_square = this.ordered_karbonite[0][1];
-                    signal_value = this.encode_coordinates(
-                        this.ordered_karbonite[0][0]);
-                }
+                this.enqueue_unit(SPECS.PILGRIM, 0, null);
+                this.enqueue_unit(SPECS.PILGRIM, 1, null);
             }
 
-            else if (step == 1) {
-                if (this.ordered_fuel.length > 0) {
-                    target_unit = SPECS.PILGRIM;
-                    target_square = this.ordered_fuel[0][1];
-                    signal_value = this.encode_coordinates(
-                        this.ordered_fuel[0][0]);
+            if (this.queue_unit.length == 0
+                    && this.karbonite >= this.unit_karbonite_costs[3]
+                    && this.fuel >= this.unit_fuel_costs[3]) {
+                var signal = null;
+                if (this.mirror != null) {
+                    signal = this.encode_coordinates(this.mirror);
                 }
+
+                this.enqueue_unit(SPECS.CRUSADER, 0, signal);
             }
 
-            else {
-                if (this.karbonite >= this.unit_karbonite_costs[3]
-                        && this.fuel >= this.unit_fuel_costs[3]) {
-                    target_unit = SPECS.CRUSADER;
-                    if (this.mirror != null) {
-                        signal_value = this.encode_coordinates(this.mirror);
-                    }
-                }
-            }
+            if (this.queue_unit.length > 0) {
+                var target_square = this.queue_spawn.shift();
+                var target_unit = this.queue_unit.shift();
+                var target_signal = this.queue_signal.shift();
 
-            if (target_unit != null) {
                 if (target_square != null
                         && !this.is_buildable(target_square)) {
                     var target_adjacent =
-                        this.get_adjacent_passable_empty_squares_at(
-                            target_square);
+                        this.get_buildable_squares_at(target_square);
                     for (var i = 0; i < target_adjacent.length; i++) {
                         if (this.is_adjacent(target_adjacent[i])) {
                             target_square = target_adjacent[i];
@@ -171,8 +165,8 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (target_square != null) {
-                    if (signal_value != null && !signal_veto) {
-                        this.signal(signal_value, this.distance(
+                    if (target_signal != null && !signal_veto) {
+                        this.signal(target_signal, this.distance(
                             [this.me.x, this.me.y], target_square));
                     }
 
@@ -560,6 +554,10 @@ class MyRobot extends BCAbstractRobot {
         return this.get_adjacent_passable_empty_squares();
     }
 
+    get_buildable_squares_at(square) {
+        return this.get_adjacent_passable_empty_squares_at(square);
+    }
+
     metric(r, s) {
         return Math.max(Math.abs(r[0] - s[0]), Math.abs(r[1] - s[1]));
     }
@@ -626,6 +624,37 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return local_resources;
+    }
+
+    enqueue_unit(unit, options, signal) {
+        this.queue_unit.push(unit);
+
+        if (unit == SPECS.PILGRIM) {
+            if (options == 0) {
+                if (this.index_karbonite < this.ordered_karbonite.length) {
+                    this.queue_spawn.push(
+                        this.ordered_karbonite[this.index_karbonite][1]);
+                    this.queue_signal.push(this.encode_coordinates(
+                        this.ordered_karbonite[this.index_karbonite][0]));
+                    this.index_karbonite++;
+                }
+            }
+
+            else {
+                if (this.index_fuel < this.ordered_fuel.length) {
+                    this.queue_spawn.push(
+                        this.ordered_fuel[this.index_fuel][1]);
+                    this.queue_signal.push(this.encode_coordinates(
+                        this.ordered_fuel[this.index_fuel][0]));
+                    this.index_fuel++;
+                }
+            }
+        }
+
+        else {
+            this.queue_spawn.push(null);
+            this.queue_signal.push(signal);
+        }
     }
 
     astar(start, end, adjacency) {
