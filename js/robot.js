@@ -31,7 +31,7 @@ class MyRobot extends BCAbstractRobot {
         this.queue_spawn = [];
         this.queue_signal = [];
 
-        this.nearest_deposit = null;
+        this.fountain = null;
         this.birthplace = null;
         this.birthmark = null;
 
@@ -180,15 +180,14 @@ class MyRobot extends BCAbstractRobot {
             // save birthplace as nearest deposit time
             // listen to radio for directions from the castle/church
             if (step === 0) {
-                this.nearest_deposit = this.get_adjacent_deposit_point();
+                this.fountain = this.get_adjacent_deposit_point();
 
                 var visibles = this.get_visible_robots();
                 for (var i = 0; i < visibles.length; i++) {
-                    if (visibles[i].team == this.me.team
-                            && visibles[i].unit < 2
-                            && this.is_radioing(visibles[i])) {
-                        this.target = this.decode_coordinates(
-                            visibles[i].signal);
+                    var robot = visibles[i];
+                    if (robot.team == this.me.team && robot.unit < 2
+                            && this.is_radioing(robot)) {
+                        this.target = this.decode_coordinates(robot.signal);
                         this.birthmark = this.target;
                         this.birthplace = [this.me.x, this.me.y];
                         break;
@@ -230,12 +229,12 @@ class MyRobot extends BCAbstractRobot {
             // TODO: deposit resources more frequently if close to
             // castle/church so that units may be built earlier
 
-            if (this.is_adjacent(this.nearest_deposit)
+            if (this.is_adjacent(this.fountain)
                     && (this.me.karbonite || this.me.fuel)) {
                 this.target = null;
                 this.log('  - depositing resources');
-                return this.give(this.nearest_deposit[0] - this.me.x,
-                                 this.nearest_deposit[1] - this.me.y,
+                return this.give(this.fountain[0] - this.me.x,
+                                 this.fountain[1] - this.me.y,
                                  this.me.karbonite, this.me.fuel);
             }
 
@@ -274,13 +273,16 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
-                var visibles = this.get_visible_robots();
-                for (var i = 0; i < visibles.length; i++) {
-                    if (visibles[i].team == this.me.team
-                            && visibles[i].unit < 2
-                            && this.is_radioing(visibles[i])) {
-                        this.target = this.decode_coordinates(
-                            visibles[i].signal);
+                this.fountain = this.get_adjacent_deposit_point();
+            }
+
+            var visibles = this.get_visible_robots();
+            for (var i = 0; i < visibles.length; i++) {
+                var robot = visibles[i];
+                if (robot.team == this.me.team && robot.unit == 0
+                        && this.is_radioing(robot)) {
+                    if (this.target == null) {
+                        this.target = this.decode_coordinates(robot.signal);
                         break;
                     }
                 }
@@ -307,6 +309,7 @@ class MyRobot extends BCAbstractRobot {
                                              this.birthmark.y])) {
                 // ask castle for another target if enemy castle is destroyed
                 if (!this.is_visible_and_alive(this.birthmark)) {
+                    this.birthmark == null;
                     this.target = null;
                 }
 
