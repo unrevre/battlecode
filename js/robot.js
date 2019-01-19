@@ -362,8 +362,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.pixelate(this.path),
-                                                 this.me.unit);
+                var destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
