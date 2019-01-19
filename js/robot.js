@@ -119,6 +119,9 @@ class MyRobot extends BCAbstractRobot {
             for (var i = 0; i < radioing.length; i++) {
                 var robot = radioing[i];
                 var radio_signal = robot.signal;
+
+                // TODO: put such signals in a queue and handle one-by-one,
+                // this is not urgent
                 if (radio_signal >= 0xd000) {
                     var fallen = this.decode_coordinates(
                         radio_signal - 0xd000);
@@ -163,6 +166,10 @@ class MyRobot extends BCAbstractRobot {
                 this.enqueue_unit(SPECS.CRUSADER, 0,
                     this.encode_coordinates(this.objective));
             }
+
+            // TODO: decide if resources are limited (compared to map size) and
+            // look for safe resource patches
+            // TODO: implement square safety function
 
             if (this.queue_unit.length == 0) {
                 if (this.index_karbonite < this.ordered_karbonite.length) {
@@ -237,7 +244,6 @@ class MyRobot extends BCAbstractRobot {
 
             var visibles = this.get_visible_robots();
 
-            // TODO: check if enemies are included
             var radioing = this.filter_radioing_robots(visibles);
             for (var i = 0; i < radioing.length; i++) {
                 var robot = radioing[i];
@@ -318,6 +324,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.target != null) {
+                // TODO: replace with onion search for long distances
                 this.path = this.astar([this.me.x, this.me.y], this.target,
                     this.get_adjacent_passable_empty_squares_at.bind(this));
             }
@@ -341,6 +348,7 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
+                // TODO: also save robot id for castle talk identification
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
@@ -370,6 +378,14 @@ class MyRobot extends BCAbstractRobot {
                     }
                 }
             }
+
+            // TODO: abstract target priority function, combining the two
+            // blocks below
+            // TODO: general ideas:
+            //     [1]: if overwhelmed and castle is attackable, attack castle
+            //     [2]: if overwhelmed but reinforcements are close, retreat
+            //     [3]: if around equal, stand ground and attack (with
+            //     priorities)
 
             // TODO: check turn priorities to determine target, instead of
             // blindly attacking castle
@@ -446,6 +462,9 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit == SPECS.PROPHET) {
             this.log('Prophet [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
+
+            // TODO: prophets generally should seek out choke points or cover
+            // behind friend units and remain stationary
         }
 
         else if (this.me.unit == SPECS.PREACHER) {
