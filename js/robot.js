@@ -18,7 +18,8 @@ class MyRobot extends BCAbstractRobot {
         this.symmetry = null;
 
         this.castles = 1;
-        this.pilgrims = 0;
+        this.objective_x = [];
+        this.objective_y = [];
 
         this.ordered_karbonite = [];
         this.ordered_fuel = [];
@@ -59,34 +60,22 @@ class MyRobot extends BCAbstractRobot {
             // signal veto to avoid multiple broadcasts overriding each other
             var signal_veto = false;
 
-            // listen for castle talk from other castles/churches for
-            // accounting of pilgrims - avoid overbuilding
+            // check castle talk - abuse all information available
             var visibles = this.get_visible_robots();
             for (var i = 0; i < visibles.length; i++) {
                 var robot = visibles[i];
-                if (robot.unit < 2 && robot != this.me) {
-                    if (step == 1 && robot.castle_talk != 0x00) {
+                if (robot.unit < 2 && robot.team == this.me.team
+                        && robot != this.me) {
+                    if (step == 0) {
                         this.castles++;
                     }
-                }
 
-                else if (robot.unit == 2) {
-                    if (robot.castle_talk == 0x01) {
-                        this.pilgrims++;
+                    else if (step == 1) {
+                        this.objective_x.push(robot.castle_talk);
                     }
-                }
 
-                else if (robot.unit > 2) {
-                    if (robot.castle_talk == 0xCD) {
-                        // radio signal of mirror castle coordinates if robot
-                        // is far from this mirror
-                        if (this.distance([robot.x, robot.y],
-                                          this.mirror) > 36) {
-                            this.signal(this.encode_coordinates(this.mirror),
-                                        this.distance([this.me.x, this.me.y],
-                                                      target_square));
-                            signal_veto = true;
-                        }
+                    else if (step == 2) {
+                        this.objective_y.push(robot.castle_talk);
                     }
                 }
             }
@@ -116,7 +105,11 @@ class MyRobot extends BCAbstractRobot {
 
             // broadcast coordinates (highest 4 bits)
             if (step == 0) {
-                this.castle_talk((this.me.x >> 2) | (this.me.y >> 2) << 4);
+                this.castle_talk(this.me.x);
+            }
+
+            else if (step == 1) {
+                this.castle_talk(this.me.y);
             }
 
             // TODO: decide units/target resource based on distribution of
@@ -315,7 +308,6 @@ class MyRobot extends BCAbstractRobot {
                 // ask castle for another target if enemy castle is destroyed
                 if (!this.is_visible_and_alive(this.birthmark)) {
                     this.target = null;
-                    this.castle_talk(0xCD);
                 }
 
                 else {
