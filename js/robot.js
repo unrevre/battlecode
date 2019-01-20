@@ -536,9 +536,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_adjacent(square) {
-        var ret = Math.abs(this.me.x - square[0]) < 2
-            && Math.abs(this.me.y - square[1]) < 2;
-        return ret;
+        return (this.distance([this.me.x, this.me.y], square) < 3);
     }
 
     get_adjacent_deposit_point() {
