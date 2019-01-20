@@ -311,7 +311,7 @@ class MyRobot extends BCAbstractRobot {
 
             // handle cases where target is blocked by another unit
             this.target = this.get_final_target_for(this.target);
-            this.path = this.get_path_for_target(this.target);
+            this.path = this.get_path_for(this.target);
 
             this.log('  target: ' + this.target);
 
@@ -417,7 +417,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: consider using pilgrims for vision
 
             this.target = this.get_final_target_for(this.target);
-            this.path = this.get_path_for_target(this.target);
+            this.path = this.get_path_for(this.target);
 
             this.log('  target: ' + this.target);
 
@@ -929,24 +929,6 @@ class MyRobot extends BCAbstractRobot {
         return next;
     }
 
-    pixelate(path) {
-        var points = [];
-        for (var i = 1; i < path.length; i++) {
-            var diff = [path[i][0] - path[i - 1][0],
-                        path[i][1] - path[i - 1][1]];
-            var steps = Math.max(Math.abs(diff[0]), Math.abs(diff[1]));
-            var direction = [diff[0] / steps, diff[1] / steps];
-            for (var j = 0; j < steps; j++) {
-                points.push([path[i - 1][0] + j * direction[0],
-                             path[i - 1][1] + j * direction[1]]);
-            }
-        }
-
-        points.push(path[path.length - 1]);
-
-        return points;
-    }
-
     get_final_target_for(target) {
         if (target != null) {
             if (!this.is_passable_and_empty(target)) {
@@ -965,7 +947,7 @@ class MyRobot extends BCAbstractRobot {
         return target;
     }
 
-    get_path_for_target(target) {
+    get_path_for(target) {
         if (target != null) {
             if (this.me.unit == SPECS.CRUSADER) {
                 return this.onion_search([this.me.x, this.me.y], target, 9);
