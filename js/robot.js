@@ -235,7 +235,7 @@ class MyRobot extends BCAbstractRobot {
                         && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective));
+                        this.encode_coordinates(this.objective), null);
                 }
 
                 else if (step > 10 && this.karbonite > 100
