@@ -72,16 +72,34 @@ class MyRobot extends BCAbstractRobot {
             }
 
             var visibles = this.get_visible_robots();
-
-            // TODO: castle defensive actions
             var enemies = this.filter_visible_enemies(visibles);
-
             var attackables = this.filter_enemy_attackables(enemies);
-            for (var i = 0; i < attackables.length; i++) {
-                var attackable = attackables[i];
-                if (attackable.unit == SPECS.PROPHET) {
-                    return this.attack(attackable.x - this.me.x,
-                                       attackable.y - this.me.y);
+
+            var castle_safety = this.get_castle_defence_status(
+                visibles, enemies, attackables);
+
+            if (castle_safety == 0) {
+                ;
+            }
+
+            else if (castle_safety == 3) {
+                var prey = this.get_attack_target_from(attackables);
+                if (prey != null) {
+                    return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+                }
+            }
+
+            else {
+                this.queue_unit.length = 0;
+                this.queue_spawn.length = 0;
+                this.queue_signal.length = 0;
+
+                if (castle_safety == 1) {
+                    this.enqueue_unit(SPECS.PROPHET, 0, null);
+                }
+
+                else {
+                    this.enqueue_unit(SPECS.PREACHER, 0, null);
                 }
             }
 
@@ -1078,6 +1096,20 @@ class MyRobot extends BCAbstractRobot {
         return attackables;
     }
 
+    filter_visible_friends(visibles) {
+        var friends = [];
+        for (var i = 0; i < visibles.length; i++) {
+            var robot = visibles[i];
+            if (robot.team == this.me.team
+                    && this.distance([robot.x, robot.y],
+                                     [this.me.x, this.me.y]) <= 9) {
+                friends.push(robot);
+            }
+        }
+
+        return friends;
+    }
+
     is_alive(robot) {
         return this.get_robot(robot.id) != null;
     }
@@ -1096,5 +1128,97 @@ class MyRobot extends BCAbstractRobot {
 
         return (this.distance([this.me.x, this.me.y], square)
             <= vision_range[this.me.unit]);
+    }
+
+    filter_unit_types(robots) {
+        var types = [[], [], [], [], [], []];
+        for (var i = 0; i < robots.length; i++) {
+            var robot = robots[i];
+            types[robot.unit].push(robot);
+        }
+
+        return types;
+    }
+
+    get_castle_defence_status(visibles, enemies, attackables) {
+        if (enemies.length == 0) {
+            return 0;
+        }
+
+        var friendlies = this.filter_visible_friends(visibles);
+        var enemies_by_units = this.filter_unit_types(enemies);
+        var friendlies_by_units = this.filter_unit_types(friendlies);
+
+        if (enemies_by_units[4].length > friendlies_by_units[4].length) {
+            return 1;
+        }
+
+        if (enemies_by_units[3].length > friendlies_by_units[5].length + 1) {
+            return 2;
+        }
+
+        if (enemies_by_units[5].length > friendlies_by_units[4].length) {
+            var nearest = this.get_nearest_unit(enemies_by_units[5]);
+
+            if (this.distance([this.me.x, this.me.y],
+                              [nearest.x, nearest.y]) <= 25) {
+                return 2;
+            }
+
+            else {
+                return 1;
+            }
+        }
+
+        // not necessary to build new units, try attacking
+        return 3;
+    }
+
+    get_nearest_unit(units) {
+        var min_index = 0;
+        var min_distance = 100;
+        for (var i = 0; i < units.length; i++) {
+            var robot = units[i];
+            var distance_to_unit = this.distance([this.me.x, this.me.y],
+                                                 [robot.x, robot.y]);
+            if (distance_to_unit < min_distance) {
+                min_index = i;
+                min_distance = distance_to_unit;
+            }
+        }
+
+        return units[min_index];
+    }
+
+    get_attack_target_from(attackables) {
+        if (attackables.length == 0) {
+            return null;
+        }
+
+        var attackables_by_units = this.filter_unit_types(attackables);
+
+        if (attackables_by_units[4].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[4]);
+        }
+
+        if (attackables_by_units[5].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[5]);
+        }
+
+        if (attackables_by_units[2].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[2]);
+        }
+
+        if (attackables_by_units[3].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[3]);
+        }
+
+        if (attackables_by_units[1].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[1]);
+        }
+
+        if (attackables_by_units[0].length > 0) {
+            return this.get_nearest_unit(attackables_by_units[0]);
+        }
     }
 }
