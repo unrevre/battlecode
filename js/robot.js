@@ -309,29 +309,11 @@ class MyRobot extends BCAbstractRobot {
                 this.target = this.birthmark;
             }
 
-            this.log('  target: ' + this.target);
-
             // handle cases where target is blocked by another unit
-            if (!this.is_passable_and_empty(this.target)) {
-                if (this.target[0] == this.fountain[0]
-                        && this.target[1] == this.fountain[1]) {
-                    this.target = this.smear_centred(this.fountain);
-                }
+            this.target = this.get_final_target_for(this.target);
+            this.path = this.get_path_for_target(this.target);
 
-                else {
-                    this.target = this.smear_centred(this.target);
-                }
-            }
-
-            if (this.target != null) {
-                // TODO: replace with onion search for long distances
-                this.path = this.astar([this.me.x, this.me.y], this.target,
-                    this.get_adjacent_passable_empty_squares_at.bind(this));
-            }
-
-            else {
-                this.path = null;
-            }
+            this.log('  target: ' + this.target);
 
             // proceed to target
             if (this.path != null && this.path.length > 0) {
@@ -434,20 +416,10 @@ class MyRobot extends BCAbstractRobot {
             // TODO: wrap around defenders (if possible) to attack castle
             // TODO: consider using pilgrims for vision
 
+            this.target = this.get_final_target_for(this.target);
+            this.path = this.get_path_for_target(this.target);
+
             this.log('  target: ' + this.target);
-
-            if (this.target != null) {
-                if (!this.is_passable_and_empty(this.target)) {
-                    this.target = this.smear_centred(this.target);
-                }
-
-                this.path = this.onion_search([this.me.x, this.me.y],
-                                              this.target, 9);
-            }
-
-            else {
-                this.path = null;
-            }
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
@@ -696,7 +668,11 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        return reachables[Math.floor(Math.random() * reachables.length)];
+        if (reachables.length > 0) {
+            return reachables[Math.floor(Math.random() * reachables.length)];
+        }
+
+        return null;
     }
 
     on_resource(resource_map) {
@@ -969,6 +945,38 @@ class MyRobot extends BCAbstractRobot {
         points.push(path[path.length - 1]);
 
         return points;
+    }
+
+    get_final_target_for(target) {
+        if (target != null) {
+            if (!this.is_passable_and_empty(target)) {
+                if (this.me.unit == SPECS.PILGRIM
+                        && target[0] == this.birthplace[0]
+                        && target[1] == this.birthplace[1]) {
+                    target = this.smear_centred(this.fountain);
+                }
+
+                else {
+                    target = this.smear_centred(target);
+                }
+            }
+        }
+
+        return target;
+    }
+
+    get_path_for_target(target) {
+        if (target != null) {
+            if (this.me.unit == SPECS.CRUSADER) {
+                return this.onion_search([this.me.x, this.me.y], target, 9);
+            }
+
+            // TODO: replace with onion search for long distances
+            return this.astar([this.me.x, this.me.y], target,
+                this.get_adjacent_passable_empty_squares_at.bind(this));
+        }
+
+        return null;
     }
 
     order_resources(resources) {
