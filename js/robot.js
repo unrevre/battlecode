@@ -237,6 +237,13 @@ class MyRobot extends BCAbstractRobot {
                     this.enqueue_unit(SPECS.CRUSADER, 0,
                         this.encode_coordinates(this.objective));
                 }
+
+                else if (step > 10 && this.karbonite > 100
+                        && this.fuel > 200) {
+                    this.enqueue_unit(
+                        SPECS.PROPHET, 0,
+                        this.encode_coordinates(this.objective), null);
+                }
             }
 
             if (this.queue_unit.length > 0) {
