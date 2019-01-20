@@ -194,24 +194,8 @@ class MyRobot extends BCAbstractRobot {
                 var target_unit = this.queue_unit.shift();
                 var target_signal = this.queue_signal.shift();
 
-                if (target_square != null
-                        && !this.is_buildable(target_square)) {
-                    var target_adjacent =
-                        this.get_buildable_squares_at(target_square);
-                    for (var i = 0; i < target_adjacent.length; i++) {
-                        if (this.is_adjacent(target_adjacent[i])) {
-                            target_square = target_adjacent[i];
-                            break;
-                        }
-                    }
-                }
-
-                if (target_square == null) {
-                    var buildable = this.get_buildable_squares();
-                    if (buildable.length > 0) {
-                        target_square = buildable[0];
-                    }
-                }
+                target_square = this.get_optimal_buildable_square_for(
+                    target_square);
 
                 if (target_square != null) {
                     // TODO: handle signal vetoes properly
@@ -631,6 +615,26 @@ class MyRobot extends BCAbstractRobot {
 
     get_buildable_squares_at(square) {
         return this.get_adjacent_passable_empty_squares_at(square);
+    }
+
+    get_optimal_buildable_square_for(target) {
+        if (target != null && !this.is_buildable(target)) {
+            var adjacent = this.get_buildable_squares_at(target);
+            for (var i = 0; i < adjacent.length; i++) {
+                if (this.is_adjacent(adjacent[i])) {
+                    return adjacent[i];
+                }
+            }
+        }
+
+        if (target == null) {
+            var buildable = this.get_buildable_squares();
+            if (buildable.length > 0) {
+                return buildable[0];
+            }
+        }
+
+        return target;
     }
 
     metric(r, s) {
