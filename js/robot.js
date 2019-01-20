@@ -320,9 +320,16 @@ class MyRobot extends BCAbstractRobot {
                 this.mode = 1;
             }
 
-            else if (enemies.length > 0) {
+            else if (enemies.length > 2 || this.me.karbonite > 9
+                    || this.me.fuel > 49) {
                 // trigger deposit if enemies are closing in
-                ;
+                if (this.is_adjacent(this.fountain)
+                        && (this.me.karbonite || this.me.fuel)) {
+                    this.log('  - depositing resources [emergency]');
+                    return this.give(this.fountain[0] - this.me.x,
+                                     this.fountain[1] - this.me.y,
+                                     this.me.karbonite, this.me.fuel);
+                }
             }
 
             else if (this.mode > 0) {
@@ -545,9 +552,28 @@ class MyRobot extends BCAbstractRobot {
 
             this.target = null;
 
-            if (this.is_adjacent(this.fountain)) {
+            if (this.is_adjacent(this.fountain) && this.mode != 1) {
                 // move off buildable square
                 this.target = this.memory;
+            }
+
+            // deposit resources if convenient
+            if (this.target == null) {
+                if (this.is_adjacent(this.fountain)
+                        && (this.me.karbonite || this.me.fuel)) {
+                    this.log('  - depositing resources [emergency]');
+                    this.mode = 0;
+                    return this.give(this.fountain[0] - this.me.x,
+                                     this.fountain[1] - this.me.y,
+                                     this.me.karbonite, this.me.fuel);
+                }
+
+                else if ((this.me.karbonite > 9 || this.me.fuel > 79)
+                        && this.distance([this.me.x, this.me.y],
+                                         this.fountain) <= 10) {
+                    this.target = this.fountain;
+                    this.mode = 1;
+                }
             }
 
             this.target = this.get_final_target_for(this.target);
@@ -612,6 +638,25 @@ class MyRobot extends BCAbstractRobot {
             if (this.is_adjacent(this.fountain)) {
                 // move off buildable square
                 this.target = this.memory;
+            }
+
+            // deposit resources if convenient
+            if (this.target == null) {
+                if (this.is_adjacent(this.fountain)
+                        && (this.me.karbonite || this.me.fuel)) {
+                    this.log('  - depositing resources [emergency]');
+                    this.mode = 0;
+                    return this.give(this.fountain[0] - this.me.x,
+                                     this.fountain[1] - this.me.y,
+                                     this.me.karbonite, this.me.fuel);
+                }
+
+                else if ((this.me.karbonite > 9 || this.me.fuel > 79)
+                        && this.distance([this.me.x, this.me.y],
+                                         this.fountain) <= 10) {
+                    this.target = this.fountain;
+                    this.mode = 1;
+                }
             }
 
             this.target = this.get_final_target_for(this.target);
