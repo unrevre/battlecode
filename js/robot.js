@@ -84,7 +84,7 @@ class MyRobot extends BCAbstractRobot {
             var attackables = this.filter_enemy_attackables(enemies);
 
             var castle_safety = this.get_castle_defence_status(
-                visibles, enemies, attackables);
+                visibles, enemies);
 
             if (castle_safety == 0) {
                 ;
@@ -274,6 +274,111 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit == SPECS.CHURCH) {
             this.log('Church [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
+
+            if (step == 0) {
+                this.symmetry = this.guess_map_symmetry();
+
+                // TODO: contingency for when no resources are found
+                this.ordered_karbonite = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
+                        this.karbonite_map)));
+                this.ordered_fuel = this.order_resources(
+                    this.filter_by_map_symmetry(this.get_local_resources(
+                        this.fuel_map)));
+
+                this.objective = this.reflect_about_symmetry_axis(
+                    [this.me.x, this.me.y]);
+            }
+
+            var visibles = this.get_visible_robots();
+            var enemies = this.filter_visible_enemies(visibles);
+            var attackables = this.filter_enemy_attackables(enemies);
+
+            var church_safety = this.get_church_defence_status(
+                visibles, enemies);
+
+            if (church_safety == 0) {
+                ;
+            }
+
+            else {
+                this.queue_unit.length = 0;
+                this.queue_spawn.length = 0;
+                this.queue_signal.length = 0;
+
+                var nearest_enemy = this.get_nearest_unit(enemies);
+                var signal_value = this.encode_coordinates(this.objective);
+                if (church_safety == 1) {
+                    this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
+                }
+
+                else {
+                    this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
+                                      nearest_enemy);
+                }
+            }
+
+            // TODO: defend with (stationary) prophets against enemies
+
+            // signal veto to avoid multiple broadcasts overriding each other
+            var signal_veto = false;
+
+            // TODO: decide units/target resource based on distribution of
+            // resources
+
+            if (step == 0) {
+                this.enqueue_unit(
+                    SPECS.PROPHET, 0,
+                    this.encode_coordinates(this.objective), null);
+                this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
+                this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
+            }
+
+            // TODO: decide if resources are limited (compared to map size) and
+            // look for safe resource patches
+            // TODO: implement square safety function
+
+            if (this.queue_unit.length == 0) {
+                if (this.index_karbonite < this.ordered_karbonite.length) {
+                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
+                }
+
+                else if (this.index_fuel < this.ordered_fuel.length
+                        && this.index_fuel < 4) {
+                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
+                }
+
+                else if (step > 10 && this.karbonite > 100
+                        && this.fuel > 200) {
+                    this.enqueue_unit(
+                        SPECS.PROPHET, 0,
+                        this.encode_coordinates(this.objective), null);
+                }
+            }
+
+            if (this.queue_unit.length > 0) {
+                var target_square = this.queue_spawn.shift();
+                var target_unit = this.queue_unit.shift();
+                var target_signal = this.queue_signal.shift();
+                var target_destination = this.queue_destination.shift();
+
+                target_square = this.get_optimal_buildable_square_for(
+                    target_square, target_destination);
+
+                if (target_square != null) {
+                    // TODO: handle signal vetoes properly
+                    if (target_signal != null && !signal_veto) {
+                        this.signal(target_signal, this.distance(
+                            [this.me.x, this.me.y], target_square));
+                    }
+
+                    this.log('  - build unit type [' + target_unit + '] at ('
+                        + target_square[0] + ', ' + target_square[1] + ')');
+                    return this.build_unit(target_unit,
+                                           target_square[0] - this.me.x,
+                                           target_square[1] - this.me.y);
+                }
+            }
         }
 
         else if (this.me.unit == SPECS.PILGRIM) {
@@ -1486,7 +1591,7 @@ class MyRobot extends BCAbstractRobot {
         return types;
     }
 
-    get_castle_defence_status(visibles, enemies, attackables) {
+    get_castle_defence_status(visibles, enemies) {
         if (enemies.length == 0) {
             return 0;
         }
@@ -1518,6 +1623,40 @@ class MyRobot extends BCAbstractRobot {
 
         // not necessary to build new units, try attacking
         return 3;
+    }
+
+    get_church_defence_status(visibles, enemies) {
+        if (enemies.length == 0) {
+            return 0;
+        }
+
+        var friendlies = this.filter_visible_friends(visibles);
+        var enemies_by_units = this.filter_unit_types(enemies);
+        var friendlies_by_units = this.filter_unit_types(friendlies);
+
+        if (enemies_by_units[4].length > friendlies_by_units[4].length) {
+            return 1;
+        }
+
+        if (enemies_by_units[3].length > friendlies_by_units[5].length) {
+            return 2;
+        }
+
+        if (enemies_by_units[5].length > friendlies_by_units[4].length) {
+            var nearest = this.get_nearest_unit(enemies_by_units[5]);
+
+            if (this.distance([this.me.x, this.me.y],
+                              [nearest.x, nearest.y]) <= 25) {
+                return 2;
+            }
+
+            else {
+                return 1;
+            }
+        }
+
+        // not necessary to build new units, try attacking
+        return 1;
     }
 
     get_nearest_unit(units) {
