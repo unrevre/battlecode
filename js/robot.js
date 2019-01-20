@@ -1154,7 +1154,7 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            else {
+            else if (options == 1) {
                 if (this.index_fuel < this.ordered_fuel.length) {
                     this.queue_spawn.push(
                         this.ordered_fuel[this.index_fuel][1]);
@@ -1164,6 +1164,12 @@ class MyRobot extends BCAbstractRobot {
                         this.ordered_fuel[this.index_fuel][0]);
                     this.index_fuel++;
                 }
+            }
+
+            else {
+                this.queue_spawn.push(null);
+                this.queue_signal.push(signal);
+                this.queue_destination.push(destination);
             }
         }
 
