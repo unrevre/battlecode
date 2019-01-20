@@ -99,13 +99,14 @@ class MyRobot extends BCAbstractRobot {
                 this.queue_signal.length = 0;
 
                 var nearest_enemy = this.get_nearest_unit(enemies);
-
+                var signal_value = this.encode_coordinates(this.objective);
                 if (castle_safety == 1) {
-                    this.enqueue_unit(SPECS.PROPHET, 0, null, null);
+                    this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
                 }
 
                 else {
-                    this.enqueue_unit(SPECS.PREACHER, 0, null, nearest_enemy);
+                    this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
+                                      nearest_enemy);
                 }
             }
 
@@ -456,6 +457,27 @@ class MyRobot extends BCAbstractRobot {
             this.log('Prophet [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            if (step === 0) {
+                // TODO: also save robot id for castle talk identification
+                this.fountain = this.get_adjacent_deposit_point();
+            }
+
+            var visibles = this.get_visible_robots();
+
+            var radioing = this.filter_all_radioing_robots(visibles);
+            for (var i = 0; i < radioing.length; i++) {
+                var robot = radioing[i];
+                if (robot.unit == 0 && robot.x == this.fountain[0]
+                        && robot.y == this.fountain[1]) {
+                    this.log('DEBUG: RADIO: receive target info');
+                    if (this.memory == null) {
+                        this.log('DEBUG: RADIO: acquire target info');
+                        this.memory = this.decode_coordinates(robot.signal);
+                        break;
+                    }
+                }
+            }
+
             // TODO: prophets generally should seek out choke points or cover
             // behind friend units and remain stationary
 
@@ -470,11 +492,53 @@ class MyRobot extends BCAbstractRobot {
                     + (prey.y - this.me.y));
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
+
+            this.target = null;
+
+            if (this.is_adjacent(this.fountain)) {
+                // move off buildable square
+                this.target = this.memory;
+            }
+
+            this.target = this.get_final_target_for(this.target);
+            this.path = this.get_path_for(this.target);
+
+            this.log('  target: ' + this.target);
+
+            // proceed to target destination
+            if (this.path != null && this.path.length > 0) {
+                var destination = this.take_step(this.path, this.me.unit);
+                this.log('  - moving to destination: (' + destination[0] + ', '
+                    + destination[1] + ')');
+                return this.move(destination[0] - this.me.x,
+                                 destination[1] - this.me.y);
+            }
         }
 
         else if (this.me.unit == SPECS.PREACHER) {
             this.log('Preacher [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
+
+            if (step === 0) {
+                // TODO: also save robot id for castle talk identification
+                this.fountain = this.get_adjacent_deposit_point();
+            }
+
+            var visibles = this.get_visible_robots();
+
+            var radioing = this.filter_all_radioing_robots(visibles);
+            for (var i = 0; i < radioing.length; i++) {
+                var robot = radioing[i];
+                if (robot.unit == 0 && robot.x == this.fountain[0]
+                        && robot.y == this.fountain[1]) {
+                    this.log('DEBUG: RADIO: receive target info');
+                    if (this.memory == null) {
+                        this.log('DEBUG: RADIO: acquire target info');
+                        this.memory = this.decode_coordinates(robot.signal);
+                        break;
+                    }
+                }
+            }
 
             // TODO: special aoe targetting for preachers
 
@@ -488,6 +552,27 @@ class MyRobot extends BCAbstractRobot {
                     + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
                     + (prey.y - this.me.y));
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+            }
+
+            this.target = null;
+
+            if (this.is_adjacent(this.fountain)) {
+                // move off buildable square
+                this.target = this.memory;
+            }
+
+            this.target = this.get_final_target_for(this.target);
+            this.path = this.get_path_for(this.target);
+
+            this.log('  target: ' + this.target);
+
+            // proceed to target destination
+            if (this.path != null && this.path.length > 0) {
+                var destination = this.take_step(this.path, this.me.unit);
+                this.log('  - moving to destination: (' + destination[0] + ', '
+                    + destination[1] + ')');
+                return this.move(destination[0] - this.me.x,
+                                 destination[1] - this.me.y);
             }
         }
     }
