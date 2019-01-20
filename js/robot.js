@@ -17,10 +17,9 @@ class MyRobot extends BCAbstractRobot {
         this.size = null;
         this.symmetry = null;
 
-        this.castles = 1;
+        this.castles = 0;
         this.castle_id = [];
-        this.castle_x = [];
-        this.castle_y = [];
+        this.castle_coords = [];
 
         this.objectives = [];
         this.objective = null;
@@ -69,9 +68,8 @@ class MyRobot extends BCAbstractRobot {
                         this.fuel_map)));
 
                 this.castle_id.push(this.me.id);
-                this.objectives.push(this.reflect_about_symmetry_axis(
-                    [this.me.x, this.me.y]));
-                this.objective = this.objectives[0];
+                this.objective = this.reflect_about_symmetry_axis(
+                    [this.me.x, this.me.y]);
             }
 
             var visibles = this.get_visible_robots();
@@ -97,22 +95,20 @@ class MyRobot extends BCAbstractRobot {
             var castling = this.filter_castling_robots(visibles);
             for (var i = 0; i < castling.length; i++) {
                 var robot = castling[i];
-                if (robot.unit < 2 && robot.id != this.me.id) {
-                    if (step == 1) {
+                if (robot.id != this.me.id) {
+                    if (step < 3) {
                         this.castles++;
                         this.castle_id.push(robot.id);
-                        this.castle_x.push(robot.castle_talk);
-                    }
-
-                    else if (step == 2) {
-                        this.castle_y.push(robot.castle_talk);
+                        this.castle_coords.push(robot.castle_talk);
                     }
                 }
             }
 
             if (step == 2) {
-                for (var i = 0; i < this.castles - 1; i++) {
-                    var coords = [this.castle_x.shift(), this.castle_y.shift()];
+                this.castles /= 2;
+                for (var i = 0; i < this.castles; i++) {
+                    var coords = [this.castle_coords[i],
+                                  this.castle_coords[i + this.castles]];
                     this.objectives.push(
                         this.reflect_about_symmetry_axis(coords));
                 }
@@ -133,8 +129,7 @@ class MyRobot extends BCAbstractRobot {
                     if (fallen[0] == this.objective[0]
                             && fallen[1] == this.objective[1]
                             && this.objectives.length > 0) {
-                        this.objectives.shift();
-                        this.objective = this.objectives[0];
+                        this.objective = this.objectives.shift();
                         this.signal(this.encode_coordinates(this.objective),
                                     this.distance([this.me.x, this.me.y],
                                                   [robot.x, robot.y]));
@@ -147,6 +142,8 @@ class MyRobot extends BCAbstractRobot {
             this.castle_talk(0x00);
 
             // broadcast coordinates (highest 4 bits)
+            // TODO: prefix with 0x10 to avoid 0 coordinates from not being
+            // picked up
             if (step == 0) {
                 this.castle_talk(this.me.x);
             }
@@ -548,10 +545,10 @@ class MyRobot extends BCAbstractRobot {
 
     reflect_about_symmetry_axis(square) {
         if (this.symmetry == 0) {
-            return [this.size - 1 - this.me.x, this.me.y];
+            return [this.size - 1 - square[0], square[1]];
         }
 
-        return [this.me.x, this.size - 1 - this.me.y];
+        return [square[0], this.size - 1 - square[1]];
     }
 
     filter_by_map_symmetry(squares) {
