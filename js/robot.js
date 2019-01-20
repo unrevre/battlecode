@@ -319,27 +319,51 @@ class MyRobot extends BCAbstractRobot {
             if (attacked_count > 0) {
                 // evade enemies by moving to edge of map
                 // TODO: be careful not to be overly scared
-                this.target = this.get_direction_away_from_symmetry_axis();
                 this.mode = 1;
             }
 
-            else if (enemies.length > 2 || this.me.karbonite > 9
-                    || this.me.fuel > 49) {
-                // trigger deposit if enemies are closing in
-                if (this.is_adjacent(this.fountain)
-                        && (this.me.karbonite || this.me.fuel)) {
-                    this.log('  - depositing resources [emergency]');
-                    return this.give(this.fountain[0] - this.me.x,
-                                     this.fountain[1] - this.me.y,
-                                     this.me.karbonite, this.me.fuel);
+            else if (enemies.length > 0) {
+                var enemies_by_units = this.filter_unit_types(enemies);
+                if (enemies_by_units[SPECS.CRUSADER].length > 0) {
+                    var nearest_crusader = this.get_nearest_unit(
+                        enemies_by_units[SPECS.CRUSADER]);
+                    if (this.distance([nearest_crusader.x, nearest_crusader.y],
+                                      [this.me.x, this.me.y]) <= 20) {
+                        this.mode = 1;
+                    }
+
+                    // TODO: refactor this to avoid duplication
+                    else if (this.me.karbonite > 9 || this.me.fuel > 49) {
+                        // trigger deposit if enemies are closing in
+                        if (this.is_adjacent(this.fountain)
+                                && (this.me.karbonite || this.me.fuel)) {
+                            this.log('  - depositing resources [emergency]');
+                            return this.give(this.fountain[0] - this.me.x,
+                                             this.fountain[1] - this.me.y,
+                                             this.me.karbonite, this.me.fuel);
+                        }
+                    }
                 }
 
-                this.target = null;
+                else if (this.me.karbonite > 9 || this.me.fuel > 49) {
+                    // trigger deposit if enemies are closing in
+                    if (this.is_adjacent(this.fountain)
+                            && (this.me.karbonite || this.me.fuel)) {
+                        this.log('  - depositing resources [emergency]');
+                        return this.give(this.fountain[0] - this.me.x,
+                                         this.fountain[1] - this.me.y,
+                                         this.me.karbonite, this.me.fuel);
+                    }
+                }
             }
 
             else if (this.mode > 0) {
-                this.target = this.memory;
+                this.target = null;
                 this.mode = 0;
+            }
+
+            if (this.mode == 1) {
+                this.target = this.get_direction_to_edge();
             }
 
             // mine resources if safe and appropriate
@@ -374,7 +398,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // return to nearest resource deposit point
-            if (this.me.karbonite > 18 || this.me.fuel > 90) {
+            if (this.mode == 0
+                    && (this.me.karbonite > 18 || this.me.fuel > 90)) {
                 this.target = this.birthplace;
             }
 
@@ -788,7 +813,7 @@ class MyRobot extends BCAbstractRobot {
         return [square[0], this.size - 1 - square[1]];
     }
 
-    get_direction_away_from_symmetry_axis() {
+    get_direction_to_edge() {
         if (this.symmetry == 0) {
             var side = (this.me.x > this.size / 2);
             if (side == true) {
