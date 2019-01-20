@@ -94,11 +94,9 @@ class MyRobot extends BCAbstractRobot {
             var castling = this.filter_castling_robots(visibles);
             for (var i = 0; i < castling.length; i++) {
                 var robot = castling[i];
-                if (robot.id != this.me.id) {
-                    if (step < 3) {
-                        this.castles++;
-                        this.castle_coords.push(robot.castle_talk);
-                    }
+                if (step < 3 && robot.id != this.me.id) {
+                    this.castles++;
+                    this.castle_coords.push(robot.castle_talk - 0x80);
                 }
             }
 
@@ -144,14 +142,12 @@ class MyRobot extends BCAbstractRobot {
             this.castle_talk(0x00);
 
             // broadcast coordinates (highest 4 bits)
-            // TODO: prefix with 0x10 to avoid 0 coordinates from not being
-            // picked up
             if (step == 0) {
-                this.castle_talk(this.me.x);
+                this.castle_talk(this.me.x + 0x80);
             }
 
             else if (step == 1) {
-                this.castle_talk(this.me.y);
+                this.castle_talk(this.me.y + 0x80);
             }
 
             // TODO: decide units/target resource based on distribution of
