@@ -134,6 +134,7 @@ class MyRobot extends BCAbstractRobot {
                     }
 
                     else if (robot.castle_talk >= 0xF0) {
+                        this.mode = 1;
                         this.current_rusher = robot.castle_talk - 0xF0 + 1;
                     }
                 }
@@ -198,6 +199,7 @@ class MyRobot extends BCAbstractRobot {
                                                       this.objective, 9);
 
                     if (rush_path.length < 8) {
+                        this.mode = 1;
                         this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
                         this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
                         this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
@@ -226,8 +228,9 @@ class MyRobot extends BCAbstractRobot {
                     this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
                 }
 
-                // produce crusaders by default
-                else if (this.current_rusher == this.castle_order
+                // produce crusaders if rushing
+                else if (this.mode == 1
+                        && this.current_rusher == this.castle_order
                         && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     this.enqueue_unit(SPECS.CRUSADER, 0,
@@ -330,6 +333,8 @@ class MyRobot extends BCAbstractRobot {
                                      this.fountain[1] - this.me.y,
                                      this.me.karbonite, this.me.fuel);
                 }
+
+                this.target = null;
             }
 
             else if (this.mode > 0) {
