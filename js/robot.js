@@ -38,6 +38,7 @@ class MyRobot extends BCAbstractRobot {
         this.fountain = null;
         this.birthplace = null;
         this.memory = null;
+        this.victim = null;
 
         this.target = null;
         this.path = null;
@@ -326,19 +327,8 @@ class MyRobot extends BCAbstractRobot {
                         && robot.y == this.fountain[1]) {
                     if (this.target == null) {
                         this.target = this.decode_coordinates(robot.signal);
-                        break;
-                    }
-                }
-            }
-
-            // identify objective if possible
-            var enemies = this.filter_visible_enemies(visibles);
-            if (this.target != null && this.memory == null) {
-                // identify enemy castle
-                for (var i = 0; i < enemies.length; i++) {
-                    if (enemies[i].unit == 0) {
-                        this.memory = enemies[i];
-                        this.target = [this.memory.x, this.memory.y];
+                        this.memory = this.target
+                        this.objective = this.target;
                         break;
                     }
                 }
@@ -352,43 +342,69 @@ class MyRobot extends BCAbstractRobot {
             //     [3]: if around equal, stand ground and attack (with
             //     priorities)
 
-            // TODO: check turn priorities to determine target, instead of
-            // blindly attacking castle
-            if (this.memory != null) {
-                if (!this.is_visible_and_alive(this.memory)) {
-                    // request another target if enemy castle is destroyed
-                    // TODO: replace by castle talk, requiring some form of
-                    // castle ordering
-                    this.signal(
-                        this.encode_coordinates(
-                            [this.memory.x, this.memory.y]) + 0xd000,
-                            this.distance([this.me.x, this.me.y],
-                                          this.fountain));
-                    this.memory = null;
-                    this.target = null;
+            // NOTES:
+            //     memory: long-term target location (only castles)
+            //     objective: current enemy target location
+            //     victim: short-term enemy robot object
+
+            var enemies = this.filter_visible_enemies(visibles);
+
+            // identify castle if it is within range
+            if (this.memory != null && this.in_vision_range(this.memory)) {
+                var castle_prescence = null;
+                for (var i = 0; i < enemies.length; i++) {
+                    if (enemies[i].unit == 0) {
+                        castle_prescence = enemies[i];
+                        break;
+                    }
                 }
 
-                else if (this.in_attack_range(this.memory)) {
-                    this.log('  - attack unit [' + this.memory.id
-                        + '], type (' + this.memory.unit + ') at '
-                        + (this.memory.x - this.me.x) + ', '
-                        + this.memory.y - this.me.y);
-                    return this.attack(this.memory.x - this.me.x,
-                                       this.memory.y - this.me.y);
+                if (castle_prescence == null) {
+                    var signal_value = this.encode_coordinates(
+                        [this.memory[0], this.memory[1]]) + 0xd000;
+                    this.signal(signal_value, this.distance(
+                        [this.me.x, this.me.y], this.fountain));
+
+                    this.victim = null;
+                    this.objective = null;
+                    this.memory = null;
+
+                    this.target = null;
                 }
             }
 
-            // basic attacks
-            // TODO: prioritise targets, instead of attacking first target
-            // TODO: decide target to attack, somehow..
+            // start with victim (target to focus)
+            // this usually is either the last enemy attacked, or the castle
+            // TODO: use victim to remember attacked units - preferentially
+            // attacked since they have lower health
+            if (this.victim != null && this.is_alive(this.victim)) {
+                if (this.in_attack_range(this.victim)) {
+                    this.log('  - attack unit [' + this.victim.id
+                        + '], type (' + this.victim.unit + ') at '
+                        + (this.victim.x - this.me.x) + ', '
+                        + (this.victim.y - this.me.y));
+                    return this.attack(this.victim.x - this.me.x,
+                                       this.victim.y - this.me.y);
+                }
+            }
+
             var attackables = this.filter_enemy_attackables(enemies);
-            if (attackables.length > 0) {
-                var attackable = attackables[0];
-                this.log('  - attack unit [' + attackable.id + '], type ('
-                    + attackable.unit + ') at ' + attackable.x - this.me.x
-                    + ', ' + attackable.y - this.me.y);
-                return this.attack(attackable.x - this.me.x,
-                                   attackable.y - this.me.y);
+
+            // TODO: improve this with proper unit priorities, instead of
+            // blindly attacking castle
+            var prey = null;
+            for (var i = 0; i < attackables.length; i++) {
+                prey = attackables[i];
+                if (attackables[i].unit == SPECS.CASTLE) {
+                    break;
+                }
+            }
+
+            if (prey != null) {
+                this.log('  - attack unit [' + prey.id + '], type ('
+                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
+                    + (prey.y - this.me.y));
+                return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
             // TODO: fuzzy target destinations to surround enemies properly
@@ -1067,7 +1083,7 @@ class MyRobot extends BCAbstractRobot {
         return attackables;
     }
 
-    is_visible_and_alive(robot) {
+    is_alive(robot) {
         return this.get_robot(robot.id) != null;
     }
 
@@ -1078,5 +1094,12 @@ class MyRobot extends BCAbstractRobot {
         var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
+    }
+
+    in_vision_range(square) {
+        const vision_range = [100, 100, 100, 49, 64, 16];
+
+        return (this.distance([this.me.x, this.me.y], square)
+            <= vision_range[this.me.unit]);
     }
 }
