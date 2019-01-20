@@ -18,7 +18,7 @@ class MyRobot extends BCAbstractRobot {
         this.symmetry = null;
 
         this.castles = 0;
-        this.castle_id = [];
+        this.castle_order = null;
         this.castle_coords = [];
 
         this.objectives = [];
@@ -67,7 +67,6 @@ class MyRobot extends BCAbstractRobot {
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
 
-                this.castle_id.push(this.me.id);
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
             }
@@ -98,13 +97,16 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.id != this.me.id) {
                     if (step < 3) {
                         this.castles++;
-                        this.castle_id.push(robot.id);
                         this.castle_coords.push(robot.castle_talk);
                     }
                 }
             }
 
-            if (step == 2) {
+            if (step == 0) {
+                this.castle_order = this.castle_coords.length;
+            }
+
+            else if (step == 2) {
                 this.castles /= 2;
                 for (var i = 0; i < this.castles; i++) {
                     var coords = [this.castle_coords[i],
