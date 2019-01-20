@@ -131,8 +131,7 @@ class MyRobot extends BCAbstractRobot {
                     // check coordinates
                     if (fallen[0] == this.objective[0]
                             && fallen[1] == this.objective[1]
-                            && this.castle_x.length > 0
-                            && this.castle_y.length > 0) {
+                            && this.objectives.length > 0) {
                         this.objectives.shift();
                         this.objective = this.objectives[0];
                         this.signal(this.encode_coordinates(this.objective),
