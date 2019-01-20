@@ -85,6 +85,9 @@ class MyRobot extends BCAbstractRobot {
             else if (castle_safety == 3) {
                 var prey = this.get_attack_target_from(attackables);
                 if (prey != null) {
+                    this.log('  - attack unit [' + prey.id + '], type ('
+                        + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
+                        + (prey.y - this.me.y));
                     return this.attack(prey.x - this.me.x, prey.y - this.me.y);
                 }
             }
@@ -217,6 +220,8 @@ class MyRobot extends BCAbstractRobot {
                             [this.me.x, this.me.y], target_square));
                     }
 
+                    this.log('  - build unit type [' + target_unit + '] at ('
+                        + target_square[0] + ', ' + target_square[1] + ')');
                     return this.build_unit(target_unit,
                                            target_square[0] - this.me.x,
                                            target_square[1] - this.me.y);
