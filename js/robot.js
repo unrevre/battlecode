@@ -551,10 +551,12 @@ class MyRobot extends BCAbstractRobot {
             var prey = this.get_attack_target_from(attackables,
                                                    [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
+                var splash_target = this.get_splash_for([prey.x, prey.y]);
                 this.log('  - attack unit [' + prey.id + '], type ('
-                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
-                    + (prey.y - this.me.y));
-                return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+                    + prey.unit + ') at ' + splash_target[0] + ', '
+                    + splash_target[1]);
+                return this.attack(splash_target[0] - this.me.x,
+                                   splash_target[1] - this.me.y);
             }
 
             this.target = null;
@@ -1348,5 +1350,47 @@ class MyRobot extends BCAbstractRobot {
                 return this.get_nearest_unit(attackables_by_units[order]);
             }
         }
+    }
+
+    get_unit_count_for(square, robot_map) {
+        var robot_id = robot_map[square[1]][square[0]];
+        if (robot_id < 1) {
+            return 0;
+        }
+
+        var robot = this.get_robot(robot_id);
+        if (robot.team == this.me.team) {
+            return -1;
+        }
+
+        return 1;
+    }
+
+    get_unit_count_difference_around(square) {
+        var robot_map = this.get_visible_robot_map();
+
+        var count = 0;
+        count += this.get_unit_count_for(square, robot_map);
+        var adjacent = this.get_adjacent_passable_squares_at(square);
+        for (var i = 0; i < adjacent.length; i++) {
+            count += this.get_unit_count_for(adjacent[i], robot_map);
+        }
+
+        return count;
+    }
+
+    get_splash_for(target) {
+        var square = target;
+        var max_count = this.get_unit_count_difference_around(target);
+
+        var adjacent = this.get_adjacent_passable_squares_at(target);
+        for (var i = 0; i < adjacent.length; i++) {
+            var count = this.get_unit_count_difference_around(adjacent[i]);
+            if (count > max_count) {
+                square = adjacent[i];
+            }
+        }
+
+        return square;
     }
 }
