@@ -84,7 +84,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             else if (castle_safety == 3) {
-                var prey = this.get_attack_target_from(attackables);
+                var prey = this.get_attack_target_from(attackables,
+                                                       [4, 5, 2, 3, 1, 0]);
                 if (prey != null) {
                     this.log('  - attack unit [' + prey.id + '], type ('
                         + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
@@ -485,7 +486,8 @@ class MyRobot extends BCAbstractRobot {
             var enemies = this.filter_visible_enemies(visibles);
             var attackables = this.filter_enemy_attackables(enemies);
 
-            var prey = this.get_attack_target_from(attackables);
+            var prey = this.get_attack_target_from(attackables,
+                                                   [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
                     + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
@@ -546,7 +548,8 @@ class MyRobot extends BCAbstractRobot {
             var enemies = this.filter_visible_enemies(visibles);
             var attackables = this.filter_enemy_attackables(enemies);
 
-            var prey = this.get_attack_target_from(attackables);
+            var prey = this.get_attack_target_from(attackables,
+                                                   [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
                     + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
@@ -1333,35 +1336,17 @@ class MyRobot extends BCAbstractRobot {
         return units[min_index];
     }
 
-    get_attack_target_from(attackables) {
+    get_attack_target_from(attackables, priority) {
         if (attackables.length == 0) {
             return null;
         }
 
         var attackables_by_units = this.filter_unit_types(attackables);
-
-        if (attackables_by_units[4].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[4]);
-        }
-
-        if (attackables_by_units[5].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[5]);
-        }
-
-        if (attackables_by_units[2].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[2]);
-        }
-
-        if (attackables_by_units[3].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[3]);
-        }
-
-        if (attackables_by_units[1].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[1]);
-        }
-
-        if (attackables_by_units[0].length > 0) {
-            return this.get_nearest_unit(attackables_by_units[0]);
+        for (var i = 0; i < priority.length; i++) {
+            var order = priority[i];
+            if (attackables_by_units[order].length > 0) {
+                return this.get_nearest_unit(attackables_by_units[order]);
+            }
         }
     }
 }
