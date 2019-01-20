@@ -42,6 +42,8 @@ class MyRobot extends BCAbstractRobot {
 
         this.target = null;
         this.path = null;
+
+        this.current_rusher = 0;
     }
 
     turn() {
@@ -71,6 +73,9 @@ class MyRobot extends BCAbstractRobot {
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
             }
+
+            // clear castle talk by default
+            var castle_talk_value = 0x00;
 
             var visibles = this.get_visible_robots();
             var enemies = this.filter_visible_enemies(visibles);
@@ -120,9 +125,15 @@ class MyRobot extends BCAbstractRobot {
             var castling = this.filter_castling_robots(visibles);
             for (var i = 0; i < castling.length; i++) {
                 var robot = castling[i];
-                if (step < 3 && robot.id != this.me.id) {
-                    this.castles++;
-                    this.castle_coords.push(robot.castle_talk - 0x80);
+                if (robot.id != this.me.id) {
+                    if (step < 3) {
+                        this.castles++;
+                        this.castle_coords.push(robot.castle_talk - 0x80);
+                    }
+
+                    else if (robot.castle_talk >= 0xF0) {
+                        this.current_rusher = robot.castle_talk - 0xF0 + 1;
+                    }
                 }
             }
 
@@ -156,6 +167,7 @@ class MyRobot extends BCAbstractRobot {
                             && fallen[1] == this.objective[1]
                             && this.objectives.length > 0) {
                         this.objective = this.objectives.shift();
+                        castle_talk_value = 0xF0 + this.castle_order;
                         this.signal(this.encode_coordinates(this.objective),
                                     this.distance([this.me.x, this.me.y],
                                                   [robot.x, robot.y]));
@@ -164,28 +176,36 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // clear castle talk by default
-            this.castle_talk(0x00);
-
             // broadcast coordinates (highest 4 bits)
             if (step == 0) {
-                this.castle_talk(this.me.x + 0x80);
+                castle_talk_value = this.me.x + 0x80;
             }
 
             else if (step == 1) {
-                this.castle_talk(this.me.y + 0x80);
+                castle_talk_value = this.me.y + 0x80;
             }
+
+            this.castle_talk(castle_talk_value);
 
             // TODO: decide units/target resource based on distribution of
             // resources
 
             if (step == 0) {
-                this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
-                this.enqueue_unit(SPECS.CRUSADER, 0,
-                    this.encode_coordinates(this.objective), null);
-                this.enqueue_unit(SPECS.CRUSADER, 0,
-                    this.encode_coordinates(this.objective), null);
+                if (this.size < 40 && this.castle_order == 0) {
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
+                }
+
+                else {
+                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
+                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
+                }
             }
 
             // TODO: decide if resources are limited (compared to map size) and
@@ -203,7 +223,8 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 // produce crusaders by default
-                else if (this.karbonite >= this.unit_karbonite_costs[3]
+                else if (this.current_rusher == this.castle_order
+                        && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     this.enqueue_unit(SPECS.CRUSADER, 0,
                         this.encode_coordinates(this.objective));
