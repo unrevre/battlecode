@@ -414,15 +414,8 @@ class MyRobot extends BCAbstractRobot {
 
             var attackables = this.filter_enemy_attackables(enemies);
 
-            // TODO: improve this with proper unit priorities, instead of
-            // blindly attacking castle
-            var prey = null;
-            for (var i = 0; i < attackables.length; i++) {
-                prey = attackables[i];
-                if (attackables[i].unit == SPECS.CASTLE) {
-                    break;
-                }
-            }
+            var prey = this.get_attack_target_from(attackables,
+                                                   [0, 2, 4, 5, 3, 1]);
 
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
