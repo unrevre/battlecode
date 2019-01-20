@@ -37,7 +37,7 @@ class MyRobot extends BCAbstractRobot {
 
         this.fountain = null;
         this.birthplace = null;
-        this.birthmark = null;
+        this.memory = null;
 
         this.target = null;
         this.path = null;
@@ -230,9 +230,9 @@ class MyRobot extends BCAbstractRobot {
             var radioing = this.filter_radioing_robots(visibles);
             for (var i = 0; i < radioing.length; i++) {
                 var robot = radioing[i];
-                if (robot.unit < 2 && this.birthmark == null) {
+                if (robot.unit < 2 && this.memory == null) {
                     this.target = this.decode_coordinates(robot.signal);
-                    this.birthmark = this.target;
+                    this.memory = this.target;
                     this.birthplace = [this.me.x, this.me.y];
                     break;
                 }
@@ -288,8 +288,8 @@ class MyRobot extends BCAbstractRobot {
 
             // attempt to target remembered resource after any interruption
             // (deposition, evasion, etc..)
-            if (this.target == null && this.birthmark != null) {
-                this.target = this.birthmark;
+            if (this.target == null && this.memory != null) {
+                this.target = this.memory;
             }
 
             // handle cases where target is blocked by another unit
@@ -333,12 +333,12 @@ class MyRobot extends BCAbstractRobot {
 
             // identify objective if possible
             var enemies = this.filter_visible_enemies(visibles);
-            if (this.target != null && this.birthmark == null) {
+            if (this.target != null && this.memory == null) {
                 // identify enemy castle
                 for (var i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
-                        this.birthmark = enemies[i];
-                        this.target = [this.birthmark.x, this.birthmark.y];
+                        this.memory = enemies[i];
+                        this.target = [this.memory.x, this.memory.y];
                         break;
                     }
                 }
@@ -354,27 +354,27 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: check turn priorities to determine target, instead of
             // blindly attacking castle
-            if (this.birthmark != null) {
-                if (!this.is_visible_and_alive(this.birthmark)) {
+            if (this.memory != null) {
+                if (!this.is_visible_and_alive(this.memory)) {
                     // request another target if enemy castle is destroyed
                     // TODO: replace by castle talk, requiring some form of
                     // castle ordering
                     this.signal(
                         this.encode_coordinates(
-                            [this.birthmark.x, this.birthmark.y]) + 0xd000,
+                            [this.memory.x, this.memory.y]) + 0xd000,
                             this.distance([this.me.x, this.me.y],
                                           this.fountain));
-                    this.birthmark = null;
+                    this.memory = null;
                     this.target = null;
                 }
 
-                else if (this.in_attack_range(this.birthmark)) {
-                    this.log('  - attack unit [' + this.birthmark.id
-                        + '], type (' + this.birthmark.unit + ') at '
-                        + (this.birthmark.x - this.me.x) + ', '
-                        + this.birthmark.y - this.me.y);
-                    return this.attack(this.birthmark.x - this.me.x,
-                                       this.birthmark.y - this.me.y);
+                else if (this.in_attack_range(this.memory)) {
+                    this.log('  - attack unit [' + this.memory.id
+                        + '], type (' + this.memory.unit + ') at '
+                        + (this.memory.x - this.me.x) + ', '
+                        + this.memory.y - this.me.y);
+                    return this.attack(this.memory.x - this.me.x,
+                                       this.memory.y - this.me.y);
                 }
             }
 
