@@ -454,6 +454,18 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: prophets generally should seek out choke points or cover
             // behind friend units and remain stationary
+
+            var visibles = this.get_visible_robots();
+            var enemies = this.filter_visible_enemies(visibles);
+            var attackables = this.filter_enemy_attackables(enemies);
+
+            var prey = this.get_attack_target_from(attackables);
+            if (prey != null) {
+                this.log('  - attack unit [' + prey.id + '], type ('
+                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
+                    + (prey.y - this.me.y));
+                return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+            }
         }
 
         else if (this.me.unit == SPECS.PREACHER) {
@@ -461,6 +473,18 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             // TODO: special aoe targetting for preachers
+
+            var visibles = this.get_visible_robots();
+            var enemies = this.filter_visible_enemies(visibles);
+            var attackables = this.filter_enemy_attackables(enemies);
+
+            var prey = this.get_attack_target_from(attackables);
+            if (prey != null) {
+                this.log('  - attack unit [' + prey.id + '], type ('
+                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
+                    + (prey.y - this.me.y));
+                return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+            }
         }
     }
 
