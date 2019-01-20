@@ -44,6 +44,8 @@ class MyRobot extends BCAbstractRobot {
         this.path = null;
 
         this.current_rusher = 0;
+
+        this.mode = 0;
     }
 
     turn() {
@@ -192,14 +194,16 @@ class MyRobot extends BCAbstractRobot {
 
             if (step == 0) {
                 if (this.size < 40 && this.castle_order == 0) {
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
+                    var rush_path = this.onion_search([this.me.x, this.me.y],
+                                                      this.objective, 9);
+
+                    if (rush_path.length < 8) {
+                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                        this.enqueue_unit(SPECS.CRUSADER, 0,
+                            this.encode_coordinates(this.objective), null);
+                    }
                 }
 
                 else {
@@ -269,6 +273,8 @@ class MyRobot extends BCAbstractRobot {
             // listen to radio for directions from the castle/church
             if (step === 0) {
                 this.fountain = this.get_adjacent_deposit_point();
+
+                this.symmetry = this.guess_map_symmetry();
             }
 
             var visibles = this.get_visible_robots();
@@ -293,8 +299,36 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: check for attacking units and check distance to deposit
             // point
-            // TODO: evade attackers if possible - be careful here not to be
-            // overly scared
+            // TODO: check turns of attackers and friends to determine if
+            // evasion is necessary, though may be complicated with unknown
+            // targetting priorities of enemies
+
+            var enemies = this.filter_visible_enemies(visibles);
+
+            var attacked_count = 0;
+            for (var i = 0; i < enemies.length; i++) {
+                var enemy = enemies[i];
+                if (this.in_attack_range_of(enemy)) {
+                    attacked_count++;
+                }
+            }
+
+            if (attacked_count > 0) {
+                // evade enemies by moving to edge of map
+                // TODO: be careful not to be overly scared
+                this.target = this.get_direction_away_from_symmetry_axis();
+                this.mode = 1;
+            }
+
+            else if (enemies.length > 0) {
+                // trigger deposit if enemies are closing in
+                ;
+            }
+
+            else if (this.mode > 0) {
+                this.target = this.memory;
+                this.mode = 0;
+            }
 
             // mine resources if safe and appropriate
             // TODO: safety check
@@ -702,6 +736,28 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return [square[0], this.size - 1 - square[1]];
+    }
+
+    get_direction_away_from_symmetry_axis() {
+        if (this.symmetry == 0) {
+            var side = (this.me.x > this.size / 2);
+            if (side == true) {
+                return [Math.min(this.size - 1, this.me.x + 4), this.me.y];
+            }
+
+            else {
+                return [Math.max(0, this.me.x - 4), this.me.y];
+            }
+        }
+
+        var side = (this.me.y > this.size / 2);
+        if (side == true) {
+            return [this.me.x, Math.min(this.size - 1, this.me.y + 4)];
+        }
+
+        else {
+            return [this.me.x, Math.max(0, this.me.y - 4)];
+        }
     }
 
     filter_by_map_symmetry(squares) {
@@ -1283,6 +1339,15 @@ class MyRobot extends BCAbstractRobot {
         var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
+    }
+
+    in_attack_range_of(robot) {
+        const min_attack_range = [1, 0, 0, 1, 16, 1];
+        const max_attack_range = [64, 0, 0, 16, 64, 26];
+
+        var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        return ((range <= max_attack_range[robot.unit])
+            && (range >= min_attack_range[robot.unit]));
     }
 
     in_vision_range(square) {
