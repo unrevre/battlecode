@@ -96,17 +96,15 @@ class MyRobot extends BCAbstractRobot {
                     if (this.castle_order == 0 && step > 10
                             && this.churches * 16 < step
                             && this.karbonite > 80 && this.fuel > 300) {
-                        let target_church = this.get_church_candidate(
+                        let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance(
                                 this.get_resources(this.karbonite_map),
                                 this.castle_locations),
                             this.castle_locations);
-                        this.log('DEBUG: CHURCH: ' + target_church);
-                        this.enqueue_unit(
-                            SPECS.PILGRIM, 2,
-                            this.encode_coordinates(target_church), null);
+                        this.log('DEBUG: CHURCH: ' + candidate);
+                        this.enqueue_unit(SPECS.PILGRIM, 2, candidate, null);
+                        this.castle_locations.push(candidate);
                         this.churches++;
-                        this.castle_locations.push(target_church);
                     }
                     break;
                 case 1:
@@ -115,9 +113,7 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    let signal_value = this.encode_coordinates(this.objective);
-
-                    this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
+                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                     break;
                 case 2:
                     this.queue_unit.length = 0;
@@ -125,15 +121,12 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    let nearest_enemy = this.get_nearest_unit(enemies);
-                    let signal_value = this.encode_coordinates(this.objective);
-
-                    this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
-                                      nearest_enemy);
+                    this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
+                                      this.get_nearest_unit(enemies));
                     break;
                 case 3:
-                    let prey = this.get_attack_target_from(attackables,
-                                                           [4, 5, 2, 3, 1, 0]);
+                    let prey = this.get_attack_target_from(
+                        attackables, [4, 5, 2, 3, 1, 0]);
                     if (prey != null) {
                         this.log('  - attack unit [' + prey.id + '], type ('
                             + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
@@ -224,13 +217,11 @@ class MyRobot extends BCAbstractRobot {
                     this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
                     this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
                     this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
                 }
 
                 else {
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
                     this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
                     this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
                 }
@@ -259,15 +250,12 @@ class MyRobot extends BCAbstractRobot {
                         && this.current_rusher == this.castle_order
                         && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
-                    this.enqueue_unit(SPECS.CRUSADER, 0,
-                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
                 }
 
                 else if (step > 10 && this.karbonite > 120
                         && this.fuel > 400) {
-                    this.enqueue_unit(
-                        SPECS.PROPHET, 0,
-                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit( SPECS.PROPHET, 0, this.objective, null);
                 }
             }
 
@@ -333,8 +321,7 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    let signal_value = this.encode_coordinates(this.objective);
-                    this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
+                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                     break;
                 case 2:
                     this.queue_unit.length = 0;
@@ -342,10 +329,8 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    let nearest_enemy = this.get_nearest_unit(enemies);
-                    let signal_value = this.encode_coordinates(this.objective);
-                    this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
-                                      nearest_enemy);
+                    this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
+                                      this.get_nearest_unit(enemies));
                     break;
             }
 
@@ -358,9 +343,7 @@ class MyRobot extends BCAbstractRobot {
             // resources
 
             if (step == 0) {
-                this.enqueue_unit(
-                    SPECS.PROPHET, 0,
-                    this.encode_coordinates(this.objective), null);
+                this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                 this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
                 this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
             }
@@ -381,9 +364,7 @@ class MyRobot extends BCAbstractRobot {
 
                 else if (step > 10 && this.karbonite > 100
                         && this.fuel > 200) {
-                    this.enqueue_unit(
-                        SPECS.PROPHET, 0,
-                        this.encode_coordinates(this.objective), null);
+                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                 }
             }
 
@@ -726,7 +707,6 @@ class MyRobot extends BCAbstractRobot {
             // TODO: prophets generally should seek out choke points or cover
             // behind friend units and remain stationary
 
-            let visibles = this.get_visible_robots();
             let enemies = this.filter_visible_enemies(visibles);
             let attackables = this.filter_enemy_attackables(enemies);
 
@@ -807,7 +787,6 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: special aoe targetting for preachers
 
-            let visibles = this.get_visible_robots();
             let enemies = this.filter_visible_enemies(visibles);
             let attackables = this.filter_enemy_attackables(enemies);
 
@@ -1214,14 +1193,14 @@ class MyRobot extends BCAbstractRobot {
 
             else {
                 this.queue_spawn.push(null);
-                this.queue_signal.push(signal);
+                this.queue_signal.push(this.encode_coordinates(signal));
                 this.queue_destination.push(destination);
             }
         }
 
         else {
             this.queue_spawn.push(null);
-            this.queue_signal.push(signal);
+            this.queue_signal.push(this.encode_coordinates(signal));
             this.queue_destination.push(destination);
         }
     }
