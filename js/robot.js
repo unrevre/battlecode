@@ -82,13 +82,13 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // clear castle talk by default
-            var castle_talk_value = 0x00;
+            let castle_talk_value = 0x00;
 
-            var visibles = this.get_visible_robots();
-            var enemies = this.filter_visible_enemies(visibles);
-            var attackables = this.filter_enemy_attackables(enemies);
+            let visibles = this.get_visible_robots();
+            let enemies = this.filter_visible_enemies(visibles);
+            let attackables = this.filter_enemy_attackables(enemies);
 
-            var castle_safety = this.get_castle_defence_status(
+            let castle_safety = this.get_castle_defence_status(
                 visibles, enemies);
 
             switch (castle_safety) {
@@ -96,7 +96,7 @@ class MyRobot extends BCAbstractRobot {
                     if (this.castle_order == 0 && step > 10
                             && this.churches * 16 < step
                             && this.karbonite > 80 && this.fuel > 300) {
-                        var target_church = this.get_church_candidate(
+                        let target_church = this.get_church_candidate(
                             this.filter_by_nearest_distance(
                                 this.get_resources(this.karbonite_map),
                                 this.castle_locations),
@@ -115,8 +115,7 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    var nearest_enemy = this.get_nearest_unit(enemies);
-                    var signal_value = this.encode_coordinates(this.objective);
+                    let signal_value = this.encode_coordinates(this.objective);
 
                     this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
                     break;
@@ -126,14 +125,14 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    var nearest_enemy = this.get_nearest_unit(enemies);
-                    var signal_value = this.encode_coordinates(this.objective);
+                    let nearest_enemy = this.get_nearest_unit(enemies);
+                    let signal_value = this.encode_coordinates(this.objective);
 
                     this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
                                       nearest_enemy);
                     break;
                 case 3:
-                    var prey = this.get_attack_target_from(attackables,
+                    let prey = this.get_attack_target_from(attackables,
                                                            [4, 5, 2, 3, 1, 0]);
                     if (prey != null) {
                         this.log('  - attack unit [' + prey.id + '], type ('
@@ -147,12 +146,12 @@ class MyRobot extends BCAbstractRobot {
             // TODO: defend with (stationary) prophets against enemies
 
             // signal veto to avoid multiple broadcasts overriding each other
-            var signal_veto = false;
+            let signal_veto = false;
 
             // check castle talk - abuse all information available
-            var castling = this.filter_castling_robots(visibles);
-            for (var i = 0; i < castling.length; i++) {
-                var robot = castling[i];
+            let castling = this.filter_castling_robots(visibles);
+            for (let i = 0; i < castling.length; i++) {
+                let robot = castling[i];
                 if (robot.id != this.me.id) {
                     if (step < 3) {
                         this.castles++;
@@ -172,8 +171,8 @@ class MyRobot extends BCAbstractRobot {
                     break;
                 case 2:
                     this.castles /= 2;
-                    for (var i = 0; i < this.castles; i++) {
-                        var coords = [this.castle_coords[i],
+                    for (let i = 0; i < this.castles; i++) {
+                        let coords = [this.castle_coords[i],
                                       this.castle_coords[i + this.castles]];
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
@@ -183,15 +182,15 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // check radioing units - team available for castles
-            var radioing = this.filter_radioing_robots(visibles);
-            for (var i = 0; i < radioing.length; i++) {
-                var robot = radioing[i];
-                var radio_signal = robot.signal;
+            let radioing = this.filter_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
+                let radio_signal = robot.signal;
 
                 // TODO: put such signals in a queue and handle one-by-one,
                 // this is not urgent
                 if (radio_signal >= 0xd000) {
-                    var fallen = this.decode_coordinates(
+                    let fallen = this.decode_coordinates(
                         radio_signal - 0xd000);
                     // check coordinates
                     if (fallen[0] == this.objective[0]
@@ -273,10 +272,10 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.queue_unit.length > 0) {
-                var target_square = this.queue_spawn.shift();
-                var target_unit = this.queue_unit.shift();
-                var target_signal = this.queue_signal.shift();
-                var target_destination = this.queue_destination.shift();
+                let target_square = this.queue_spawn.shift();
+                let target_unit = this.queue_unit.shift();
+                let target_signal = this.queue_signal.shift();
+                let target_destination = this.queue_destination.shift();
 
                 target_square = this.get_optimal_buildable_square_for(
                     target_square, target_destination);
@@ -318,11 +317,11 @@ class MyRobot extends BCAbstractRobot {
                     [this.me.x, this.me.y]);
             }
 
-            var visibles = this.get_visible_robots();
-            var enemies = this.filter_visible_enemies(visibles);
-            var attackables = this.filter_enemy_attackables(enemies);
+            let visibles = this.get_visible_robots();
+            let enemies = this.filter_visible_enemies(visibles);
+            let attackables = this.filter_enemy_attackables(enemies);
 
-            var church_safety = this.get_church_defence_status(
+            let church_safety = this.get_church_defence_status(
                 visibles, enemies);
 
             switch (church_safety) {
@@ -334,8 +333,7 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    var nearest_enemy = this.get_nearest_unit(enemies);
-                    var signal_value = this.encode_coordinates(this.objective);
+                    let signal_value = this.encode_coordinates(this.objective);
                     this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
                     break;
                 case 2:
@@ -344,8 +342,8 @@ class MyRobot extends BCAbstractRobot {
                     this.queue_signal.length = 0;
                     this.queue_destination.length = 0;
 
-                    var nearest_enemy = this.get_nearest_unit(enemies);
-                    var signal_value = this.encode_coordinates(this.objective);
+                    let nearest_enemy = this.get_nearest_unit(enemies);
+                    let signal_value = this.encode_coordinates(this.objective);
                     this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
                                       nearest_enemy);
                     break;
@@ -354,7 +352,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: defend with (stationary) prophets against enemies
 
             // signal veto to avoid multiple broadcasts overriding each other
-            var signal_veto = false;
+            let signal_veto = false;
 
             // TODO: decide units/target resource based on distribution of
             // resources
@@ -390,10 +388,10 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.queue_unit.length > 0) {
-                var target_square = this.queue_spawn.shift();
-                var target_unit = this.queue_unit.shift();
-                var target_signal = this.queue_signal.shift();
-                var target_destination = this.queue_destination.shift();
+                let target_square = this.queue_spawn.shift();
+                let target_unit = this.queue_unit.shift();
+                let target_signal = this.queue_signal.shift();
+                let target_destination = this.queue_destination.shift();
 
                 target_square = this.get_optimal_buildable_square_for(
                     target_square, target_destination);
@@ -426,11 +424,11 @@ class MyRobot extends BCAbstractRobot {
                 this.symmetry = this.guess_map_symmetry();
             }
 
-            var visibles = this.get_visible_robots();
+            let visibles = this.get_visible_robots();
 
-            var radioing = this.filter_radioing_robots(visibles);
-            for (var i = 0; i < radioing.length; i++) {
-                var robot = radioing[i];
+            let radioing = this.filter_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
                 if (robot.unit < 2 && this.memory == null) {
                     this.target = this.decode_coordinates(robot.signal);
                     this.memory = this.target;
@@ -449,7 +447,7 @@ class MyRobot extends BCAbstractRobot {
                         && this.get_adjacent_deposit_point() == null
                         && this.distance([this.me.x, this.me.y],
                                          this.fountain) > 25) {
-                    var church_square = this.get_optimal_buildable_square_for(
+                    let church_square = this.get_optimal_buildable_square_for(
                         church_square, null);
                     this.fountain = church_square;
                     this.birthplace = [this.me.x, this.me.y];
@@ -466,12 +464,12 @@ class MyRobot extends BCAbstractRobot {
             // evasion is necessary, though may be complicated with unknown
             // targetting priorities of enemies
 
-            var enemies = this.filter_attacking_enemies(
+            let enemies = this.filter_attacking_enemies(
                 this.filter_visible_enemies(visibles));
 
-            var attacked_count = 0;
-            for (var i = 0; i < enemies.length; i++) {
-                var enemy = enemies[i];
+            let attacked_count = 0;
+            for (let i = 0; i < enemies.length; i++) {
+                let enemy = enemies[i];
                 if (this.in_attack_range_of(enemy)) {
                     attacked_count++;
                 }
@@ -484,9 +482,9 @@ class MyRobot extends BCAbstractRobot {
             }
 
             else if (enemies.length > 0) {
-                var enemies_by_units = this.filter_unit_types(enemies);
+                let enemies_by_units = this.filter_unit_types(enemies);
                 if (enemies_by_units[SPECS.CRUSADER].length > 0) {
-                    var nearest_crusader = this.get_nearest_unit(
+                    let nearest_crusader = this.get_nearest_unit(
                         enemies_by_units[SPECS.CRUSADER]);
                     if (this.distance([nearest_crusader.x, nearest_crusader.y],
                                       [this.me.x, this.me.y]) <= 20) {
@@ -578,7 +576,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: ('
                     + destination[0] + ', ' + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -595,16 +593,16 @@ class MyRobot extends BCAbstractRobot {
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
-            var visibles = this.get_visible_robots();
+            let visibles = this.get_visible_robots();
 
-            var radioing = this.filter_all_radioing_robots(visibles);
-            for (var i = 0; i < radioing.length; i++) {
-                var robot = radioing[i];
+            let radioing = this.filter_all_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
                 if (robot.unit == 0 && robot.x == this.fountain[0]
                         && robot.y == this.fountain[1]) {
                     if (this.target == null) {
                         this.target = this.decode_coordinates(robot.signal);
-                        this.memory = this.target
+                        this.memory = this.target;
                         this.objective = this.target;
                         break;
                     }
@@ -624,12 +622,12 @@ class MyRobot extends BCAbstractRobot {
             //     objective: current enemy target location
             //     victim: short-term enemy robot object
 
-            var enemies = this.filter_visible_enemies(visibles);
+            let enemies = this.filter_visible_enemies(visibles);
 
             // identify castle if it is within range
             if (this.memory != null && this.in_vision_range(this.memory)) {
-                var castle_prescence = null;
-                for (var i = 0; i < enemies.length; i++) {
+                let castle_prescence = null;
+                for (let i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
                         castle_prescence = enemies[i];
                         break;
@@ -637,7 +635,7 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (castle_prescence == null) {
-                    var signal_value = this.encode_coordinates(
+                    let signal_value = this.encode_coordinates(
                         [this.memory[0], this.memory[1]]) + 0xd000;
                     this.signal(signal_value, this.distance(
                         [this.me.x, this.me.y], this.fountain));
@@ -665,9 +663,9 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            var attackables = this.filter_enemy_attackables(enemies);
+            let attackables = this.filter_enemy_attackables(enemies);
 
-            var prey = this.get_attack_target_from(attackables,
+            let prey = this.get_attack_target_from(attackables,
                                                    [2, 0, 4, 5, 3, 1]);
 
             if (prey != null) {
@@ -692,7 +690,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -709,11 +707,11 @@ class MyRobot extends BCAbstractRobot {
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
-            var visibles = this.get_visible_robots();
+            let visibles = this.get_visible_robots();
 
-            var radioing = this.filter_all_radioing_robots(visibles);
-            for (var i = 0; i < radioing.length; i++) {
-                var robot = radioing[i];
+            let radioing = this.filter_all_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
                 if (robot.unit == 0 && robot.x == this.fountain[0]
                         && robot.y == this.fountain[1]) {
                     this.log('DEBUG: RADIO: receive target info');
@@ -728,11 +726,11 @@ class MyRobot extends BCAbstractRobot {
             // TODO: prophets generally should seek out choke points or cover
             // behind friend units and remain stationary
 
-            var visibles = this.get_visible_robots();
-            var enemies = this.filter_visible_enemies(visibles);
-            var attackables = this.filter_enemy_attackables(enemies);
+            let visibles = this.get_visible_robots();
+            let enemies = this.filter_visible_enemies(visibles);
+            let attackables = this.filter_enemy_attackables(enemies);
 
-            var prey = this.get_attack_target_from(attackables,
+            let prey = this.get_attack_target_from(attackables,
                                                    [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
@@ -774,7 +772,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -791,11 +789,11 @@ class MyRobot extends BCAbstractRobot {
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
-            var visibles = this.get_visible_robots();
+            let visibles = this.get_visible_robots();
 
-            var radioing = this.filter_all_radioing_robots(visibles);
-            for (var i = 0; i < radioing.length; i++) {
-                var robot = radioing[i];
+            let radioing = this.filter_all_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
                 if (robot.unit == 0 && robot.x == this.fountain[0]
                         && robot.y == this.fountain[1]) {
                     this.log('DEBUG: RADIO: receive target info');
@@ -809,14 +807,14 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: special aoe targetting for preachers
 
-            var visibles = this.get_visible_robots();
-            var enemies = this.filter_visible_enemies(visibles);
-            var attackables = this.filter_enemy_attackables(enemies);
+            let visibles = this.get_visible_robots();
+            let enemies = this.filter_visible_enemies(visibles);
+            let attackables = this.filter_enemy_attackables(enemies);
 
-            var prey = this.get_attack_target_from(attackables,
+            let prey = this.get_attack_target_from(attackables,
                                                    [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
-                var splash_target = this.get_splash_for([prey.x, prey.y]);
+                let splash_target = this.get_splash_for([prey.x, prey.y]);
                 this.log('  - attack unit [' + prey.id + '], type ('
                     + prey.unit + ') at ' + splash_target[0] + ', '
                     + splash_target[1]);
@@ -857,7 +855,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                var destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path, this.me.unit);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -899,8 +897,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_passable(square) {
-        var x = square[0];
-        var y = square[1];
+        let x = square[0];
+        let y = square[1];
 
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return false;
@@ -910,14 +908,14 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_passable_and_empty(square) {
-        var x = square[0];
-        var y = square[1];
+        let x = square[0];
+        let y = square[1];
 
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
             return false;
         }
 
-        var nonempty = this.get_visible_robot_map();
+        let nonempty = this.get_visible_robot_map();
 
         return this.map[y][x] && (nonempty[y][x] < 1);
     }
@@ -931,8 +929,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_deposit_point() {
-        var visibles = this.get_visible_robots();
-        for (var i = 0; i < visibles.length; i++) {
+        let visibles = this.get_visible_robots();
+        for (let i = 0; i < visibles.length; i++) {
             if (visibles[i].unit < 2 && visibles[i].team == this.me.team) {
                 if (this.is_adjacent([visibles[i].x, visibles[i].y])) {
                     return [visibles[i].x, visibles[i].y];
@@ -944,11 +942,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     guess_map_symmetry() {
-        var karbonite_map = this.karbonite_map;
-        var karbonite_coords = this.get_resources(karbonite_map);
+        let karbonite_map = this.karbonite_map;
+        let karbonite_coords = this.get_resources(karbonite_map);
 
-        for (var i = 0; i < karbonite_coords.length; i++) {
-            var coord = karbonite_coords[i];
+        for (let i = 0; i < karbonite_coords.length; i++) {
+            let coord = karbonite_coords[i];
             if (karbonite_map[coord[1]][this.size - 1 - coord[0]]
                     && !(karbonite_map[this.size - 1 - coord[1]][coord[0]])) {
                 return 0;
@@ -976,7 +974,7 @@ class MyRobot extends BCAbstractRobot {
 
     get_direction_to_edge() {
         if (this.symmetry == 0) {
-            var side = (this.me.x > this.size / 2);
+            let side = (this.me.x > this.size / 2);
             if (side == true) {
                 return [Math.min(this.size - 1, this.me.x + 4), this.me.y];
             }
@@ -986,7 +984,7 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        var side = (this.me.y > this.size / 2);
+        let side = (this.me.y > this.size / 2);
         if (side == true) {
             return [this.me.x, Math.min(this.size - 1, this.me.y + 4)];
         }
@@ -1001,11 +999,11 @@ class MyRobot extends BCAbstractRobot {
             return [];
         }
 
-        var square = [this.me.x, this.me.y];
-        var side = (square[this.symmetry] > this.map.length / 2);
+        let square = [this.me.x, this.me.y];
+        let side = (square[this.symmetry] > this.map.length / 2);
 
-        var filtered = [];
-        for (var i = 0; i < squares.length; i++) {
+        let filtered = [];
+        for (let i = 0; i < squares.length; i++) {
             if ((squares[i][this.symmetry] > this.map.length / 2) == side) {
                 filtered.push(squares[i]);
             }
@@ -1015,10 +1013,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_squares() {
-        var adjacent = [];
-        for (var i = 0; i < 8; i++) {
-            var adjx = this.me.x + this.compass[i][0];
-            var adjy = this.me.y + this.compass[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let adjx = this.me.x + this.compass[i][0];
+            let adjy = this.me.y + this.compass[i][1];
             if (this.is_passable([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
@@ -1028,10 +1026,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_empty_squares() {
-        var adjacent = [];
-        for (var i = 0; i < 8; i++) {
-            var adjx = this.me.x + this.compass[i][0];
-            var adjy = this.me.y + this.compass[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let adjx = this.me.x + this.compass[i][0];
+            let adjy = this.me.y + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
@@ -1041,10 +1039,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_squares_at(square) {
-        var adjacent = [];
-        for (var i = 0; i < 8; i++) {
-            var adjx = square[0] + this.compass[i][0];
-            var adjy = square[1] + this.compass[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let adjx = square[0] + this.compass[i][0];
+            let adjy = square[1] + this.compass[i][1];
             if (this.is_passable([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
@@ -1054,10 +1052,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_passable_empty_squares_at(square) {
-        var adjacent = [];
-        for (var i = 0; i < 8; i++) {
-            var adjx = square[0] + this.compass[i][0];
-            var adjy = square[1] + this.compass[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let adjx = square[0] + this.compass[i][0];
+            let adjy = square[1] + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
                 adjacent.push([adjx, adjy]);
             }
@@ -1076,16 +1074,16 @@ class MyRobot extends BCAbstractRobot {
 
     get_optimal_buildable_square_for(target, destination) {
         if (destination != null) {
-            var adjacent = this.get_buildable_squares();
+            let adjacent = this.get_buildable_squares();
             if (adjacent.length == 0) {
                 return null;
             }
 
-            var min_index = 0;
-            var min_distance = 100;
-            for (var i = 0; i < adjacent.length; i++) {
-                var square = adjacent[i];
-                var distance = this.distance(square, [this.me.x, this.me.y]);
+            let min_index = 0;
+            let min_distance = 100;
+            for (let i = 0; i < adjacent.length; i++) {
+                let square = adjacent[i];
+                let distance = this.distance(square, [this.me.x, this.me.y]);
                 if (distance < min_distance) {
                     min_index = i;
                     min_distance = distance;
@@ -1096,8 +1094,8 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (target != null && !this.is_buildable(target)) {
-            var adjacent = this.get_buildable_squares_at(target);
-            for (var i = 0; i < adjacent.length; i++) {
+            let adjacent = this.get_buildable_squares_at(target);
+            for (let i = 0; i < adjacent.length; i++) {
                 if (this.is_adjacent(adjacent[i])) {
                     return adjacent[i];
                 }
@@ -1105,7 +1103,7 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (target == null) {
-            var buildable = this.get_buildable_squares();
+            let buildable = this.get_buildable_squares();
             if (buildable.length > 0) {
                 return buildable[0];
             }
@@ -1123,13 +1121,13 @@ class MyRobot extends BCAbstractRobot {
     }
 
     smear_centred(square) {
-        var x = square[0];
-        var y = square[1];
+        let x = square[0];
+        let y = square[1];
 
-        var reachables = [];
-        for (var i = 0; i < 8; i++) {
-            var adjx = square[0] + this.compass[i][0];
-            var adjy = square[1] + this.compass[i][1];
+        let reachables = [];
+        for (let i = 0; i < 8; i++) {
+            let adjx = square[0] + this.compass[i][0];
+            let adjy = square[1] + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
                 reachables.push([adjx, adjy]);
             }
@@ -1140,9 +1138,9 @@ class MyRobot extends BCAbstractRobot {
                 [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2],
                 [-2, -1], [2, -1], [-2, 0], [2, 0], [-2, 1], [2, 1],
                 [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]];
-            for (var i = 0; i < 16; i++) {
-                var rngx = square[0] + ring_two[i][0];
-                var rngy = square[1] + ring_two[i][1];
+            for (let i = 0; i < 16; i++) {
+                let rngx = square[0] + ring_two[i][0];
+                let rngy = square[1] + ring_two[i][1];
                 if (this.is_passable_and_empty([rngx, rngy])) {
                     reachables.push([rngx, rngy]);
                 }
@@ -1161,9 +1159,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_resources(resource_map) {
-        var resources = [];
-        for (var i = 0; i < this.size; i++) {
-            for (var j = 0; j < this.size; j++) {
+        let resources = [];
+        for (let i = 0; i < this.size; i++) {
+            for (let j = 0; j < this.size; j++) {
                 if (resource_map[i][j]) {
                     resources.push([j, i]);
                 }
@@ -1174,10 +1172,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_local_resources(resource_map) {
-        var local_resources = [];
+        let local_resources = [];
 
-        var resources = this.get_resources(resource_map);
-        for (var i = 0; i < resources.length; i++) {
+        let resources = this.get_resources(resource_map);
+        for (let i = 0; i < resources.length; i++) {
             if (this.distance([this.me.x, this.me.y], resources[i]) < 25) {
                 local_resources.push(resources[i]);
             }
@@ -1229,22 +1227,22 @@ class MyRobot extends BCAbstractRobot {
     }
 
     astar(start, end, adjacency) {
-        var trace = {};
+        let trace = {};
 
-        var G = {};
-        var open_squares = {};
+        let G = {};
+        let open_squares = {};
 
         G[start] = 0;
         open_squares[start] = this.distance(start, end);
 
-        var closed_squares = {};
+        let closed_squares = {};
 
         while (Object.keys(open_squares).length > 0) {
-            var head = null;
-            var score = 0;
+            let head = null;
+            let score = 0;
 
-            for (var square in open_squares) {
-                var square_score = open_squares[square];
+            for (let square in open_squares) {
+                let square_score = open_squares[square];
                 if (head == null || square_score < score) {
                     head = JSON.parse('[' + square + ']');
                     score = square_score;
@@ -1252,7 +1250,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (head[0] == end[0] && head[1] == end[1]) {
-                var path = [head];
+                let path = [head];
                 while (head in trace) {
                     head = trace[head];
                     path.push(head);
@@ -1265,15 +1263,15 @@ class MyRobot extends BCAbstractRobot {
             delete open_squares[head];
             closed_squares[head] = 0;
 
-            var adjacent = adjacency(head);
-            for (var i = 0; i < adjacent.length; i++) {
-                var square = adjacent[i];
+            let adjacent = adjacency(head);
+            for (let i = 0; i < adjacent.length; i++) {
+                let square = adjacent[i];
 
                 if (closed_squares[square] == 0) {
                     continue;
                 }
 
-                var total = G[head] + this.distance(head, square);
+                let total = G[head] + this.distance(head, square);
 
                 if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
@@ -1302,18 +1300,18 @@ class MyRobot extends BCAbstractRobot {
             [[-1, -1], [0, -2], [1, -1]], [[1, -1], [2, 0], [1, 1]],
             [[1, 1], [0, 2], [-1, 1]], [[-1, 1], [-2, 0], [-1, -1]]];
 
-        var adjacent = [];
-        for (var i = 0; i < 8; i++) {
-            var rngx = square[0] + ring_two[i][0];
-            var rngy = square[1] + ring_two[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let rngx = square[0] + ring_two[i][0];
+            let rngy = square[1] + ring_two[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
                 adjacent.push([rngx, rngy]);
             }
         }
 
-        for (var i = 0; i < 4; i++) {
-            var rngx = square[0] + ring_one[i][0];
-            var rngy = square[1] + ring_one[i][1];
+        for (let i = 0; i < 4; i++) {
+            let rngx = square[0] + ring_one[i][0];
+            let rngy = square[1] + ring_one[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
                 adjacent.push([rngx, rngy]);
             }
@@ -1344,26 +1342,26 @@ class MyRobot extends BCAbstractRobot {
             [[-1, -1], [0, -2], [1, -1]], [[1, -1], [2, 0], [1, 1]],
             [[1, 1], [0, 2], [-1, 1]], [[-1, 1], [-2, 0], [-1, -1]]];
 
-        var adjacent = [];
-        for (var i = 0; i < 16; i++) {
-            var rngx = square[0] + ring_three[i][0];
-            var rngy = square[1] + ring_three[i][1];
+        let adjacent = [];
+        for (let i = 0; i < 16; i++) {
+            let rngx = square[0] + ring_three[i][0];
+            let rngy = square[1] + ring_three[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
                 adjacent.push([rngx, rngy]);
             }
         }
 
-        for (var i = 0; i < 8; i++) {
-            var rngx = square[0] + ring_two[i][0];
-            var rngy = square[1] + ring_two[i][1];
+        for (let i = 0; i < 8; i++) {
+            let rngx = square[0] + ring_two[i][0];
+            let rngy = square[1] + ring_two[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
                 adjacent.push([rngx, rngy]);
             }
         }
 
-        for (var i = 0; i < 4; i++) {
-            var rngx = square[0] + ring_one[i][0];
-            var rngy = square[1] + ring_one[i][1];
+        for (let i = 0; i < 4; i++) {
+            let rngx = square[0] + ring_one[i][0];
+            let rngy = square[1] + ring_one[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
                 adjacent.push([rngx, rngy]);
             }
@@ -1373,22 +1371,22 @@ class MyRobot extends BCAbstractRobot {
     }
 
     onion_search(start, end, range, layering) {
-        var trace = {};
+        let trace = {};
 
-        var G = {};
-        var open_squares = {};
+        let G = {};
+        let open_squares = {};
 
         G[start] = 0;
         open_squares[start] = this.distance(start, end);
 
-        var closed_squares = {};
+        let closed_squares = {};
 
         while (Object.keys(open_squares).length > 0) {
-            var head = null;
-            var score = 0;
+            let head = null;
+            let score = 0;
 
-            for (var square in open_squares) {
-                var square_score = open_squares[square];
+            for (let square in open_squares) {
+                let square_score = open_squares[square];
                 if (head == null || square_score < score) {
                     head = JSON.parse('[' + square + ']');
                     score = square_score;
@@ -1396,7 +1394,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.distance(head, end) <= range) {
-                var path = [end, head];
+                let path = [end, head];
                 while (head in trace) {
                     head = trace[head];
                     path.push(head);
@@ -1409,15 +1407,15 @@ class MyRobot extends BCAbstractRobot {
             delete open_squares[head];
             closed_squares[head] = 0;
 
-            var adjacent = layering(head);
-            for (var i = 0; i < adjacent.length; i++) {
-                var square = adjacent[i];
+            let adjacent = layering(head);
+            for (let i = 0; i < adjacent.length; i++) {
+                let square = adjacent[i];
 
                 if (closed_squares[square] == 0) {
                     continue;
                 }
 
-                var total = G[head] + this.distance(head, square);
+                let total = G[head] + this.distance(head, square);
 
                 if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
@@ -1438,8 +1436,8 @@ class MyRobot extends BCAbstractRobot {
         const movement_speed = [0, 0, 4, 9, 4, 4];
         const range = movement_speed[this.me.unit];
 
-        var next = null;
-        for (var i = 1; i < path.length; i++) {
+        let next = null;
+        for (let i = 1; i < path.length; i++) {
             if (this.distance([this.me.x, this.me.y], path[i]) > range) {
                 next = path[i - 1];
                 break;
@@ -1490,8 +1488,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     order_resources(resources) {
-        var resource_paths = [];
-        for (var i = 0; i < resources.length; i++) {
+        let resource_paths = [];
+        for (let i = 0; i < resources.length; i++) {
             resource_paths[i] = (this.astar(
                 [this.me.x, this.me.y], resources[i],
                 this.get_adjacent_passable_squares_at.bind(this)));
@@ -1500,9 +1498,9 @@ class MyRobot extends BCAbstractRobot {
         resource_paths.sort(function(r, s) {
             return r.length - s.length; });
 
-        var ordered_resources = [];
-        for (var i = 0; i < resource_paths.length; i++) {
-            var path = resource_paths[i];
+        let ordered_resources = [];
+        for (let i = 0; i < resource_paths.length; i++) {
+            let path = resource_paths[i];
             ordered_resources.push(
                 [path[path.length - 1], path[0], path.length]);
         }
@@ -1523,9 +1521,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_castling_robots(visibles) {
-        var castling = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let castling = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (robot.team == this.me.team && robot.castle_talk != 0) {
                 castling.push(robot);
             }
@@ -1535,9 +1533,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_radioing_robots(visibles) {
-        var radioing = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let radioing = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (this.is_radioing(robot) && robot.team == this.me.team
                     && robot.id != this.me.id) {
                 radioing.push(robot);
@@ -1548,9 +1546,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_all_radioing_robots(visibles) {
-        var radioing = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let radioing = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (this.is_radioing(robot)) {
                 radioing.push(robot);
             }
@@ -1560,9 +1558,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_visible_enemies(visibles) {
-        var enemies = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let enemies = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (this.is_visible(robot) && robot.team != this.me.team) {
                 enemies.push(robot);
             }
@@ -1572,9 +1570,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_visible_enemies_in_attack_range(visibles) {
-        var enemies = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let enemies = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (this.is_visible(robot) && robot.team != this.me.team
                     && this.in_attack_range(robot)) {
                 enemies.push(robot);
@@ -1585,9 +1583,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_enemy_attackables(enemies) {
-        var attackables = [];
-        for (var i = 0; i < enemies.length; i++) {
-            var enemy = enemies[i];
+        let attackables = [];
+        for (let i = 0; i < enemies.length; i++) {
+            let enemy = enemies[i];
             if (this.in_attack_range(enemy)) {
                 attackables.push(enemy);
             }
@@ -1597,9 +1595,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_attacking_enemies(enemies) {
-        var attacking = [];
-        for (var i = 0; i < enemies.length; i++) {
-            var enemy = enemies[i];
+        let attacking = [];
+        for (let i = 0; i < enemies.length; i++) {
+            let enemy = enemies[i];
             if (enemy.unit > 2) {
                 attacking.push(enemy);
             }
@@ -1609,9 +1607,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_visible_friends(visibles) {
-        var friends = [];
-        for (var i = 0; i < visibles.length; i++) {
-            var robot = visibles[i];
+        let friends = [];
+        for (let i = 0; i < visibles.length; i++) {
+            let robot = visibles[i];
             if (robot.team == this.me.team
                     && this.distance([robot.x, robot.y],
                                      [this.me.x, this.me.y]) <= 9) {
@@ -1630,7 +1628,7 @@ class MyRobot extends BCAbstractRobot {
         const min_attack_range = [1, 0, 0, 1, 16, 1];
         const max_attack_range = [64, 0, 0, 16, 64, 16];
 
-        var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        let range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
     }
@@ -1639,7 +1637,7 @@ class MyRobot extends BCAbstractRobot {
         const min_attack_range = [1, 0, 0, 1, 16, 1];
         const max_attack_range = [64, 0, 0, 16, 64, 26];
 
-        var range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        let range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
     }
@@ -1652,9 +1650,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     filter_unit_types(robots) {
-        var types = [[], [], [], [], [], []];
-        for (var i = 0; i < robots.length; i++) {
-            var robot = robots[i];
+        let types = [[], [], [], [], [], []];
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
             types[robot.unit].push(robot);
         }
 
@@ -1666,9 +1664,9 @@ class MyRobot extends BCAbstractRobot {
             return 0;
         }
 
-        var friendlies = this.filter_visible_friends(visibles);
-        var enemies_by_units = this.filter_unit_types(enemies);
-        var friendlies_by_units = this.filter_unit_types(friendlies);
+        let friendlies = this.filter_visible_friends(visibles);
+        let enemies_by_units = this.filter_unit_types(enemies);
+        let friendlies_by_units = this.filter_unit_types(friendlies);
 
         if (enemies_by_units[4].length > friendlies_by_units[4].length) {
             return 1;
@@ -1679,7 +1677,7 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (enemies_by_units[5].length > friendlies_by_units[4].length) {
-            var nearest = this.get_nearest_unit(enemies_by_units[5]);
+            let nearest = this.get_nearest_unit(enemies_by_units[5]);
 
             if (this.distance([this.me.x, this.me.y],
                               [nearest.x, nearest.y]) <= 25) {
@@ -1700,9 +1698,9 @@ class MyRobot extends BCAbstractRobot {
             return 0;
         }
 
-        var friendlies = this.filter_visible_friends(visibles);
-        var enemies_by_units = this.filter_unit_types(enemies);
-        var friendlies_by_units = this.filter_unit_types(friendlies);
+        let friendlies = this.filter_visible_friends(visibles);
+        let enemies_by_units = this.filter_unit_types(enemies);
+        let friendlies_by_units = this.filter_unit_types(friendlies);
 
         if (enemies_by_units[4].length > friendlies_by_units[4].length) {
             return 1;
@@ -1713,7 +1711,7 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (enemies_by_units[5].length > friendlies_by_units[4].length) {
-            var nearest = this.get_nearest_unit(enemies_by_units[5]);
+            let nearest = this.get_nearest_unit(enemies_by_units[5]);
 
             if (this.distance([this.me.x, this.me.y],
                               [nearest.x, nearest.y]) <= 25) {
@@ -1730,11 +1728,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_nearest_unit(units) {
-        var min_index = 0;
-        var min_distance = 100;
-        for (var i = 0; i < units.length; i++) {
-            var robot = units[i];
-            var distance_to_unit = this.distance([this.me.x, this.me.y],
+        let min_index = 0;
+        let min_distance = 100;
+        for (let i = 0; i < units.length; i++) {
+            let robot = units[i];
+            let distance_to_unit = this.distance([this.me.x, this.me.y],
                                                  [robot.x, robot.y]);
             if (distance_to_unit < min_distance) {
                 min_index = i;
@@ -1750,9 +1748,9 @@ class MyRobot extends BCAbstractRobot {
             return null;
         }
 
-        var attackables_by_units = this.filter_unit_types(attackables);
-        for (var i = 0; i < priority.length; i++) {
-            var order = priority[i];
+        let attackables_by_units = this.filter_unit_types(attackables);
+        for (let i = 0; i < priority.length; i++) {
+            let order = priority[i];
             if (attackables_by_units[order].length > 0) {
                 return this.get_nearest_unit(attackables_by_units[order]);
             }
@@ -1760,12 +1758,12 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_unit_count_for(square, robot_map) {
-        var robot_id = robot_map[square[1]][square[0]];
+        let robot_id = robot_map[square[1]][square[0]];
         if (robot_id < 1) {
             return 0;
         }
 
-        var robot = this.get_robot(robot_id);
+        let robot = this.get_robot(robot_id);
         if (robot.team == this.me.team) {
             return -1;
         }
@@ -1774,12 +1772,12 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_unit_count_difference_around(square) {
-        var robot_map = this.get_visible_robot_map();
+        let robot_map = this.get_visible_robot_map();
 
-        var count = 0;
+        let count = 0;
         count += this.get_unit_count_for(square, robot_map);
-        var adjacent = this.get_adjacent_passable_squares_at(square);
-        for (var i = 0; i < adjacent.length; i++) {
+        let adjacent = this.get_adjacent_passable_squares_at(square);
+        for (let i = 0; i < adjacent.length; i++) {
             count += this.get_unit_count_for(adjacent[i], robot_map);
         }
 
@@ -1787,12 +1785,12 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_splash_for(target) {
-        var square = target;
-        var max_count = this.get_unit_count_difference_around(target);
+        let square = target;
+        let max_count = this.get_unit_count_difference_around(target);
 
-        var adjacent = this.get_adjacent_passable_squares_at(target);
-        for (var i = 0; i < adjacent.length; i++) {
-            var count = this.get_unit_count_difference_around(adjacent[i]);
+        let adjacent = this.get_adjacent_passable_squares_at(target);
+        for (let i = 0; i < adjacent.length; i++) {
+            let count = this.get_unit_count_difference_around(adjacent[i]);
             if (count > max_count) {
                 square = adjacent[i];
             }
@@ -1803,10 +1801,10 @@ class MyRobot extends BCAbstractRobot {
 
     filter_by_nearest_distance(squares, targets) {
         // targets: castles, squares: resources
-        var filtered = [];
-        for (var i = 0; i < squares.length; i++) {
-            var square = squares[i];
-            var nearest = this.get_nearest_distance(targets, square);
+        let filtered = [];
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            let nearest = this.get_nearest_distance(targets, square);
             if (nearest >= 25) {
                 filtered.push(square);
             }
@@ -1820,10 +1818,10 @@ class MyRobot extends BCAbstractRobot {
             return null;
         }
 
-        var min_distance = 8192;
-        for (var i = 0; i < squares.length; i++) {
-            var square = squares[i];
-            var distance = this.distance(target, square);
+        let min_distance = 8192;
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            let distance = this.distance(target, square);
             if (distance < min_distance) {
                 min_distance = distance;
             }
@@ -1833,12 +1831,12 @@ class MyRobot extends BCAbstractRobot {
     }
 
     count_impassable_squares_around(square) {
-        var count = 0;
+        let count = 0;
 
-        var x = square[0];
-        var y = square[1];
-        for (var i = -4; i < 5; i++) {
-            for (var j = -4; j < 5; j++) {
+        let x = square[0];
+        let y = square[1];
+        for (let i = -4; i < 5; i++) {
+            for (let j = -4; j < 5; j++) {
                 if (!this.is_passable([y + j, x + i])) {
                     count++;
                 }
@@ -1849,9 +1847,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_safety_evaluation(resources, friends, enemies) {
-        var safety = [];
-        for (var i = 0; i < resources.length; i++) {
-            var resource = resources[i];
+        let safety = [];
+        for (let i = 0; i < resources.length; i++) {
+            let resource = resources[i];
             safety[i] = this.get_nearest_distance(enemies, resource)
                 - this.get_nearest_distance(friends, resource)
                 + this.count_impassable_squares_around(resource);
@@ -1861,9 +1859,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_index_of_largest_in(list) {
-        var max = -16384;
-        var max_index = 0;
-        for (var i = 0; i < list.length; i++) {
+        let max = -16384;
+        let max_index = 0;
+        for (let i = 0; i < list.length; i++) {
             if (list[i] > max) {
                 max = list[i];
                 max_index = i;
@@ -1874,15 +1872,15 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_church_candidate(resources, castles) {
-        var enemy_castles = [];
-        for (var i = 0; i < castles.length; i++) {
-            var castle = castles[i];
+        let enemy_castles = [];
+        for (let i = 0; i < castles.length; i++) {
+            let castle = castles[i];
             enemy_castles.push(this.reflect_about_symmetry_axis(castle));
         }
 
-        var safety = this.get_safety_evaluation(resources, castles,
+        let safety = this.get_safety_evaluation(resources, castles,
                                                 enemy_castles);
-        var safest = resources[this.get_index_of_largest_in(safety)];
+        let safest = resources[this.get_index_of_largest_in(safety)];
 
         return safest;
     }
