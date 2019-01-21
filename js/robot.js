@@ -94,8 +94,7 @@ class MyRobot extends BCAbstractRobot {
                 if (step > 10) {
                     var target_church = this.get_church_candidate(
                         this.filter_by_nearest_distance(
-                            this.filter_by_map_symmetry(
-                                this.get_resources(this.karbonite_map)),
+                            this.get_resources(this.karbonite_map),
                             this.castle_locations),
                         this.castle_locations);
                     this.enqueue_unit(
