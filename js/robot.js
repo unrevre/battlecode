@@ -21,9 +21,9 @@ class MyRobot extends BCAbstractRobot {
         this.castle_order = null;
         this.castle_coords = [];
 
-        this.castle_locations = [];
-
+        this.deposit_points = [];
         this.objectives = [];
+
         this.objective = null;
 
         this.local_resources = [];
@@ -74,8 +74,9 @@ class MyRobot extends BCAbstractRobot {
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
+                this.objectives.push(this.objective);
 
-                this.castle_locations.push([this.me.x, this.me.y]);
+                this.deposit_points.push([this.me.x, this.me.y]);
             }
 
             // clear castle talk by default
@@ -96,11 +97,11 @@ class MyRobot extends BCAbstractRobot {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
                                 this.get_resources(this.karbonite_map),
-                                this.castle_locations, 25),
-                            this.castle_locations);
+                                this.deposit_points, 25),
+                            this.deposit_points, this.objectives);
                         this.log('DEBUG: CHURCH: ' + candidate);
                         this.enqueue_unit(SPECS.PILGRIM, 2, candidate, null);
-                        this.castle_locations.push(candidate);
+                        this.deposit_points.push(candidate);
                         this.churches++;
                     }
                     break;
@@ -159,7 +160,7 @@ class MyRobot extends BCAbstractRobot {
                                       this.castle_coords[i + this.castles]];
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
-                        this.castle_locations.push(coords);
+                        this.deposit_points.push(coords);
                     }
                     break;
             }
@@ -179,7 +180,8 @@ class MyRobot extends BCAbstractRobot {
                     if (fallen[0] == this.objective[0]
                             && fallen[1] == this.objective[1]
                             && this.objectives.length > 0) {
-                        this.objective = this.objectives.shift();
+                        this.objectives.shift();
+                        this.objective = this.objectives[0];
                         castle_talk_value = 0xF0 + this.castle_order;
                         this.signal(this.encode_coordinates(this.objective),
                                     this.distance([this.me.x, this.me.y],
@@ -1852,15 +1854,9 @@ class MyRobot extends BCAbstractRobot {
         return safety;
     }
 
-    get_church_candidate(resources, castles) {
-        let enemy_castles = [];
-        for (let i = 0; i < castles.length; i++) {
-            let castle = castles[i];
-            enemy_castles.push(this.reflect_about_symmetry_axis(castle));
-        }
-
+    get_church_candidate(resources, allied_bases, enemy_bases) {
         let safety = this.evaluate_safety_for_each(
-            resources, castles, enemy_castles);
+            resources, allied_bases, enemy_bases);
         let safest = resources[this.index_largest_element_in(safety)];
 
         return safest;
