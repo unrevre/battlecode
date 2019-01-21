@@ -48,6 +48,7 @@ class MyRobot extends BCAbstractRobot {
         this.current_rusher = 0;
 
         this.mode = 0;
+        this.churches = 0;
     }
 
     turn() {
@@ -91,15 +92,19 @@ class MyRobot extends BCAbstractRobot {
                 visibles, enemies);
 
             if (castle_safety == 0) {
-                if (step > 10) {
+                if (this.castle_order == 0 && step > 10
+                        && this.churches * 16 < step
+                        && this.karbonite > 80 && this.fuel > 300) {
                     var target_church = this.get_church_candidate(
                         this.filter_by_nearest_distance(
                             this.get_resources(this.karbonite_map),
                             this.castle_locations),
                         this.castle_locations);
+                    this.log('DEBUG: CHURCH: ' + target_church);
                     this.enqueue_unit(
                         SPECS.PILGRIM, 2,
                         this.encode_coordinates(target_church), null);
+                    this.churches++;
                 }
             }
 
@@ -252,8 +257,8 @@ class MyRobot extends BCAbstractRobot {
                         this.encode_coordinates(this.objective), null);
                 }
 
-                else if (step > 10 && this.karbonite > 100
-                        && this.fuel > 200) {
+                else if (step > 10 && this.karbonite > 120
+                        && this.fuel > 400) {
                     this.enqueue_unit(
                         SPECS.PROPHET, 0,
                         this.encode_coordinates(this.objective), null);
@@ -425,6 +430,20 @@ class MyRobot extends BCAbstractRobot {
                     && this.target[0] == this.me.x
                     && this.target[1] == this.me.y) {
                 this.target = null;
+
+                if (this.on_resource(this.karbonite_map)
+                        && this.get_adjacent_deposit_point() == null
+                        && this.distance([this.me.x, this.me.y],
+                                         this.fountain) > 25) {
+                    var church_square = this.get_optimal_buildable_square_for(
+                        church_square, null);
+                    this.fountain = church_square;
+                    this.birthplace = [this.me.x, this.me.y];
+                    this.target = null;
+                    return this.build_unit(SPECS.CHURCH,
+                                           church_square[0] - this.me.x,
+                                           church_square[1] - this.me.y);
+                }
             }
 
             // TODO: check for attacking units and check distance to deposit
@@ -899,7 +918,7 @@ class MyRobot extends BCAbstractRobot {
     get_adjacent_deposit_point() {
         var visibles = this.get_visible_robots();
         for (var i = 0; i < visibles.length; i++) {
-            if (visibles[i].unit < 2) {
+            if (visibles[i].unit < 2 && visibles[i].team == this.me.team) {
                 if (this.is_adjacent([visibles[i].x, visibles[i].y])) {
                     return [visibles[i].x, visibles[i].y];
                 }
