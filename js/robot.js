@@ -29,6 +29,7 @@ class MyRobot extends BCAbstractRobot {
         this.local_resources = [];
 
         this.unit_queue = [];
+        this.signal_queue = [];
 
         this.fountain = null;
         this.birthplace = null;
@@ -127,11 +128,6 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // TODO: defend with (stationary) prophets against enemies
-
-            // signal veto to avoid multiple broadcasts overriding each other
-            let signal_veto = false;
-
             // check castle talk - abuse all information available
             let castling = this.filter_castling_robots(visibles);
             for (let i = 0; i < castling.length; i++) {
@@ -169,26 +165,11 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_allied_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                let radio_signal = robot.signal;
-
-                // TODO: put such signals in a queue and handle one-by-one,
-                // this is not urgent
-                if (radio_signal >= 0xd000) {
-                    let fallen = this.decode_coordinates(
-                        radio_signal - 0xd000);
-                    // check coordinates
-                    if (fallen[0] == this.objective[0]
-                            && fallen[1] == this.objective[1]
-                            && this.objectives.length > 0) {
-                        this.objectives.shift();
-                        this.objective = this.objectives[0];
-                        castle_talk_value = 0xF0 + this.castle_order;
-                        this.signal(this.encode_coordinates(this.objective),
-                                    this.distance([this.me.x, this.me.y],
-                                                  [robot.x, robot.y]));
-                        signal_veto = true;
-                    }
-                }
+                this.signal_queue.push({
+                    signal: robot.signal,
+                    id: robot.id,
+                    coordinates: [robot.x, robot.y]
+                });
             }
 
             // broadcast coordinates (highest 4 bits)
@@ -265,9 +246,8 @@ class MyRobot extends BCAbstractRobot {
                     unit.spawn, unit.target);
 
                 if (build_square != null) {
-                    // TODO: handle signal vetoes properly
                     const signal = unit.signal;
-                    if (signal != null && !signal_veto) {
+                    if (signal != null) {
                         this.signal(this.encode_coordinates(signal),
                                     this.distance([this.me.x, this.me.y],
                                                   build_square));
@@ -278,6 +258,25 @@ class MyRobot extends BCAbstractRobot {
                     return this.build_unit(unit.unit,
                                            build_square[0] - this.me.x,
                                            build_square[1] - this.me.y);
+                }
+            }
+
+            // handle radio signals
+            let next_signal = this.signal_queue.shift();
+            if (next_signal != undefined && next_signal.signal >= 0xd000) {
+                let fallen = this.decode_coordinates(
+                    next_signal.signal - 0xd000);
+                // check coordinates
+                if (fallen[0] == this.objective[0]
+                        && fallen[1] == this.objective[1]
+                        && this.objectives.length > 1) {
+                    // FIXME: send this earlier
+                    castle_talk_value = 0xF0 + this.castle_order;
+                    this.objectives.shift();
+                    this.objective = this.objectives[0];
+                    this.signal(this.encode_coordinates(this.objective),
+                                this.distance([this.me.x, this.me.y],
+                                              next_signal.coordinates));
                 }
             }
         }
