@@ -21,6 +21,8 @@ class MyRobot extends BCAbstractRobot {
         this.castle_order = null;
         this.castle_coords = [];
 
+        this.castle_locations = [];
+
         this.objectives = [];
         this.objective = null;
 
@@ -74,6 +76,8 @@ class MyRobot extends BCAbstractRobot {
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
+
+                this.castle_locations.push([this.me.x, this.me.y]);
             }
 
             // clear castle talk by default
@@ -87,7 +91,17 @@ class MyRobot extends BCAbstractRobot {
                 visibles, enemies);
 
             if (castle_safety == 0) {
-                ;
+                if (step > 10) {
+                    var target_church = this.get_church_candidate(
+                        this.filter_by_nearest_distance(
+                            this.filter_by_map_symmetry(
+                                this.get_resources(this.karbonite_map)),
+                            this.castle_locations),
+                        this.castle_locations);
+                    this.enqueue_unit(
+                        SPECS.PILGRIM, 2,
+                        this.encode_coordinates(target_church), null);
+                }
             }
 
             else if (castle_safety == 3) {
@@ -151,6 +165,7 @@ class MyRobot extends BCAbstractRobot {
                                   this.castle_coords[i + this.castles]];
                     this.objectives.push(
                         this.reflect_about_symmetry_axis(coords));
+                    this.castle_locations.push(coords);
                 }
             }
 
@@ -1735,5 +1750,91 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return square;
+    }
+
+    filter_by_nearest_distance(squares, targets) {
+        // targets: castles, squares: resources
+        var filtered = [];
+        for (var i = 0; i < squares.length; i++) {
+            var square = squares[i];
+            var nearest = this.get_nearest_distance(targets, square);
+            if (nearest >= 25) {
+                filtered.push(square);
+            }
+        }
+
+        return filtered;
+    }
+
+    get_nearest_distance(squares, target) {
+        if (squares.length == 0) {
+            return null;
+        }
+
+        var min_distance = 8192;
+        for (var i = 0; i < squares.length; i++) {
+            var square = squares[i];
+            var distance = this.distance(target, square);
+            if (distance < min_distance) {
+                min_distance = distance;
+            }
+        }
+
+        return min_distance;
+    }
+
+    count_impassable_squares_around(square) {
+        var count = 0;
+
+        var x = square[0];
+        var y = square[1];
+        for (var i = -4; i < 5; i++) {
+            for (var j = -4; j < 5; j++) {
+                if (!this.is_passable([y + j, x + i])) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    get_safety_evaluation(resources, friends, enemies) {
+        var safety = [];
+        for (var i = 0; i < resources.length; i++) {
+            var resource = resources[i];
+            safety[i] = this.get_nearest_distance(enemies, resource)
+                - this.get_nearest_distance(friends, resource)
+                + this.count_impassable_squares_around(resource);
+        }
+
+        return safety;
+    }
+
+    get_index_of_largest_in(list) {
+        var max = -16384;
+        var max_index = 0;
+        for (var i = 0; i < list.length; i++) {
+            if (list[i] > max) {
+                max = list[i];
+                max_index = i;
+            }
+        }
+
+        return max_index;
+    }
+
+    get_church_candidate(resources, castles) {
+        var enemy_castles = [];
+        for (var i = 0; i < castles.length; i++) {
+            var castle = castles[i];
+            enemy_castles.push(this.reflect_about_symmetry_axis(castle));
+        }
+
+        var safety = this.get_safety_evaluation(resources, castles,
+                                                enemy_castles);
+        var safest = resources[this.get_index_of_largest_in(safety)];
+
+        return safest;
     }
 }
