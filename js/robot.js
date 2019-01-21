@@ -32,10 +32,7 @@ class MyRobot extends BCAbstractRobot {
         this.index_karbonite = 0;
         this.index_fuel = 0;
 
-        this.queue_unit = [];
-        this.queue_spawn = [];
-        this.queue_signal = [];
-        this.queue_destination = [];
+        this.unit_queue = [];
 
         this.fountain = null;
         this.birthplace = null;
@@ -108,19 +105,11 @@ class MyRobot extends BCAbstractRobot {
                     }
                     break;
                 case 1:
-                    this.queue_unit.length = 0;
-                    this.queue_spawn.length = 0;
-                    this.queue_signal.length = 0;
-                    this.queue_destination.length = 0;
-
+                    this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                     break;
                 case 2:
-                    this.queue_unit.length = 0;
-                    this.queue_spawn.length = 0;
-                    this.queue_signal.length = 0;
-                    this.queue_destination.length = 0;
-
+                    this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
                                       this.get_nearest_unit(enemies));
                     break;
@@ -236,7 +225,7 @@ class MyRobot extends BCAbstractRobot {
             // look for safe resource patches
             // TODO: implement square safety function
 
-            if (this.queue_unit.length == 0) {
+            if (this.unit_queue.length == 0) {
                 if (this.index_karbonite < this.ordered_karbonite.length) {
                     this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
                 }
@@ -260,27 +249,26 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            if (this.queue_unit.length > 0) {
-                let target_square = this.queue_spawn.shift();
-                let target_unit = this.queue_unit.shift();
-                let target_signal = this.queue_signal.shift();
-                let target_destination = this.queue_destination.shift();
+            if (this.unit_queue.length > 0) {
+                let unit = this.unit_queue.shift();
 
-                target_square = this.get_optimal_buildable_square_for(
-                    target_square, target_destination);
+                let build_square = this.get_optimal_buildable_square_for(
+                    unit.spawn, unit.target);
 
-                if (target_square != null) {
+                if (build_square != null) {
                     // TODO: handle signal vetoes properly
-                    if (target_signal != null && !signal_veto) {
-                        this.signal(target_signal, this.distance(
-                            [this.me.x, this.me.y], target_square));
+                    const signal = unit.signal;
+                    if (signal != null && !signal_veto) {
+                        this.signal(this.encode_coordinates(signal),
+                                    this.distance([this.me.x, this.me.y],
+                                                  build_square));
                     }
 
-                    this.log('  - build unit type [' + target_unit + '] at ('
-                        + target_square[0] + ', ' + target_square[1] + ')');
-                    return this.build_unit(target_unit,
-                                           target_square[0] - this.me.x,
-                                           target_square[1] - this.me.y);
+                    this.log('  - build unit type [' + unit.unit + '] at ('
+                        + build_square[0] + ', ' + build_square[1] + ')');
+                    return this.build_unit(unit.unit,
+                                           build_square[0] - this.me.x,
+                                           build_square[1] - this.me.y);
                 }
             }
         }
@@ -316,19 +304,11 @@ class MyRobot extends BCAbstractRobot {
                 case 0:
                     break;
                 case 1:
-                    this.queue_unit.length = 0;
-                    this.queue_spawn.length = 0;
-                    this.queue_signal.length = 0;
-                    this.queue_destination.length = 0;
-
+                    this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                     break;
                 case 2:
-                    this.queue_unit.length = 0;
-                    this.queue_spawn.length = 0;
-                    this.queue_signal.length = 0;
-                    this.queue_destination.length = 0;
-
+                    this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
                                       this.get_nearest_unit(enemies));
                     break;
@@ -352,7 +332,7 @@ class MyRobot extends BCAbstractRobot {
             // look for safe resource patches
             // TODO: implement square safety function
 
-            if (this.queue_unit.length == 0) {
+            if (this.unit_queue.length == 0) {
                 if (this.index_karbonite < this.ordered_karbonite.length) {
                     this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
                 }
@@ -368,27 +348,26 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            if (this.queue_unit.length > 0) {
-                let target_square = this.queue_spawn.shift();
-                let target_unit = this.queue_unit.shift();
-                let target_signal = this.queue_signal.shift();
-                let target_destination = this.queue_destination.shift();
+            if (this.unit_queue.length > 0) {
+                let unit = this.unit_queue.shift();
 
-                target_square = this.get_optimal_buildable_square_for(
-                    target_square, target_destination);
+                let build_square = this.get_optimal_buildable_square_for(
+                    unit.spawn, unit.target);
 
-                if (target_square != null) {
+                if (build_square != null) {
                     // TODO: handle signal vetoes properly
-                    if (target_signal != null && !signal_veto) {
-                        this.signal(target_signal, this.distance(
-                            [this.me.x, this.me.y], target_square));
+                    const signal = unit.signal;
+                    if (signal != null && !signal_veto) {
+                        this.signal(this.encode_coordinates(signal),
+                                    this.distance([this.me.x, this.me.y],
+                                                  build_square));
                     }
 
-                    this.log('  - build unit type [' + target_unit + '] at ('
-                        + target_square[0] + ', ' + target_square[1] + ')');
-                    return this.build_unit(target_unit,
-                                           target_square[0] - this.me.x,
-                                           target_square[1] - this.me.y);
+                    this.log('  - build unit type [' + unit.unit + '] at ('
+                        + build_square[0] + ', ' + build_square[1] + ')');
+                    return this.build_unit(unit.unit,
+                                           build_square[0] - this.me.x,
+                                           build_square[1] - this.me.y);
                 }
             }
         }
@@ -1164,45 +1143,36 @@ class MyRobot extends BCAbstractRobot {
     }
 
     enqueue_unit(unit, options, signal, destination) {
-        this.queue_unit.push(unit);
-
         if (unit == SPECS.PILGRIM) {
             if (options == 0) {
-                if (this.index_karbonite < this.ordered_karbonite.length) {
-                    this.queue_spawn.push(
-                        this.ordered_karbonite[this.index_karbonite][1]);
-                    this.queue_signal.push(this.encode_coordinates(
-                        this.ordered_karbonite[this.index_karbonite][0]));
-                    this.queue_destination.push(
-                        this.ordered_karbonite[this.index_karbonite][0]);
-                    this.index_karbonite++;
-                }
+                this.unit_queue.push({
+                    unit: unit,
+                    spawn: this.ordered_karbonite[this.index_karbonite][1],
+                    signal: this.ordered_karbonite[this.index_karbonite][0],
+                    target: this.ordered_karbonite[this.index_karbonite][0]
+                });
+                this.index_karbonite++;
+                return;
             }
 
             else if (options == 1) {
-                if (this.index_fuel < this.ordered_fuel.length) {
-                    this.queue_spawn.push(
-                        this.ordered_fuel[this.index_fuel][1]);
-                    this.queue_signal.push(this.encode_coordinates(
-                        this.ordered_fuel[this.index_fuel][0]));
-                    this.queue_destination.push(
-                        this.ordered_fuel[this.index_fuel][0]);
-                    this.index_fuel++;
-                }
-            }
-
-            else {
-                this.queue_spawn.push(null);
-                this.queue_signal.push(this.encode_coordinates(signal));
-                this.queue_destination.push(destination);
+                this.unit_queue.push({
+                    unit: unit,
+                    spawn: this.ordered_fuel[this.index_fuel][1],
+                    signal: this.ordered_fuel[this.index_fuel][0],
+                    target: this.ordered_fuel[this.index_fuel][0]
+                });
+                this.index_fuel++;
+                return;
             }
         }
 
-        else {
-            this.queue_spawn.push(null);
-            this.queue_signal.push(this.encode_coordinates(signal));
-            this.queue_destination.push(destination);
-        }
+        this.unit_queue.push({
+            unit: unit,
+            spawn: null,
+            signal: signal,
+            target: destination
+        });
     }
 
     astar(start, end, adjacency) {
