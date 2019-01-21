@@ -91,50 +91,57 @@ class MyRobot extends BCAbstractRobot {
             var castle_safety = this.get_castle_defence_status(
                 visibles, enemies);
 
-            if (castle_safety == 0) {
-                if (this.castle_order == 0 && step > 10
-                        && this.churches * 16 < step
-                        && this.karbonite > 80 && this.fuel > 300) {
-                    var target_church = this.get_church_candidate(
-                        this.filter_by_nearest_distance(
-                            this.get_resources(this.karbonite_map),
-                            this.castle_locations),
-                        this.castle_locations);
-                    this.log('DEBUG: CHURCH: ' + target_church);
-                    this.enqueue_unit(
-                        SPECS.PILGRIM, 2,
-                        this.encode_coordinates(target_church), null);
-                    this.churches++;
-                    this.castle_locations.push(target_church);
-                }
-            }
+            switch (castle_safety) {
+                case 0:
+                    if (this.castle_order == 0 && step > 10
+                            && this.churches * 16 < step
+                            && this.karbonite > 80 && this.fuel > 300) {
+                        var target_church = this.get_church_candidate(
+                            this.filter_by_nearest_distance(
+                                this.get_resources(this.karbonite_map),
+                                this.castle_locations),
+                            this.castle_locations);
+                        this.log('DEBUG: CHURCH: ' + target_church);
+                        this.enqueue_unit(
+                            SPECS.PILGRIM, 2,
+                            this.encode_coordinates(target_church), null);
+                        this.churches++;
+                        this.castle_locations.push(target_church);
+                    }
+                    break;
+                case 1:
+                    this.queue_unit.length = 0;
+                    this.queue_spawn.length = 0;
+                    this.queue_signal.length = 0;
+                    this.queue_destination.length = 0;
 
-            else if (castle_safety == 3) {
-                var prey = this.get_attack_target_from(attackables,
-                                                       [4, 5, 2, 3, 1, 0]);
-                if (prey != null) {
-                    this.log('  - attack unit [' + prey.id + '], type ('
-                        + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
-                        + (prey.y - this.me.y));
-                    return this.attack(prey.x - this.me.x, prey.y - this.me.y);
-                }
-            }
+                    var nearest_enemy = this.get_nearest_unit(enemies);
+                    var signal_value = this.encode_coordinates(this.objective);
 
-            else {
-                this.queue_unit.length = 0;
-                this.queue_spawn.length = 0;
-                this.queue_signal.length = 0;
-
-                var nearest_enemy = this.get_nearest_unit(enemies);
-                var signal_value = this.encode_coordinates(this.objective);
-                if (castle_safety == 1) {
                     this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
-                }
+                    break;
+                case 2:
+                    this.queue_unit.length = 0;
+                    this.queue_spawn.length = 0;
+                    this.queue_signal.length = 0;
+                    this.queue_destination.length = 0;
 
-                else {
+                    var nearest_enemy = this.get_nearest_unit(enemies);
+                    var signal_value = this.encode_coordinates(this.objective);
+
                     this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
                                       nearest_enemy);
-                }
+                    break;
+                case 3:
+                    var prey = this.get_attack_target_from(attackables,
+                                                           [4, 5, 2, 3, 1, 0]);
+                    if (prey != null) {
+                        this.log('  - attack unit [' + prey.id + '], type ('
+                            + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
+                            + (prey.y - this.me.y));
+                        return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+                    }
+                    break;
             }
 
             // TODO: defend with (stationary) prophets against enemies
@@ -159,19 +166,20 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            if (step == 0) {
-                this.castle_order = this.castle_coords.length;
-            }
-
-            else if (step == 2) {
-                this.castles /= 2;
-                for (var i = 0; i < this.castles; i++) {
-                    var coords = [this.castle_coords[i],
-                                  this.castle_coords[i + this.castles]];
-                    this.objectives.push(
-                        this.reflect_about_symmetry_axis(coords));
-                    this.castle_locations.push(coords);
-                }
+            switch (step) {
+                case 0:
+                    this.castle_order = this.castle_coords.length;
+                    break;
+                case 2:
+                    this.castles /= 2;
+                    for (var i = 0; i < this.castles; i++) {
+                        var coords = [this.castle_coords[i],
+                                      this.castle_coords[i + this.castles]];
+                        this.objectives.push(
+                            this.reflect_about_symmetry_axis(coords));
+                        this.castle_locations.push(coords);
+                    }
+                    break;
             }
 
             // check radioing units - team available for castles
@@ -200,18 +208,16 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // broadcast coordinates (highest 4 bits)
-            if (step == 0) {
-                castle_talk_value = this.me.x + 0x80;
-            }
-
-            else if (step == 1) {
-                castle_talk_value = this.me.y + 0x80;
+            switch (step) {
+                case 0:
+                    castle_talk_value = this.me.x + 0x80;
+                    break;
+                case 1:
+                    castle_talk_value = this.me.y + 0x80;
+                    break;
             }
 
             this.castle_talk(castle_talk_value);
-
-            // TODO: decide units/target resource based on distribution of
-            // resources
 
             if (step == 0) {
                 if (this.size < 40 && this.castle_order == 0) {
@@ -319,25 +325,30 @@ class MyRobot extends BCAbstractRobot {
             var church_safety = this.get_church_defence_status(
                 visibles, enemies);
 
-            if (church_safety == 0) {
-                ;
-            }
+            switch (church_safety) {
+                case 0:
+                    break;
+                case 1:
+                    this.queue_unit.length = 0;
+                    this.queue_spawn.length = 0;
+                    this.queue_signal.length = 0;
+                    this.queue_destination.length = 0;
 
-            else {
-                this.queue_unit.length = 0;
-                this.queue_spawn.length = 0;
-                this.queue_signal.length = 0;
-
-                var nearest_enemy = this.get_nearest_unit(enemies);
-                var signal_value = this.encode_coordinates(this.objective);
-                if (church_safety == 1) {
+                    var nearest_enemy = this.get_nearest_unit(enemies);
+                    var signal_value = this.encode_coordinates(this.objective);
                     this.enqueue_unit(SPECS.PROPHET, 0, signal_value, null);
-                }
+                    break;
+                case 2:
+                    this.queue_unit.length = 0;
+                    this.queue_spawn.length = 0;
+                    this.queue_signal.length = 0;
+                    this.queue_destination.length = 0;
 
-                else {
+                    var nearest_enemy = this.get_nearest_unit(enemies);
+                    var signal_value = this.encode_coordinates(this.objective);
                     this.enqueue_unit(SPECS.PREACHER, 0, signal_value,
                                       nearest_enemy);
-                }
+                    break;
             }
 
             // TODO: defend with (stationary) prophets against enemies
