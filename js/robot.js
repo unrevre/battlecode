@@ -105,6 +105,7 @@ class MyRobot extends BCAbstractRobot {
                         SPECS.PILGRIM, 2,
                         this.encode_coordinates(target_church), null);
                     this.churches++;
+                    this.castle_locations.push(target_church);
                 }
             }
 
@@ -214,24 +215,24 @@ class MyRobot extends BCAbstractRobot {
 
             if (step == 0) {
                 if (this.size < 40 && this.castle_order == 0) {
-                    var rush_path = this.onion_search(
-                        [this.me.x, this.me.y], this.objective, 9,
-                        this.get_two_onion_rings_around.bind(this));
-
-                    if (rush_path.length < 8) {
-                        this.mode = 1;
-                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                        this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                        this.enqueue_unit(SPECS.CRUSADER, 0,
-                            this.encode_coordinates(this.objective), null);
-                    }
+                    this.mode = 1;
+                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
                 }
 
                 else {
+                    this.enqueue_unit(SPECS.CRUSADER, 0,
+                        this.encode_coordinates(this.objective), null);
                     this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
                     this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
                 }
+            }
+
+            if (step > 80) {
+                this.mode = 0;
             }
 
             // TODO: decide if resources are limited (compared to map size) and
@@ -656,7 +657,7 @@ class MyRobot extends BCAbstractRobot {
             var attackables = this.filter_enemy_attackables(enemies);
 
             var prey = this.get_attack_target_from(attackables,
-                                                   [0, 2, 4, 5, 3, 1]);
+                                                   [2, 0, 4, 5, 3, 1]);
 
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
@@ -1499,6 +1500,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     encode_coordinates(square) {
+        if (square == null) {
+            return 0;
+        }
+
         return (square[0] | square[1] << 6);
     }
 
