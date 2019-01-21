@@ -452,7 +452,8 @@ class MyRobot extends BCAbstractRobot {
             // evasion is necessary, though may be complicated with unknown
             // targetting priorities of enemies
 
-            var enemies = this.filter_visible_enemies(visibles);
+            var enemies = this.filter_attacking_enemies(
+                this.filter_visible_enemies(visibles));
 
             var attacked_count = 0;
             for (var i = 0; i < enemies.length; i++) {
@@ -1575,6 +1576,18 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return attackables;
+    }
+
+    filter_attacking_enemies(enemies) {
+        var attacking = [];
+        for (var i = 0; i < enemies.length; i++) {
+            var enemy = enemies[i];
+            if (enemy.unit > 2) {
+                attacking.push(enemy);
+            }
+        }
+
+        return attacking;
     }
 
     filter_visible_friends(visibles) {
