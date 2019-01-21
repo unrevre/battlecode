@@ -26,11 +26,7 @@ class MyRobot extends BCAbstractRobot {
         this.objectives = [];
         this.objective = null;
 
-        this.ordered_karbonite = [];
-        this.ordered_fuel = [];
-
-        this.index_karbonite = 0;
-        this.index_fuel = 0;
+        this.local_resources = [];
 
         this.unit_queue = [];
 
@@ -65,12 +61,14 @@ class MyRobot extends BCAbstractRobot {
                 this.symmetry = this.guess_map_symmetry();
 
                 // TODO: contingency for when no resources are found
-                this.ordered_karbonite = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.karbonite_map)));
-                this.ordered_fuel = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.fuel_map)));
+                this.local_resources.push({
+                    locations: this.order_resources(this.filter_by_map_symmetry(
+                        this.get_local_resources(this.karbonite_map))),
+                    index: 0 });
+                this.local_resources.push({
+                    locations: this.order_resources(this.filter_by_map_symmetry(
+                        this.get_local_resources(this.fuel_map))),
+                    index: 0 });
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
@@ -225,26 +223,33 @@ class MyRobot extends BCAbstractRobot {
             // look for safe resource patches
             // TODO: implement square safety function
 
+            // put pilgrims on all available local resources after initial
+            // build queue is cleared
             if (this.unit_queue.length == 0) {
-                if (this.index_karbonite < this.ordered_karbonite.length) {
+                if (this.local_resources[0].index
+                        < this.local_resources[0].locations.length) {
                     this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
+                    this.local_resources[0].index++;
                 }
 
-                else if (this.index_fuel < this.ordered_fuel.length
-                        && this.index_fuel < 4) {
+                if (this.local_resources[1].index
+                        < this.local_resources[1].locations.length) {
                     this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
+                    this.local_resources[1].index++;
                 }
+            }
 
-                // produce crusaders if rushing
-                else if (this.mode == 1
+            // continuously produce crusaders if rushing
+            if (this.unit_queue.length == 0) {
+                if (this.mode == 1
                         && this.current_rusher == this.castle_order
                         && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
                     this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
                 }
 
-                else if (step > 10 && this.karbonite > 120
-                        && this.fuel > 400) {
+                // produce prophets otherwise, to build up defences
+                else if (step > 10 && this.karbonite > 120 && this.fuel > 400) {
                     this.enqueue_unit( SPECS.PROPHET, 0, this.objective, null);
                 }
             }
@@ -281,14 +286,14 @@ class MyRobot extends BCAbstractRobot {
                 this.symmetry = this.guess_map_symmetry();
 
                 // TODO: contingency for when no resources are found
-                this.ordered_karbonite = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.karbonite_map)));
-                this.ordered_fuel = this.order_resources(
-                    this.filter_by_map_symmetry(this.get_local_resources(
-                        this.fuel_map)));
-
-                this.index_karbonite++;
+                this.local_resources.push({
+                    locations: this.order_resources(this.filter_by_map_symmetry(
+                        this.get_local_resources(this.karbonite_map))),
+                    index: 1 });
+                this.local_resources.push({
+                    locations: this.order_resources(this.filter_by_map_symmetry(
+                        this.get_local_resources(this.fuel_map))),
+                    index: 0 });
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
@@ -328,22 +333,24 @@ class MyRobot extends BCAbstractRobot {
                 this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
             }
 
-            // TODO: decide if resources are limited (compared to map size) and
-            // look for safe resource patches
-            // TODO: implement square safety function
+            // FIXME: units in the build queue are not guaranteed to actually
+            // be built
+            if (this.unit_queue.length == 0) {
+                if (this.local_resources[0].index
+                        < this.local_resources[0].locations.length) {
+                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
+                    this.local_resources[0].index++;
+                }
+
+                if (this.local_resources[1].index
+                        < this.local_resources[1].locations.length) {
+                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
+                    this.local_resources[1].index++;
+                }
+            }
 
             if (this.unit_queue.length == 0) {
-                if (this.index_karbonite < this.ordered_karbonite.length) {
-                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                }
-
-                else if (this.index_fuel < this.ordered_fuel.length
-                        && this.index_fuel < 4) {
-                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
-                }
-
-                else if (step > 10 && this.karbonite > 100
-                        && this.fuel > 200) {
+                if (step > 10 && this.karbonite > 100 && this.fuel > 200) {
                     this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
                 }
             }
@@ -1144,25 +1151,14 @@ class MyRobot extends BCAbstractRobot {
 
     enqueue_unit(unit, options, signal, destination) {
         if (unit == SPECS.PILGRIM) {
-            if (options == 0) {
+            if (options < 2) {
+                const resource = this.local_resources[options];
                 this.unit_queue.push({
                     unit: unit,
-                    spawn: this.ordered_karbonite[this.index_karbonite][1],
-                    signal: this.ordered_karbonite[this.index_karbonite][0],
-                    target: this.ordered_karbonite[this.index_karbonite][0]
+                    spawn: resource.locations[resource.index][1],
+                    signal: resource.locations[resource.index][0],
+                    target: resource.locations[resource.index][0]
                 });
-                this.index_karbonite++;
-                return;
-            }
-
-            else if (options == 1) {
-                this.unit_queue.push({
-                    unit: unit,
-                    spawn: this.ordered_fuel[this.index_fuel][1],
-                    signal: this.ordered_fuel[this.index_fuel][0],
-                    target: this.ordered_fuel[this.index_fuel][0]
-                });
-                this.index_fuel++;
                 return;
             }
         }
