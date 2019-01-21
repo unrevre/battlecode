@@ -305,6 +305,8 @@ class MyRobot extends BCAbstractRobot {
                     this.filter_by_map_symmetry(this.get_local_resources(
                         this.fuel_map)));
 
+                this.index_karbonite++;
+
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
             }
