@@ -124,7 +124,7 @@ class MyRobot extends BCAbstractRobot {
                     this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
                                       this.get_nearest_unit(enemies));
                     break;
-                case 3:
+                case 3: {
                     let prey = this.get_attack_target_from(
                         attackables, [4, 5, 2, 3, 1, 0]);
                     if (prey != null) {
@@ -134,6 +134,7 @@ class MyRobot extends BCAbstractRobot {
                         return this.attack(prey.x - this.me.x, prey.y - this.me.y);
                     }
                     break;
+                }
             }
 
             // TODO: defend with (stationary) prophets against enemies
@@ -307,7 +308,6 @@ class MyRobot extends BCAbstractRobot {
 
             let visibles = this.get_visible_robots();
             let enemies = this.filter_visible_enemies(visibles);
-            let attackables = this.filter_enemy_attackables(enemies);
 
             let church_safety = this.get_church_defence_status(
                 visibles, enemies);
@@ -557,7 +557,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target
             if (this.path != null && this.path.length > 0) {
-                let destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path);
                 this.log('  - moving to destination: ('
                     + destination[0] + ', ' + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -671,7 +671,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                let destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -752,7 +752,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                let destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -834,7 +834,7 @@ class MyRobot extends BCAbstractRobot {
 
             // proceed to target destination
             if (this.path != null && this.path.length > 0) {
-                let destination = this.take_step(this.path, this.me.unit);
+                let destination = this.take_step(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -1105,8 +1105,8 @@ class MyRobot extends BCAbstractRobot {
 
         let reachables = [];
         for (let i = 0; i < 8; i++) {
-            let adjx = square[0] + this.compass[i][0];
-            let adjy = square[1] + this.compass[i][1];
+            let adjx = x + this.compass[i][0];
+            let adjy = y + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
                 reachables.push([adjx, adjy]);
             }
@@ -1411,7 +1411,7 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
-    take_step(path, speed) {
+    take_step(path) {
         const movement_speed = [0, 0, 4, 9, 4, 4];
         const range = movement_speed[this.me.unit];
 
