@@ -114,7 +114,8 @@ class MyRobot extends BCAbstractRobot {
                 case 2:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
-                                      this.get_closest_robot(enemies));
+                                      this.get_coordinates_of_closest_robot(
+                                          enemies));
                     break;
                 case 3: {
                     let prey = this.get_attack_target_from(
@@ -320,7 +321,8 @@ class MyRobot extends BCAbstractRobot {
                 case 2:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
-                                      this.get_closest_robot(enemies));
+                                      this.get_coordinates_of_closest_robot(
+                                          enemies));
                     break;
             }
 
@@ -690,9 +692,11 @@ class MyRobot extends BCAbstractRobot {
 
             this.target = null;
 
-            if (this.is_adjacent(this.fountain) && this.mode != 1) {
-                // move off buildable square
-                this.target = this.memory;
+            if (this.is_adjacent(this.fountain)) {
+                // move off buildable squares
+                this.target = this.get_closest_square_by_distance(
+                    this.get_next_to_adjacent_passable_empty_squares_at(
+                        this.fountain));
             }
 
             // deposit resources if convenient
@@ -700,18 +704,13 @@ class MyRobot extends BCAbstractRobot {
                 if (this.is_adjacent(this.fountain)
                         && (this.me.karbonite || this.me.fuel)) {
                     this.log('  - depositing resources [emergency]');
-                    this.mode = 0;
                     return this.give(this.fountain[0] - this.me.x,
                                      this.fountain[1] - this.me.y,
                                      this.me.karbonite, this.me.fuel);
+
                 }
 
-                else if ((this.me.karbonite > 9 || this.me.fuel > 79)
-                        && this.distance([this.me.x, this.me.y],
-                                         this.fountain) <= 10) {
-                    this.target = this.fountain;
-                    this.mode = 1;
-                }
+                // TODO: implement daisy chaining resources back to base
             }
 
             this.target = this.get_final_target_for(this.target);
@@ -762,6 +761,8 @@ class MyRobot extends BCAbstractRobot {
             let victim = this.get_attack_target_from(
                 attackables, [4, 5, 2, 0, 3, 1]);
             if (victim != null) {
+                // TODO: be sure not to splash on own castle (is this
+                // possible?)
                 let point = this.get_splash_attack_at([victim.x, victim.y]);
                 this.log('  - attack unit [' + victim.id + '], type ('
                     + victim.unit + ') at ' + point[0] + ', ' + point[1]);
@@ -771,8 +772,10 @@ class MyRobot extends BCAbstractRobot {
             this.target = null;
 
             if (this.is_adjacent(this.fountain)) {
-                // move off buildable square
-                this.target = this.memory;
+                // move off buildable squares
+                this.target = this.get_closest_square_by_distance(
+                    this.get_next_to_adjacent_passable_empty_squares_at(
+                        this.fountain));
             }
 
             // deposit resources if convenient
@@ -780,18 +783,12 @@ class MyRobot extends BCAbstractRobot {
                 if (this.is_adjacent(this.fountain)
                         && (this.me.karbonite || this.me.fuel)) {
                     this.log('  - depositing resources [emergency]');
-                    this.mode = 0;
                     return this.give(this.fountain[0] - this.me.x,
                                      this.fountain[1] - this.me.y,
                                      this.me.karbonite, this.me.fuel);
                 }
 
-                else if ((this.me.karbonite > 9 || this.me.fuel > 79)
-                        && this.distance([this.me.x, this.me.y],
-                                         this.fountain) <= 10) {
-                    this.target = this.fountain;
-                    this.mode = 1;
-                }
+                // TODO: implement daisy chaining resources back to base
             }
 
             this.target = this.get_final_target_for(this.target);
@@ -1854,6 +1851,16 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return robots[index];
+    }
+
+    get_coordinates_of_closest_robot(robots) {
+        let robot = this.get_closest_robot(robots);
+
+        if (robot == null) {
+            return null;
+        }
+
+        return [robot.x, robot.y];
     }
 
     group_by_unit_types(robots) {
