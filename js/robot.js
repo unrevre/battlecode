@@ -324,11 +324,6 @@ class MyRobot extends BCAbstractRobot {
                     break;
             }
 
-            // TODO: defend with (stationary) prophets against enemies
-
-            // signal veto to avoid multiple broadcasts overriding each other
-            let signal_veto = false;
-
             // TODO: decide units/target resource based on distribution of
             // resources
 
@@ -365,9 +360,8 @@ class MyRobot extends BCAbstractRobot {
                     unit.spawn, unit.target);
 
                 if (build_square != null) {
-                    // TODO: handle signal vetoes properly
                     const signal = unit.signal;
-                    if (signal != null && !signal_veto) {
+                    if (signal != null) {
                         this.signal(this.encode_coordinates(signal),
                                     this.distance([this.me.x, this.me.y],
                                                   build_square));
