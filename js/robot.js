@@ -571,10 +571,14 @@ class MyRobot extends BCAbstractRobot {
             // proceed to target
             if (this.path != null && this.path.length > 0) {
                 let destination = this.get_next_step_on(this.path);
-                this.log('  - moving to destination: ('
-                    + destination[0] + ', ' + destination[1] + ')');
-                return this.move(destination[0] - this.me.x,
-                                 destination[1] - this.me.y);
+
+                // don't move into attack range of enemies
+                if (this.is_safe(destination, enemies)) {
+                    this.log('  - moving to destination: ('
+                        + destination[0] + ', ' + destination[1] + ')');
+                    return this.move(destination[0] - this.me.x,
+                                     destination[1] - this.me.y);
+                }
             }
         }
 
@@ -1891,7 +1895,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (robot.unit > 2) {
+            if (robot.unit != SPECS.CHURCH && robot.unit != SPECS.PILGRIM) {
                 filtered.push(robot);
             }
         }
@@ -1923,6 +1927,27 @@ class MyRobot extends BCAbstractRobot {
         let range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
+    }
+
+    is_square_in_attack_range_of(square, robot) {
+        const min_attack_range = [1, 0, 0, 1, 16, 1];
+        const max_attack_range = [64, 0, 0, 16, 64, 26];
+
+        let range = this.distance(square, [robot.x, robot.y]);
+        return ((range <= max_attack_range[robot.unit])
+            && (range >= min_attack_range[robot.unit]));
+    }
+
+    is_safe(square, robots) {
+        let safe = true;
+
+        for (let i = 0; i < robots.length; i++) {
+            if (this.is_square_in_attack_range_of(square, robots[i])) {
+                return false;
+            }
+        }
+
+        return safe;
     }
 
     unit_count(square, robot_map) {
