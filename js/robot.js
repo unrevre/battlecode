@@ -11,9 +11,6 @@ class MyRobot extends BCAbstractRobot {
             [-1, 1], [-1, -1], [1, -1], [1, 1]
         ];
 
-        this.unit_karbonite_costs = [0, 50, 10, 15, 25, 30];
-        this.unit_fuel_costs = [0, 200, 50, 50, 50, 50];
-
         this.size = null;
         this.symmetry = null;
 
@@ -214,10 +211,11 @@ class MyRobot extends BCAbstractRobot {
                 if (this.unit_queue.length == 0) {
                     let resource = this.local_resources[i];
                     if (resource.index < resource.locations.length) {
-                        this.enqueue_unit(SPECS.PILGRIM,
-                            resource.locations[resource.index],
-                            resource.locations[resource.index]);
-                        resource.index++;
+                        if (this.enqueue_unit(SPECS.PILGRIM,
+                                resource.locations[resource.index],
+                                resource.locations[resource.index])) {
+                            resource.index++;
+                        }
                     }
                 }
             }
@@ -225,9 +223,7 @@ class MyRobot extends BCAbstractRobot {
             // continuously produce crusaders if rushing
             if (this.unit_queue.length == 0) {
                 if (this.mode == 1
-                        && this.current_rusher == this.castle_order
-                        && this.karbonite >= this.unit_karbonite_costs[3]
-                        && this.fuel >= this.unit_fuel_costs[3]) {
+                        && this.current_rusher == this.castle_order) {
                     this.enqueue_unit(SPECS.CRUSADER, this.objective, null);
                 }
 
@@ -335,10 +331,11 @@ class MyRobot extends BCAbstractRobot {
                 if (this.unit_queue.length == 0) {
                     let resource = this.local_resources[i];
                     if (resource.index < resource.locations.length) {
-                        this.enqueue_unit(SPECS.PILGRIM,
-                            resource.locations[resource.index],
-                            resource.locations[resource.index]);
-                        resource.index++;
+                        if (this.enqueue_unit(SPECS.PILGRIM,
+                                resource.locations[resource.index],
+                                resource.locations[resource.index])) {
+                            resource.index++;
+                        }
                     }
                 }
             }
@@ -1114,11 +1111,22 @@ class MyRobot extends BCAbstractRobot {
      */
 
     enqueue_unit(unit, signal, target) {
-        this.unit_queue.push({
-            unit: unit,
-            signal: signal,
-            target: target
-        });
+        const karbonite_costs = [0, 50, 10, 15, 25, 30];
+        const fuel_costs = [0, 200, 50, 50, 50, 50];
+
+        // FIXME: signals fuel cost not taken into account
+        if (this.karbonite >= karbonite_costs[unit]
+                && this.fuel >= fuel_costs[unit]) {
+            this.unit_queue.push({
+                unit: unit,
+                signal: signal,
+                target: target
+            });
+
+            return true;
+        }
+
+        return false;
     }
 
     /*
