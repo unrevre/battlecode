@@ -253,8 +253,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let spawn = this.get_buildable_square_closest_by_distance_to(
-                        unit.target);
+                let spawn = this.get_buildable_square_closest_to(unit.target);
 
                 if (spawn != null) {
                     const signal = unit.signal;
@@ -391,8 +390,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let spawn = this.get_buildable_square_closest_by_distance_to(
-                        unit.target);
+                let spawn = this.get_buildable_square_closest_to(unit.target);
 
                 if (spawn != null) {
                     const signal = unit.signal;
@@ -1569,7 +1567,7 @@ class MyRobot extends BCAbstractRobot {
      * high-level optimisations
      */
 
-    get_buildable_square_closest_by_distance_to(target) {
+    get_buildable_square_closest_to(target) {
         let adjacent = this.get_buildable_squares();
 
         if (adjacent.length == 0) {
@@ -1580,21 +1578,18 @@ class MyRobot extends BCAbstractRobot {
             return adjacent[Math.random() * adjacent.length];
         }
 
-        else if (this.is_adjacent(target)) {
-            return target;
-        }
-
         let distances = [];
 
         for (let i = 0; i < adjacent.length; i++) {
             let square = adjacent[i];
+
+            if (square[0] == target[0] && square[1] == target[1]) {
+                return target;
+            }
+
             distances.push(this.total_path_distance(this.onion_search(
                 square, target, 4,
                 this.get_two_onion_rings_around.bind(this))));
-        }
-
-        if (distances.length == 0) {
-            return null;
         }
 
         return adjacent[this.index_of_minimum_element_in(distances)];
