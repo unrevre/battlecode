@@ -28,6 +28,8 @@ class MyRobot extends BCAbstractRobot {
         this.unit_queue = [];
         this.signal_queue = [];
 
+        this.messages = [];
+
         this.fountain = null;
         this.memory = null;
         this.victim = null;
@@ -38,7 +40,6 @@ class MyRobot extends BCAbstractRobot {
         this.current_rusher = 0;
 
         this.mode = 0;
-        this.churches = 0;
     }
 
     turn() {
@@ -90,8 +91,9 @@ class MyRobot extends BCAbstractRobot {
 
             switch (castle_safety) {
                 case 0:
+                    // TODO: group resource patches to avoid building
+                    // overlapping churches
                     if (this.castle_order == 0 && step > 10
-                            && this.churches * 16 < step
                             && this.karbonite > 80 && this.fuel > 300) {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
@@ -102,8 +104,9 @@ class MyRobot extends BCAbstractRobot {
                         if (candidate != null) {
                             this.enqueue_unit(SPECS.PILGRIM, candidate,
                                 candidate);
+                            // push first to prevent multiple pilgrims being
+                            // sent here - updated later through castle talk
                             this.deposit_points.push(candidate);
-                            this.churches++;
                         }
                     }
                     break;
@@ -131,18 +134,28 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // check castle talk - abuse all information available
+            // TODO: improve this
             let castling = this.filter_castling_robots(visibles);
             for (let i = 0; i < castling.length; i++) {
                 let robot = castling[i];
                 if (robot.id != this.me.id) {
+                    let message = robot.castle_talk;
                     if (step < 3) {
                         this.castles++;
-                        this.castle_coords.push(robot.castle_talk - 0x80);
+                        this.castle_coords.push(message - 0x80);
                     }
 
-                    else if (robot.castle_talk >= 0xF0) {
+                    else if (message >= 0xF0) {
                         this.mode = 1;
-                        this.current_rusher = robot.castle_talk - 0xF0 + 1;
+                        this.current_rusher = message - 0xF0 + 1;
+                    }
+
+                    else if (message >= 0x70) {
+                        this.add_message(robot.id, message - 0x70);
+                        if (this.messages[robot.id].length == 2) {
+                            this.replace_coordinates(this.messages[robot.id]);
+                            this.messages[robot.id].length = 0;
+                        }
                     }
                 }
             }
@@ -278,6 +291,9 @@ class MyRobot extends BCAbstractRobot {
             this.log('Church [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            // clear castle talk by default
+            let castle_talk_value = 0x00;
+
             let visibles = this.get_visible_robots();
 
             if (step == 0) {
@@ -309,6 +325,16 @@ class MyRobot extends BCAbstractRobot {
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
             }
+
+            if (step == 0) {
+                castle_talk_value = this.me.x + 0x70;
+            }
+
+            else if (step == 1) {
+                castle_talk_value = this.me.y + 0x70;
+            }
+
+            this.castle_talk(castle_talk_value);
 
             let enemies = this.filter_visible_enemy_robots(visibles);
 
@@ -1666,6 +1692,23 @@ class MyRobot extends BCAbstractRobot {
 
     decode_coordinates(signal) {
         return [signal & 0x003f, (signal & 0x0fc0) >> 6];
+    }
+
+    add_message(id, message) {
+        if (!this.messages[id]) {
+            this.messages[id] = [];
+        }
+
+        this.messages[id].push(message);
+    }
+
+    replace_coordinates(coordinates) {
+        for (let i = 0; i < this.deposit_points.length; i++) {
+            if (this.are_adjacent(coordinates, this.deposit_points[i])) {
+                this.deposit_points[i] = coordinates.slice();
+                break;
+            }
+        }
     }
 
     /*
