@@ -416,7 +416,7 @@ class MyRobot extends BCAbstractRobot {
                         && this.distance([this.me.x, this.me.y],
                                          this.fountain) > 25) {
                     let church_square = this.get_optimal_buildable_square_for(
-                        church_square, null);
+                        [this.me.x, this.me.y], null);
                     this.fountain = church_square;
                     this.target = null;
                     return this.build_unit(SPECS.CHURCH,
