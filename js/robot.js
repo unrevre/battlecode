@@ -1550,34 +1550,15 @@ class MyRobot extends BCAbstractRobot {
     }
 
     smear_centred(square) {
-        let x = square[0];
-        let y = square[1];
+        let squares = this.get_adjacent_passable_empty_squares_at(square);
 
-        let reachables = [];
-        for (let i = 0; i < 8; i++) {
-            let adjx = x + this.compass[i][0];
-            let adjy = y + this.compass[i][1];
-            if (this.is_passable_and_empty([adjx, adjy])) {
-                reachables.push([adjx, adjy]);
-            }
+        if (squares.length == 0) {
+            squares = this.get_next_to_adjacent_passable_empty_squares_at(
+                square);
         }
 
-        if (reachables.length == 0) {
-            const ring_two = [
-                [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2],
-                [-2, -1], [2, -1], [-2, 0], [2, 0], [-2, 1], [2, 1],
-                [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]];
-            for (let i = 0; i < 16; i++) {
-                let rngx = square[0] + ring_two[i][0];
-                let rngy = square[1] + ring_two[i][1];
-                if (this.is_passable_and_empty([rngx, rngy])) {
-                    reachables.push([rngx, rngy]);
-                }
-            }
-        }
-
-        if (reachables.length > 0) {
-            return reachables[Math.floor(Math.random() * reachables.length)];
+        if (squares.length > 0) {
+            return squares[Math.floor(Math.random() * squares.length)];
         }
 
         return null;
