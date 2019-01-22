@@ -406,6 +406,8 @@ class MyRobot extends BCAbstractRobot {
                         this.get_buildable_square_by_adjacent_resources();
                     if (church_square != null) {
                         this.fountain = church_square;
+                        this.log('  - build unit type [2] at ('
+                            + church_square[0] + ', ' + church_square[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
                                                church_square[0] - this.me.x,
                                                church_square[1] - this.me.y);
