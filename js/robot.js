@@ -15,7 +15,7 @@ class MyRobot extends BCAbstractRobot {
         this.symmetry = null;
 
         this.castles = 0;
-        this.castle_order = null;
+        this.mark = null;
         this.castle_coords = [];
 
         this.deposit_points = [];
@@ -93,7 +93,7 @@ class MyRobot extends BCAbstractRobot {
                 case 0:
                     // TODO: group resource patches to avoid building
                     // overlapping churches
-                    if (this.castle_order == 0 && step > 10
+                    if (this.mark == 0 && step > 10
                             && this.is_available(120, 300)) {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
@@ -164,7 +164,7 @@ class MyRobot extends BCAbstractRobot {
 
             switch (step) {
                 case 0:
-                    this.castle_order = this.castle_coords.length;
+                    this.mark = this.castle_coords.length;
                     break;
                 case 2:
                     this.castles /= 2;
@@ -202,7 +202,7 @@ class MyRobot extends BCAbstractRobot {
             this.castle_talk(castle_talk_value);
 
             if (step == 0) {
-                if (this.size < 40 && this.castle_order == 0) {
+                if (this.size < 40 && this.mark == 0) {
                     this.mode = 1;
                     this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
                     this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
@@ -237,7 +237,7 @@ class MyRobot extends BCAbstractRobot {
             // continuously produce crusaders if rushing
             if (this.unit_queue.length == 0) {
                 if (this.mode == 1
-                        && this.current_rusher == this.castle_order) {
+                        && this.current_rusher == this.mark) {
                     this.enqueue_unit(SPECS.CRUSADER, this.objective, null);
                 }
 
@@ -255,7 +255,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     const signal = unit.signal;
                     if (signal != null) {
-                        this.signal(this.encode_coordinates(signal),
+                        this.signal(this.encode_coordinates(signal, this.mark),
                                     this.distance([this.me.x, this.me.y],
                                                   spawn) + 1);
                     }
@@ -269,20 +269,17 @@ class MyRobot extends BCAbstractRobot {
 
             // handle radio signals
             let next_signal = this.signal_queue.shift();
-            if (next_signal != undefined && next_signal.signal >= 0xd000) {
-                let fallen = this.decode_coordinates(
-                    next_signal.signal - 0xd000);
+            if (next_signal != undefined) {
+                let message = this.decode_coordinates(next_signal.signal);
                 // check coordinates
-                if (fallen[0] == this.objective[0]
-                        && fallen[1] == this.objective[1]
-                        && this.objectives.length > 1) {
-                    // FIXME: send this earlier
-                    castle_talk_value = 0xF0 + this.castle_order;
+                let token = message[1];
+                let coordinates = message[0];
+                if (token == 0xd && this.objectives.length > 1
+                        && coordinates[0] == this.objective[0]
+                        && coordinates[1] == this.objective[1]) {
+                    this.castle_talk(0xF0 + this.mark);
                     this.objectives.shift();
                     this.objective = this.objectives[0];
-                    this.signal(this.encode_coordinates(this.objective),
-                                this.distance([this.me.x, this.me.y],
-                                              next_signal.coordinates));
                 }
             }
         }
@@ -318,9 +315,21 @@ class MyRobot extends BCAbstractRobot {
                         this.local_resources[0].occupied[pilgrims[i]] = true;
                     }
                 }
+            }
 
-                this.objective = this.reflect_about_symmetry_axis(
-                    [this.me.x, this.me.y]);
+            let radioing = this.filter_allied_radioing_robots(visibles);
+            for (let i = 0; i < radioing.length; i++) {
+                let robot = radioing[i];
+                if (step == 0 && robot.unit == 3) {
+                    let message = this.decode_coordinates(robot.signal);
+                    this.target = message[0];
+                    this.mark = message[1];
+                    this.memory = this.target;
+                    this.objective = this.reflect_about_symmetry_axis(
+                        [this.me.x, this.me.y]);
+                    this.objectives.push(this.objective);
+                    break;
+                }
             }
 
             if (step == 0) {
@@ -388,7 +397,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     const signal = unit.signal;
                     if (signal != null) {
-                        this.signal(this.encode_coordinates(signal),
+                        this.signal(this.encode_coordinates(signal, this.mark),
                                     this.distance([this.me.x, this.me.y],
                                                   spawn) + 1);
                     }
@@ -418,7 +427,9 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
                 if (robot.unit < 2 && this.memory == null) {
-                    this.target = this.decode_coordinates(robot.signal);
+                    let message = this.decode_coordinates(robot.signal);
+                    this.target = message[0];
+                    this.mark = message[1];
                     this.memory = this.target;
                     break;
                 }
@@ -436,15 +447,17 @@ class MyRobot extends BCAbstractRobot {
                         && this.get_adjacent_deposit_point() == null
                         && this.distance([this.me.x, this.me.y],
                                          this.fountain) > 25) {
-                    let church_square =
+                    let church =
                         this.get_buildable_square_by_adjacent_resources();
-                    if (church_square != null) {
-                        this.fountain = church_square;
-                        this.log('  - build unit type [2] at ('
-                            + church_square[0] + ', ' + church_square[1] + ')');
+                    if (church != null) {
+                        this.signal(this.encode_coordinates(
+                            this.fountain, this.mark), 2);
+                        this.fountain = church;
+                        this.log('  - build unit type [2] at (' + church[0]
+                            + ', ' + church[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
-                                               church_square[0] - this.me.x,
-                                               church_square[1] - this.me.y);
+                                               church[0] - this.me.x,
+                                               church[1] - this.me.y);
                     }
                 }
             }
@@ -583,7 +596,7 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit == 0 && robot.x == this.fountain[0]
                         && robot.y == this.fountain[1]) {
                     if (this.target == null) {
-                        this.target = this.decode_coordinates(robot.signal);
+                        this.target = this.decode_coordinates(robot.signal)[0];
                         this.memory = this.target;
                         this.objective = this.target;
                         break;
@@ -619,9 +632,8 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (castle_prescence == null) {
-                    let signal_value = this.encode_coordinates(
-                        [this.memory[0], this.memory[1]]) + 0xd000;
-                    this.signal(signal_value, this.distance(
+                    let message = this.encode_coordinates(this.memory, 0xd);
+                    this.signal(message, this.distance(
                         [this.me.x, this.me.y], this.fountain));
 
                     this.victim = null;
@@ -695,7 +707,7 @@ class MyRobot extends BCAbstractRobot {
                     this.log('DEBUG: RADIO: receive target info');
                     if (this.memory == null) {
                         this.log('DEBUG: RADIO: acquire target info');
-                        this.memory = this.decode_coordinates(robot.signal);
+                        this.memory = this.decode_coordinates(robot.signal)[0];
                         break;
                     }
                 }
@@ -772,7 +784,7 @@ class MyRobot extends BCAbstractRobot {
                     this.log('DEBUG: RADIO: receive target info');
                     if (this.memory == null) {
                         this.log('DEBUG: RADIO: acquire target info');
-                        this.memory = this.decode_coordinates(robot.signal);
+                        this.memory = this.decode_coordinates(robot.signal)[0];
                         break;
                     }
                 }
@@ -1686,16 +1698,16 @@ class MyRobot extends BCAbstractRobot {
      * signals
      */
 
-    encode_coordinates(square) {
+    encode_coordinates(square, token) {
         if (square == null) {
             return 0;
         }
 
-        return (square[0] | square[1] << 6);
+        return (square[0] | square[1] << 6) + (token << 12);
     }
 
     decode_coordinates(signal) {
-        return [signal & 0x003f, (signal & 0x0fc0) >> 6];
+        return [[signal & 0x003f, (signal & 0x0fc0) >> 6], signal >> 12];
     }
 
     add_message(id, message) {
