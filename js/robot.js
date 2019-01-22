@@ -209,7 +209,7 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length == 0) {
                     let resource = this.local_resources[i];
-                    if (resource.index < resource.locations.length) {
+                    if (this.available_resource(resource)) {
                         if (this.enqueue_unit(SPECS.PILGRIM,
                                 resource.locations[resource.index],
                                 resource.locations[resource.index])) {
@@ -329,7 +329,7 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length == 0) {
                     let resource = this.local_resources[i];
-                    if (resource.index < resource.locations.length) {
+                    if (this.available_resource(resource)) {
                         if (this.enqueue_unit(SPECS.PILGRIM,
                                 resource.locations[resource.index],
                                 resource.locations[resource.index])) {
@@ -891,6 +891,12 @@ class MyRobot extends BCAbstractRobot {
         return this.map[y][x];
     }
 
+    is_empty(square) {
+        let nonempty = this.get_visible_robot_map();
+
+        return nonempty[square[1]][square[0]] < 1;
+    }
+
     is_passable_and_empty(square) {
         let x = square[0];
         let y = square[1];
@@ -1121,6 +1127,11 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return count;
+    }
+
+    available_resource(resource) {
+        return resource.index < resource.locations.length
+            && this.is_empty(resource.locations[resource.index]);
     }
 
     /*
