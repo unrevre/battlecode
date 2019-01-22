@@ -396,17 +396,20 @@ class MyRobot extends BCAbstractRobot {
                     && this.target[1] == this.me.y) {
                 this.target = null;
 
+                // TODO: more reliable conditions to determine if on church
+                // building mission would be nice
                 if (this.is_on_resource(this.karbonite_map)
                         && this.get_adjacent_deposit_point() == null
                         && this.distance([this.me.x, this.me.y],
                                          this.fountain) > 25) {
-                    let church_square = this.get_optimal_buildable_square_for(
-                        [this.me.x, this.me.y], null);
-                    this.fountain = church_square;
-                    this.target = null;
-                    return this.build_unit(SPECS.CHURCH,
-                                           church_square[0] - this.me.x,
-                                           church_square[1] - this.me.y);
+                    let church_square =
+                        this.get_buildable_square_by_adjacent_resources();
+                    if (church_square != null) {
+                        this.fountain = church_square;
+                        return this.build_unit(SPECS.CHURCH,
+                                               church_square[0] - this.me.x,
+                                               church_square[1] - this.me.y);
+                    }
                 }
             }
 
@@ -1088,6 +1091,10 @@ class MyRobot extends BCAbstractRobot {
         return resource_map[this.me.y][this.me.x];
     }
 
+    is_resource(square, resource_map) {
+        return resource_map[square[1]][square[0]];
+    }
+
     get_resources(resource_map) {
         let resources = [];
 
@@ -1100,6 +1107,20 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return resources;
+    }
+
+    count_resource_squares_around(square) {
+        let adjacent = this.get_adjacent_passable_squares_at(square);
+
+        let count = 0;
+        for (let i = 0; i < adjacent.length; i++) {
+            if (this.is_resource(adjacent[i], this.karbonite_map)
+                    || this.is_resource(adjacent[i], this.fuel_map)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     /*
@@ -1502,44 +1523,21 @@ class MyRobot extends BCAbstractRobot {
         return adjacent[this.index_of_minimum_element_in(distances)];
     }
 
-    get_optimal_buildable_square_for(target, destination) {
-        if (destination != null) {
-            let adjacent = this.get_buildable_squares();
-            if (adjacent.length == 0) {
-                return null;
-            }
+    get_buildable_square_by_adjacent_resources() {
+        let adjacent = this.get_buildable_squares();
 
-            let min_index = 0;
-            let min_distance = 100;
-            for (let i = 0; i < adjacent.length; i++) {
-                let square = adjacent[i];
-                let distance = this.distance(square, [this.me.x, this.me.y]);
-                if (distance < min_distance) {
-                    min_index = i;
-                    min_distance = distance;
-                }
-            }
-
-            return adjacent[min_index];
+        if (adjacent.length == 0) {
+            return null;
         }
 
-        if (target != null && !this.is_buildable(target)) {
-            let adjacent = this.get_buildable_squares_at(target);
-            for (let i = 0; i < adjacent.length; i++) {
-                if (this.is_adjacent(adjacent[i])) {
-                    return adjacent[i];
-                }
-            }
+        let counts = [];
+
+        for (let i = 0; i < adjacent.length; i++) {
+            counts.push(this.count_resource_squares_around(adjacent[i]) * 10
+                - this.count_impassable_squares_around(adjacent[i]));
         }
 
-        if (target == null) {
-            let buildable = this.get_buildable_squares();
-            if (buildable.length > 0) {
-                return buildable[0];
-            }
-        }
-
-        return target;
+        return adjacent[this.index_of_maximum_element_in(counts)];
     }
 
     get_pilgrimage_path_to(target) {
