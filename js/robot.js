@@ -603,14 +603,6 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // TODO: abstract target priority function, combining the two
-            // blocks below
-            // TODO: general ideas:
-            //     [1]: if overwhelmed and castle is attackable, attack castle
-            //     [2]: if overwhelmed but reinforcements are close, retreat
-            //     [3]: if around equal, stand ground and attack (with
-            //     priorities)
-
             // NOTES:
             //     memory: long-term target location (only castles)
             //     objective: current enemy target location
@@ -728,6 +720,8 @@ class MyRobot extends BCAbstractRobot {
 
             this.target = null;
 
+            // TODO: also move off resource squares
+            // TODO: form lattice structure
             if (this.is_adjacent(this.fountain)) {
                 // move off buildable squares
                 this.target = this.get_closest_square_by_distance(
@@ -789,8 +783,6 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // TODO: special aoe targetting for preachers
-
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
 
@@ -807,6 +799,7 @@ class MyRobot extends BCAbstractRobot {
 
             this.target = null;
 
+            // TODO: also move off resource squares
             if (this.is_adjacent(this.fountain)) {
                 // move off buildable squares
                 this.target = this.get_closest_square_by_distance(
