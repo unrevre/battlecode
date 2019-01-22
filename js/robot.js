@@ -30,6 +30,8 @@ class MyRobot extends BCAbstractRobot {
 
         this.messages = [];
 
+        this.reserved = [0, 0];
+
         this.fountain = null;
         this.memory = null;
         this.victim = null;
@@ -94,7 +96,7 @@ class MyRobot extends BCAbstractRobot {
                     // TODO: group resource patches to avoid building
                     // overlapping churches
                     if (this.castle_order == 0 && step > 10
-                            && this.karbonite > 80 && this.fuel > 300) {
+                            && this.is_available(120, 300)) {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
                                 this.get_resources(this.karbonite_map),
@@ -107,6 +109,7 @@ class MyRobot extends BCAbstractRobot {
                             // push first to prevent multiple pilgrims being
                             // sent here - updated later through castle talk
                             this.deposit_points.push(candidate);
+                            this.reserve_resources(75, 250);
                         }
                     }
                     break;
@@ -155,6 +158,7 @@ class MyRobot extends BCAbstractRobot {
                         if (this.messages[robot.id].length == 2) {
                             this.replace_coordinates(this.messages[robot.id]);
                             this.messages[robot.id].length = 0;
+                            this.free_resources(75, 250);
                         }
                     }
                 }
@@ -241,7 +245,7 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 // produce prophets otherwise, to build up defences
-                else if (step > 10 && this.karbonite > 120 && this.fuel > 400) {
+                else if (step > 10 && this.is_available(80, 200)) {
                     this.enqueue_unit(SPECS.PROPHET, this.objective, null);
                 }
             }
@@ -379,7 +383,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.unit_queue.length == 0) {
-                if (step > 10 && this.karbonite > 100 && this.fuel > 200) {
+                if (step > 10 && this.is_available(80, 200)) {
                     this.enqueue_unit(SPECS.PROPHET, null, null);
                 }
             }
@@ -1182,6 +1186,21 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
+    is_available(karbonite, fuel) {
+        return (this.karbonite - this.reserved[0] >= karbonite
+            && this.fuel - this.reserved[1] >= fuel);
+    }
+
+    reserve_resources(karbonite, fuel) {
+        this.reserved[0] += karbonite;
+        this.reserved[1] += fuel;
+    }
+
+    free_resources(karbonite, fuel) {
+        this.reserved[0] -= karbonite;
+        this.reserved[1] -= fuel;
+    }
+
     /*
      * unit queue
      */
@@ -1191,8 +1210,7 @@ class MyRobot extends BCAbstractRobot {
         const fuel_costs = [0, 200, 50, 50, 50, 50];
 
         // FIXME: signals fuel cost not taken into account
-        if (this.karbonite >= karbonite_costs[unit]
-                && this.fuel >= fuel_costs[unit]) {
+        if (this.is_available(karbonite_costs[unit], fuel_costs[unit])) {
             this.unit_queue.push({
                 unit: unit,
                 signal: signal,
