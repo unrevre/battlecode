@@ -15,7 +15,9 @@ class MyRobot extends BCAbstractRobot {
         this.symmetry = null;
 
         this.castles = 0;
-        this.mark = null;
+        this.mark = 0;
+        this.global_mark = 0;
+
         this.castle_coords = [];
 
         this.deposit_points = [];
@@ -38,8 +40,6 @@ class MyRobot extends BCAbstractRobot {
 
         this.target = null;
         this.path = null;
-
-        this.current_rusher = 0;
 
         this.mode = 0;
     }
@@ -148,7 +148,7 @@ class MyRobot extends BCAbstractRobot {
 
                     else if (message >= 0xF0) {
                         this.mode = 1;
-                        this.current_rusher = message - 0xF0 + 1;
+                        this.global_mark = message - 0xF0 + 1;
                     }
 
                     else if (message >= 0x70) {
@@ -236,8 +236,7 @@ class MyRobot extends BCAbstractRobot {
 
             // continuously produce crusaders if rushing
             if (this.unit_queue.length == 0) {
-                if (this.mode == 1
-                        && this.current_rusher == this.mark) {
+                if (this.mode == 1 && this.global_mark == this.mark) {
                     this.enqueue_unit(SPECS.CRUSADER, this.objective, null);
                 }
 
