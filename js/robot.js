@@ -62,11 +62,13 @@ class MyRobot extends BCAbstractRobot {
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
+                    occupied: [],
                     index: 0 });
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
+                    occupied: [],
                     index: 0 });
 
                 this.objective = this.reflect_about_symmetry_axis(
@@ -200,20 +202,19 @@ class MyRobot extends BCAbstractRobot {
                 this.mode = 0;
             }
 
-            // TODO: decide if resources are limited (compared to map size) and
-            // look for safe resource patches
-            // TODO: implement square safety function
+            // TODO: check and replenish pilgrims occasionally if time allows
+            // (in case pilgrims are killed)
 
             // put pilgrims on all available local resources after initial
             // build queue is cleared
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length == 0) {
-                    let resource = this.local_resources[i];
-                    if (this.available_resource(resource)) {
-                        if (this.enqueue_unit(SPECS.PILGRIM,
-                                resource.locations[resource.index],
-                                resource.locations[resource.index])) {
-                            resource.index++;
+                    let square = this.next_available_resource_from(
+                        this.local_resources[i]);
+                    if (square != null) {
+                        if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
+                            this.local_resources[i].index++;
+                            this.local_resources[i].occupied[square] = true;
                         }
                     }
                 }
@@ -277,6 +278,8 @@ class MyRobot extends BCAbstractRobot {
             this.log('Church [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
+            let visibles = this.get_visible_robots();
+
             if (step == 0) {
                 this.symmetry = this.determine_map_symmetry();
 
@@ -285,18 +288,28 @@ class MyRobot extends BCAbstractRobot {
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
-                    index: 1 });
+                    occupied: [],
+                    index: 0 });
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
+                    occupied: [],
                     index: 0 });
+
+                let pilgrims = this.filter_allied_pilgrim_coordinates(visibles);
+                // assume pilgrims target only karbonite patches
+                for (let i = 0; i < pilgrims.length; i++) {
+                    if (this.is_resource(pilgrims[i], this.karbonite_map)) {
+                        this.local_resources[0].occupied.push(pilgrims[i]);
+                        this.local_resources[0].index++;
+                    }
+                }
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
             }
 
-            let visibles = this.get_visible_robots();
             let enemies = this.filter_visible_enemy_robots(visibles);
 
             let church_safety = this.evaluate_church_safety(visibles, enemies);
@@ -328,12 +341,12 @@ class MyRobot extends BCAbstractRobot {
             // be built
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length == 0) {
-                    let resource = this.local_resources[i];
-                    if (this.available_resource(resource)) {
-                        if (this.enqueue_unit(SPECS.PILGRIM,
-                                resource.locations[resource.index],
-                                resource.locations[resource.index])) {
-                            resource.index++;
+                    let square = this.next_available_resource_from(
+                        this.local_resources[i]);
+                    if (square != null) {
+                        if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
+                            this.local_resources[i].index++;
+                            this.local_resources[i].occupied[square] = true;
                         }
                     }
                 }
@@ -1131,9 +1144,16 @@ class MyRobot extends BCAbstractRobot {
         return count;
     }
 
-    available_resource(resource) {
-        return resource.index < resource.locations.length
-            && this.is_empty(resource.locations[resource.index]);
+    next_available_resource_from(resource) {
+        if (resource.index < resource.locations.length) {
+            for (let i = 0; i < resource.locations.length; i++) {
+                if (!resource.occupied[resource.locations[i]]) {
+                    return resource.locations[i];
+                }
+            }
+        }
+
+        return null;
     }
 
     /*
@@ -1757,6 +1777,19 @@ class MyRobot extends BCAbstractRobot {
             let robot = robots[i];
             if (robot.team == this.me.team) {
                 filtered.push(robot);
+            }
+        }
+
+        return filtered;
+    }
+
+    filter_allied_pilgrim_coordinates(robots) {
+        let filtered = [];
+
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (robot.team == this.me.team && robot.unit == SPECS.PILGRIM) {
+                filtered.push([robot.x, robot.y]);
             }
         }
 
