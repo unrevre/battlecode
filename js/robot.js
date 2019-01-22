@@ -334,8 +334,6 @@ class MyRobot extends BCAbstractRobot {
 
             if (step == 0) {
                 this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
-                this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
             }
 
             // FIXME: units in the build queue are not guaranteed to actually
