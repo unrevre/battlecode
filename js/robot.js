@@ -62,12 +62,12 @@ class MyRobot extends BCAbstractRobot {
 
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
-                    locations: this.order_by_astar_path_length_to(
+                    locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
                     index: 0 });
                 this.local_resources.push({
-                    locations: this.order_by_astar_path_length_to(
+                    locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
                     index: 0 });
@@ -101,7 +101,8 @@ class MyRobot extends BCAbstractRobot {
                             this.deposit_points, this.objectives);
                         this.log('DEBUG: CHURCH: ' + candidate);
                         if (candidate != null) {
-                            this.enqueue_unit(SPECS.PILGRIM, 2, candidate, null);
+                            this.enqueue_unit(SPECS.PILGRIM, candidate,
+                                candidate);
                             this.deposit_points.push(candidate);
                             this.churches++;
                         }
@@ -109,13 +110,14 @@ class MyRobot extends BCAbstractRobot {
                     break;
                 case 1:
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.PROPHET, null,
+                        this.get_coordinates_of_closest_robot(enemies));
                     break;
                 case 2:
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
-                                      this.get_coordinates_of_closest_robot(
-                                          enemies));
+                    this.enqueue_unit(SPECS.PREACHER,
+                        this.get_coordinates_of_closest_robot(enemies),
+                        this.get_coordinates_of_closest_robot(enemies));
                     break;
                 case 3: {
                     let prey = this.get_attack_target_from(
@@ -189,17 +191,13 @@ class MyRobot extends BCAbstractRobot {
             if (step == 0) {
                 if (this.size < 40 && this.castle_order == 0) {
                     this.mode = 1;
-                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, 0, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
+                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
+                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
                 }
 
-                else {
-                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
-                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
-                }
+                this.enqueue_unit(SPECS.CRUSADER, this.objective,
+                    this.objective);
             }
 
             if (step > 80) {
@@ -212,17 +210,15 @@ class MyRobot extends BCAbstractRobot {
 
             // put pilgrims on all available local resources after initial
             // build queue is cleared
-            if (this.unit_queue.length == 0) {
-                if (this.local_resources[0].index
-                        < this.local_resources[0].locations.length) {
-                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                    this.local_resources[0].index++;
-                }
-
-                if (this.local_resources[1].index
-                        < this.local_resources[1].locations.length) {
-                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
-                    this.local_resources[1].index++;
+            for (let i = 0; i < 2; i++) {
+                if (this.unit_queue.length == 0) {
+                    let resource = this.local_resources[i];
+                    if (resource.index < resource.locations.length) {
+                        this.enqueue_unit(SPECS.PILGRIM,
+                            resource.locations[resource.index],
+                            resource.locations[resource.index]);
+                        resource.index++;
+                    }
                 }
             }
 
@@ -232,34 +228,33 @@ class MyRobot extends BCAbstractRobot {
                         && this.current_rusher == this.castle_order
                         && this.karbonite >= this.unit_karbonite_costs[3]
                         && this.fuel >= this.unit_fuel_costs[3]) {
-                    this.enqueue_unit(SPECS.CRUSADER, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.CRUSADER, this.objective, null);
                 }
 
                 // produce prophets otherwise, to build up defences
                 else if (step > 10 && this.karbonite > 120 && this.fuel > 400) {
-                    this.enqueue_unit( SPECS.PROPHET, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.PROPHET, this.objective, null);
                 }
             }
 
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let build_square = this.get_optimal_buildable_square_for(
-                    unit.spawn, unit.target);
+                let spawn = this.get_buildable_square_closest_by_distance_to(
+                        unit.target);
 
-                if (build_square != null) {
+                if (spawn != null) {
                     const signal = unit.signal;
                     if (signal != null) {
                         this.signal(this.encode_coordinates(signal),
                                     this.distance([this.me.x, this.me.y],
-                                                  build_square));
+                                                  spawn) + 1);
                     }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
-                        + build_square[0] + ', ' + build_square[1] + ')');
-                    return this.build_unit(unit.unit,
-                                           build_square[0] - this.me.x,
-                                           build_square[1] - this.me.y);
+                        + spawn[0] + ', ' + spawn[1] + ')');
+                    return this.build_unit(
+                        unit.unit, spawn[0] - this.me.x, spawn[1] - this.me.y);
                 }
             }
 
@@ -292,12 +287,12 @@ class MyRobot extends BCAbstractRobot {
 
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
-                    locations: this.order_by_astar_path_length_to(
+                    locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
                     index: 1 });
                 this.local_resources.push({
-                    locations: this.order_by_astar_path_length_to(
+                    locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
                     index: 0 });
@@ -316,13 +311,14 @@ class MyRobot extends BCAbstractRobot {
                     break;
                 case 1:
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.PROPHET, null,
+                        this.get_coordinates_of_closest_robot(enemies));
                     break;
                 case 2:
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PREACHER, 0, this.objective,
-                                      this.get_coordinates_of_closest_robot(
-                                          enemies));
+                    this.enqueue_unit(SPECS.PREACHER,
+                        this.get_coordinates_of_closest_robot(enemies),
+                        this.get_coordinates_of_closest_robot(enemies));
                     break;
             }
 
@@ -330,50 +326,47 @@ class MyRobot extends BCAbstractRobot {
             // resources
 
             if (step == 0) {
-                this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
+                this.enqueue_unit(SPECS.PROPHET, null, null);
             }
 
             // FIXME: units in the build queue are not guaranteed to actually
             // be built
-            if (this.unit_queue.length == 0) {
-                if (this.local_resources[0].index
-                        < this.local_resources[0].locations.length) {
-                    this.enqueue_unit(SPECS.PILGRIM, 0, null, null);
-                    this.local_resources[0].index++;
-                }
-
-                if (this.local_resources[1].index
-                        < this.local_resources[1].locations.length) {
-                    this.enqueue_unit(SPECS.PILGRIM, 1, null, null);
-                    this.local_resources[1].index++;
+            for (let i = 0; i < 2; i++) {
+                if (this.unit_queue.length == 0) {
+                    let resource = this.local_resources[i];
+                    if (resource.index < resource.locations.length) {
+                        this.enqueue_unit(SPECS.PILGRIM,
+                            resource.locations[resource.index],
+                            resource.locations[resource.index]);
+                        resource.index++;
+                    }
                 }
             }
 
             if (this.unit_queue.length == 0) {
                 if (step > 10 && this.karbonite > 100 && this.fuel > 200) {
-                    this.enqueue_unit(SPECS.PROPHET, 0, this.objective, null);
+                    this.enqueue_unit(SPECS.PROPHET, null, null);
                 }
             }
 
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let build_square = this.get_optimal_buildable_square_for(
-                    unit.spawn, unit.target);
+                let spawn = this.get_buildable_square_closest_by_distance_to(
+                        unit.target);
 
-                if (build_square != null) {
+                if (spawn != null) {
                     const signal = unit.signal;
                     if (signal != null) {
                         this.signal(this.encode_coordinates(signal),
                                     this.distance([this.me.x, this.me.y],
-                                                  build_square));
+                                                  spawn) + 1);
                     }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
-                        + build_square[0] + ', ' + build_square[1] + ')');
-                    return this.build_unit(unit.unit,
-                                           build_square[0] - this.me.x,
-                                           build_square[1] - this.me.y);
+                        + spawn[0] + ', ' + spawn[1] + ')');
+                    return this.build_unit(
+                        unit.unit, spawn[0] - this.me.x, spawn[1] - this.me.y);
                 }
             }
         }
@@ -1120,25 +1113,11 @@ class MyRobot extends BCAbstractRobot {
      * unit queue
      */
 
-    enqueue_unit(unit, options, signal, destination) {
-        if (unit == SPECS.PILGRIM) {
-            if (options < 2) {
-                const resource = this.local_resources[options];
-                this.unit_queue.push({
-                    unit: unit,
-                    spawn: resource.locations[resource.index][1],
-                    signal: resource.locations[resource.index][0],
-                    target: resource.locations[resource.index][0]
-                });
-                return;
-            }
-        }
-
+    enqueue_unit(unit, signal, target) {
         this.unit_queue.push({
             unit: unit,
-            spawn: null,
             signal: signal,
-            target: destination
+            target: target
         });
     }
 
@@ -1417,6 +1396,15 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
+    total_path_distance(path) {
+        let total = 0;
+        for (let i = 1; i < path.length; i++) {
+            total += this.distance(path[i], path[i - 1]);
+        }
+
+        return total;
+    }
+
     get_next_step_on(path) {
         const movement_speed = [0, 0, 4, 9, 4, 4];
         const range = movement_speed[this.me.unit];
@@ -1455,9 +1443,60 @@ class MyRobot extends BCAbstractRobot {
         return ordered;
     }
 
+    order_by_onion_path_length(squares) {
+        let paths = [];
+
+        for (let i = 0; i < squares.length; i++) {
+            paths.push(this.onion_search(
+                [this.me.x, this.me.y], squares[i], 4,
+                this.get_two_onion_rings_around.bind(this)));
+        }
+
+        paths.sort(function(r, s) { return r.length - s.length; });
+
+        let ordered = [];
+
+        for (let i = 0; i < paths.length; i++) {
+            ordered.push(paths[i][paths[i].length - 1]);
+        }
+
+        return ordered;
+    }
+
     /*
      * high-level optimisations
      */
+
+    get_buildable_square_closest_by_distance_to(target) {
+        let adjacent = this.get_buildable_squares();
+
+        if (adjacent.length == 0) {
+            return null;
+        }
+
+        if (target == null) {
+            return adjacent[Math.random() * adjacent.length];
+        }
+
+        else if (this.is_adjacent(target)) {
+            return target;
+        }
+
+        let distances = [];
+
+        for (let i = 0; i < adjacent.length; i++) {
+            let square = adjacent[i];
+            distances.push(this.total_path_distance(this.onion_search(
+                square, target, 4,
+                this.get_two_onion_rings_around.bind(this))));
+        }
+
+        if (distances.length == 0) {
+            return null;
+        }
+
+        return adjacent[this.index_of_minimum_element_in(distances)];
+    }
 
     get_optimal_buildable_square_for(target, destination) {
         if (destination != null) {
@@ -1975,7 +2014,7 @@ class MyRobot extends BCAbstractRobot {
         let safety = this.evaluate_safety_for_each(
             resources, allied_bases, enemy_bases);
 
-        let index = this.index_of_largest_element_in(safety);
+        let index = this.index_of_maximum_element_in(safety);
         if (index != null) {
             return resources[index];
         }
@@ -1987,7 +2026,25 @@ class MyRobot extends BCAbstractRobot {
      * array helpers
      */
 
-    index_of_largest_element_in(values) {
+    index_of_minimum_element_in(values) {
+        if (values.length == 0) {
+            return null;
+        }
+
+        let minimum = 16384;
+        let index = 0;
+        for (let i = 0; i < values.length; i++) {
+            let value = values[i];
+            if (value < minimum) {
+                minimum = value;
+                index = i;
+            }
+        }
+
+        return index;
+    }
+
+    index_of_maximum_element_in(values) {
         if (values.length == 0) {
             return null;
         }
