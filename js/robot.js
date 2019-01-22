@@ -65,14 +65,12 @@ class MyRobot extends BCAbstractRobot {
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
-                    occupied: [],
-                    index: 0 });
+                    occupied: [] });
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
-                    occupied: [],
-                    index: 0 });
+                    occupied: [] });
 
                 this.objective = this.reflect_about_symmetry_axis(
                     [this.me.x, this.me.y]);
@@ -230,7 +228,6 @@ class MyRobot extends BCAbstractRobot {
                         this.local_resources[i]);
                     if (square != null) {
                         if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
-                            this.local_resources[i].index++;
                             this.local_resources[i].occupied[square] = true;
                         }
                     }
@@ -307,21 +304,18 @@ class MyRobot extends BCAbstractRobot {
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.karbonite_map), 26)),
-                    occupied: [],
-                    index: 0 });
+                    occupied: [] });
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
-                    occupied: [],
-                    index: 0 });
+                    occupied: [] });
 
                 let pilgrims = this.filter_allied_pilgrim_coordinates(visibles);
                 // assume pilgrims target only karbonite patches
                 for (let i = 0; i < pilgrims.length; i++) {
                     if (this.is_resource(pilgrims[i], this.karbonite_map)) {
-                        this.local_resources[0].occupied.push(pilgrims[i]);
-                        this.local_resources[0].index++;
+                        this.local_resources[0].occupied[pilgrims[i]] = true;
                     }
                 }
 
@@ -374,7 +368,6 @@ class MyRobot extends BCAbstractRobot {
                         this.local_resources[i]);
                     if (square != null) {
                         if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
-                            this.local_resources[i].index++;
                             this.local_resources[i].occupied[square] = true;
                         }
                     }
@@ -1173,11 +1166,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     next_available_resource_from(resource) {
-        if (resource.index < resource.locations.length) {
-            for (let i = 0; i < resource.locations.length; i++) {
-                if (!resource.occupied[resource.locations[i]]) {
-                    return resource.locations[i];
-                }
+        for (let i = 0; i < resource.locations.length; i++) {
+            if (!resource.occupied[resource.locations[i]]) {
+                return resource.locations[i];
             }
         }
 
