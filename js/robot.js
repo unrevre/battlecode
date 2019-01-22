@@ -121,8 +121,7 @@ class MyRobot extends BCAbstractRobot {
                         attackables, [4, 5, 2, 3, 1, 0]);
                     if (prey != null) {
                         this.log('  - attack unit [' + prey.id + '], type ('
-                            + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
-                            + (prey.y - this.me.y));
+                            + prey.unit + ') at ' + prey.x + ', ' + prey.y);
                         return this.attack(prey.x - this.me.x, prey.y - this.me.y);
                     }
                     break;
@@ -602,8 +601,7 @@ class MyRobot extends BCAbstractRobot {
                 if (this.is_in_attack_range(this.victim)) {
                     this.log('  - attack unit [' + this.victim.id
                         + '], type (' + this.victim.unit + ') at '
-                        + (this.victim.x - this.me.x) + ', '
-                        + (this.victim.y - this.me.y));
+                        + this.victim.x + ', ' + this.victim.y);
                     return this.attack(this.victim.x - this.me.x,
                                        this.victim.y - this.me.y);
                 }
@@ -616,8 +614,7 @@ class MyRobot extends BCAbstractRobot {
 
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
-                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
-                    + (prey.y - this.me.y));
+                    + prey.unit + ') at ' + prey.x + ', ' + prey.y);
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
@@ -675,8 +672,7 @@ class MyRobot extends BCAbstractRobot {
                                                    [4, 5, 2, 0, 3, 1]);
             if (prey != null) {
                 this.log('  - attack unit [' + prey.id + '], type ('
-                    + prey.unit + ') at ' + (prey.x - this.me.x) + ', '
-                    + (prey.y - this.me.y));
+                    + prey.unit + ') at ' + prey.x + ', ' + prey.y);
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
