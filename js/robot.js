@@ -100,9 +100,11 @@ class MyRobot extends BCAbstractRobot {
                                 this.deposit_points, 25),
                             this.deposit_points, this.objectives);
                         this.log('DEBUG: CHURCH: ' + candidate);
-                        this.enqueue_unit(SPECS.PILGRIM, 2, candidate, null);
-                        this.deposit_points.push(candidate);
-                        this.churches++;
+                        if (candidate != null) {
+                            this.enqueue_unit(SPECS.PILGRIM, 2, candidate, null);
+                            this.deposit_points.push(candidate);
+                            this.churches++;
+                        }
                     }
                     break;
                 case 1:
@@ -1519,8 +1521,12 @@ class MyRobot extends BCAbstractRobot {
         }
 
         let final_target = this.adjust_target_for_obstructions(target);
-        return this.onion_search([this.me.x, this.me.y], final_target, 4,
-            this.get_two_onion_rings_around.bind(this));
+        if (final_target != null) {
+            return this.onion_search([this.me.x, this.me.y], final_target, 4,
+                this.get_two_onion_rings_around.bind(this));
+        }
+
+        return null;
     }
 
     adjust_target_for_obstructions(target) {
@@ -1988,16 +1994,20 @@ class MyRobot extends BCAbstractRobot {
     get_church_candidate(resources, allied_bases, enemy_bases) {
         let safety = this.evaluate_safety_for_each(
             resources, allied_bases, enemy_bases);
-        let safest = resources[this.index_largest_element_in(safety)];
 
-        return safest;
+        let index = this.index_of_largest_element_in(safety);
+        if (index != null) {
+            return resources[index];
+        }
+
+        return null;
     }
 
     /*
      * array helpers
      */
 
-    index_largest_element_in(values) {
+    index_of_largest_element_in(values) {
         if (values.length == 0) {
             return null;
         }
