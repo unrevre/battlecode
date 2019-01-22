@@ -153,9 +153,9 @@ class MyRobot extends BCAbstractRobot {
                     for (let i = 0; i < this.castles; i++) {
                         let coords = [this.castle_coords[i],
                                       this.castle_coords[i + this.castles]];
+                        this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
-                        this.deposit_points.push(coords);
                     }
                     break;
             }
@@ -880,10 +880,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     reflect_about_symmetry_axis(square) {
-        let reflected = square;
-        reflected[this.symmetry] = this.size - 1 - reflected[this.symmetry];
+        square[this.symmetry] = this.size - 1 - square[this.symmetry];
 
-        return reflected;
+        return square;
     }
 
     get_square_away_from_symmetry_axis() {
