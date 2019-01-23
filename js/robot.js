@@ -52,6 +52,9 @@ class MyRobot extends BCAbstractRobot {
 
         if (step === 0) {
             this.size = this.map.length;
+            this.symmetry = this.determine_map_symmetry();
+
+            this.fountain = this.get_adjacent_deposit_point();
         }
 
         if (this.me.unit === SPECS.CASTLE) {
@@ -59,8 +62,6 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
-                this.symmetry = this.determine_map_symmetry();
-
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
@@ -247,8 +248,6 @@ class MyRobot extends BCAbstractRobot {
             let visibles = this.get_visible_robots();
 
             if (step === 0) {
-                this.symmetry = this.determine_map_symmetry();
-
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
                     locations: this.order_by_onion_path_length(
@@ -352,12 +351,6 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit === SPECS.PILGRIM) {
             this.log('Pilgrim [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
-
-            if (step === 0) {
-                this.fountain = this.get_adjacent_deposit_point();
-
-                this.symmetry = this.determine_map_symmetry();
-            }
 
             let visibles = this.get_visible_robots();
 
@@ -512,10 +505,6 @@ class MyRobot extends BCAbstractRobot {
             this.log('Crusader [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            if (step === 0) {
-                this.fountain = this.get_adjacent_deposit_point();
-            }
-
             let visibles = this.get_visible_robots();
 
             let radioing = this.filter_radioing_robots(visibles);
@@ -605,10 +594,6 @@ class MyRobot extends BCAbstractRobot {
             this.log('Prophet [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            if (step === 0) {
-                this.fountain = this.get_adjacent_deposit_point();
-            }
-
             let visibles = this.get_visible_robots();
 
             let radioing = this.filter_radioing_robots(visibles);
@@ -679,10 +664,6 @@ class MyRobot extends BCAbstractRobot {
         else if (this.me.unit === SPECS.PREACHER) {
             this.log('Preacher [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
-
-            if (step === 0) {
-                this.fountain = this.get_adjacent_deposit_point();
-            }
 
             let visibles = this.get_visible_robots();
 
