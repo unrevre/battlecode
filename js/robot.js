@@ -1356,11 +1356,6 @@ class MyRobot extends BCAbstractRobot {
         const ring_one = [
             [0, -1], [1, 0], [0, 1], [-1, 0]];
 
-        // FIXME: test efficiency of pruning
-        const ring_one_exclusions = [
-            [[-1, -1], [0, -2], [1, -1]], [[1, -1], [2, 0], [1, 1]],
-            [[1, 1], [0, 2], [-1, 1]], [[-1, 1], [-2, 0], [-1, -1]]];
-
         let adjacent = [];
         for (let i = 0; i < 8; i++) {
             let rngx = square[0] + ring_two[i][0];
@@ -1392,16 +1387,6 @@ class MyRobot extends BCAbstractRobot {
             [0, 2], [-1, 1], [-2, 0], [-1, -1]];
         const ring_one = [
             [0, -1], [1, 0], [0, 1], [-1, 0]];
-
-        // FIXME: test efficiency of pruning
-        const ring_two_exclusions = [
-            [[-1, -2], [0, -3], [1, -2]], [[1, -2], [2, -1]],
-            [[2, -1], [3, 0], [2, 1]], [[2, 1], [1, 2]],
-            [[1, 2], [0, 3], [-1, 2]], [[-1, 2], [-2, 1]],
-            [[-2, 1], [-3, 0], [-2, -1]], [[-2, -1], [-1, -2]]];
-        const ring_one_exclusions = [
-            [[-1, -1], [0, -2], [1, -1]], [[1, -1], [2, 0], [1, 1]],
-            [[1, 1], [0, 2], [-1, 1]], [[-1, 1], [-2, 0], [-1, -1]]];
 
         let x = square[0];
         let y = square[1];
