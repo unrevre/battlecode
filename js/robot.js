@@ -1456,7 +1456,7 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (target == null) {
-            return adjacent[Math.random() * adjacent.length];
+            return adjacent[Math.floor(Math.random() * adjacent.length)];
         }
 
         let distances = [];
