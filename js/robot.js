@@ -20,6 +20,7 @@ class MyRobot extends BCAbstractRobot {
 
         this.castle_coords = [];
 
+        this.castle_points = [];
         this.deposit_points = [];
         this.objectives = [];
 
@@ -76,6 +77,7 @@ class MyRobot extends BCAbstractRobot {
                     [this.me.x, this.me.y]);
                 this.objectives.push(this.objective);
 
+                this.castle_points.push([this.me.x, this.me.y]);
                 this.deposit_points.push([this.me.x, this.me.y]);
             }
 
@@ -91,25 +93,7 @@ class MyRobot extends BCAbstractRobot {
 
             switch (castle_safety) {
                 case 0:
-                    // TODO: group resource patches to avoid building
-                    // overlapping churches
-                    if (this.mark === 0 && this.is_available(120, 300)) {
-                        let candidate = this.get_church_candidate(
-                            this.filter_by_nearest_distance_greater_than(
-                                this.get_resources(this.karbonite_map),
-                                this.deposit_points.concat(this.objectives),
-                                25),
-                            this.deposit_points, this.objectives);
-                        this.log('DEBUG: CHURCH: ' + candidate);
-                        if (candidate != null) {
-                            this.enqueue_unit(SPECS.PILGRIM, candidate,
-                                candidate);
-                            // push first to prevent multiple pilgrims being
-                            // sent here - updated later through castle talk
-                            this.deposit_points.push(candidate);
-                            this.reserve_resources(75, 250);
-                        }
-                    }
+                    this.consider_church_expansion();
                     break;
                 case 1:
                     this.unit_queue.length = 0;
@@ -153,7 +137,8 @@ class MyRobot extends BCAbstractRobot {
                     else if (message >= 0x70) {
                         this.add_message(robot.id, message - 0x70);
                         if (this.messages[robot.id].length === 2) {
-                            this.replace_coordinates(this.messages[robot.id]);
+                            this.add_or_replace_coordinates(
+                                this.messages[robot.id]);
                             this.messages[robot.id].length = 0;
                             this.free_resources(75, 250);
                         }
@@ -170,6 +155,7 @@ class MyRobot extends BCAbstractRobot {
                     for (let i = 0; i < this.castles; i++) {
                         let coords = [this.castle_coords[i],
                                       this.castle_coords[i + this.castles]];
+                        this.castle_points.push(coords.slice());
                         this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
@@ -1076,6 +1062,20 @@ class MyRobot extends BCAbstractRobot {
         return squares[index];
     }
 
+    get_closest_target_by_distance_from(square, targets) {
+        let index = 0;
+        let minimum = 16384;
+        for (let i = 0; i < targets.length; i++) {
+            let distance = this.distance(square, targets[i]);
+            if (distance < minimum) {
+                index = i;
+                minimum = distance;
+            }
+        }
+
+        return targets[index];
+    }
+
     /*
      * resources
      */
@@ -1620,13 +1620,15 @@ class MyRobot extends BCAbstractRobot {
         this.messages[id].push(message);
     }
 
-    replace_coordinates(coordinates) {
+    add_or_replace_coordinates(coordinates) {
         for (let i = 0; i < this.deposit_points.length; i++) {
             if (this.are_adjacent(coordinates, this.deposit_points[i])) {
                 this.deposit_points[i] = coordinates.slice();
-                break;
+                return;
             }
         }
+
+        this.deposit_points.push(coordinates.slice());
     }
 
     /*
@@ -2046,6 +2048,32 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return null;
+    }
+
+    consider_church_expansion() {
+        if (this.is_available(120, 300)) {
+            let candidate = this.get_church_candidate(
+                this.filter_by_nearest_distance_greater_than(
+                    this.get_resources(this.karbonite_map),
+                    this.deposit_points.concat(this.objectives),
+                    25),
+                this.deposit_points, this.objectives);
+
+            if (candidate == null) {
+                return;
+            }
+
+            let closest_castle = this.get_closest_target_by_distance_from(
+                candidate, this.castle_points);
+            if (this.me.x === closest_castle[0]
+                    && this.me.y === closest_castle[1]) {
+                this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
+                // push first to prevent multiple pilgrims being sent here to
+                // build a new church (updated later through castle talk)
+                this.deposit_points.push(candidate);
+                this.reserve_resources(75, 250);
+            }
+        }
     }
 
     /*
