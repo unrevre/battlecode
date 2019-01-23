@@ -93,8 +93,7 @@ class MyRobot extends BCAbstractRobot {
                 case 0:
                     // TODO: group resource patches to avoid building
                     // overlapping churches
-                    if (this.mark === 0 && step > 10
-                            && this.is_available(120, 300)) {
+                    if (this.mark === 0 && this.is_available(120, 300)) {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
                                 this.get_resources(this.karbonite_map),
@@ -148,7 +147,6 @@ class MyRobot extends BCAbstractRobot {
                     }
 
                     else if (message >= 0xF0) {
-                        this.mode = 1;
                         this.global_mark = message - 0xF0 + 1;
                     }
 
@@ -203,19 +201,8 @@ class MyRobot extends BCAbstractRobot {
             this.castle_talk(castle_talk_value);
 
             if (step === 0) {
-                if (this.size < 40 && this.mark === 0) {
-                    this.mode = 1;
-                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
-                    this.enqueue_unit(SPECS.CRUSADER, null, this.objective);
-                }
-
                 this.enqueue_unit(SPECS.CRUSADER, this.objective,
                     this.objective);
-            }
-
-            if (step > 80) {
-                this.mode = 0;
             }
 
             // TODO: check and replenish pilgrims occasionally if time allows
@@ -237,12 +224,8 @@ class MyRobot extends BCAbstractRobot {
 
             // continuously produce crusaders if rushing
             if (this.unit_queue.length === 0) {
-                if (this.mode === 1 && this.global_mark === this.mark) {
-                    this.enqueue_unit(SPECS.CRUSADER, this.objective, null);
-                }
-
                 // produce prophets otherwise, to build up defences
-                else if (step > 10 && this.is_available(80, 200)) {
+                if (step > 10 && this.is_available(80, 200)) {
                     this.enqueue_unit(SPECS.PROPHET, this.objective, null);
                 }
             }
