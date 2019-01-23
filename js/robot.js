@@ -1225,68 +1225,6 @@ class MyRobot extends BCAbstractRobot {
      * pathing
      */
 
-    astar(start, end, adjacency) {
-        let trace = {};
-
-        let G = {};
-        let open_squares = {};
-
-        G[start] = 0;
-        open_squares[start] = this.distance(start, end);
-
-        let closed_squares = {};
-
-        while (Object.keys(open_squares).length > 0) {
-            let head = null;
-            let score = 0;
-
-            for (let square in open_squares) {
-                let square_score = open_squares[square];
-                if (head == null || square_score < score) {
-                    head = JSON.parse('[' + square + ']');
-                    score = square_score;
-                }
-            }
-
-            if (head[0] == end[0] && head[1] == end[1]) {
-                let path = [head];
-                while (head in trace) {
-                    head = trace[head];
-                    path.push(head);
-                }
-                path.reverse();
-                path.splice(0, 1);
-                return path;
-            }
-
-            delete open_squares[head];
-            closed_squares[head] = 0;
-
-            let adjacent = adjacency(head);
-            for (let i = 0; i < adjacent.length; i++) {
-                let square = adjacent[i];
-
-                if (closed_squares[square] == 0) {
-                    continue;
-                }
-
-                let total = G[head] + this.distance(head, square);
-
-                if (open_squares[square] != undefined && total >= G[square]) {
-                    continue;
-                }
-
-                trace[square] = head;
-
-                G[square] = total;
-                open_squares[square] = total + this.distance(square, end);
-            }
-        }
-
-        this.log('ERROR: no path found!');
-        return null;
-    }
-
     get_two_onion_rings_around(square) {
         const ring_two = [
             [0, -2], [1, -1], [2, 0], [1, 1],
@@ -1507,25 +1445,6 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return next;
-    }
-
-    order_by_astar_path_length_to(squares) {
-        let paths = [];
-        let ordered = [];
-
-        for (let i = 0; i < squares.length; i++) {
-            paths.push(this.astar([this.me.x, this.me.y], squares[i],
-                this.get_adjacent_passable_squares_at.bind(this)));
-        }
-
-        paths.sort(function(r, s) { return r.length - s.length; });
-
-        for (let i = 0; i < paths.length; i++) {
-            let path = paths[i];
-            ordered.push([path[path.length - 1], path[0], path.length]);
-        }
-
-        return ordered;
     }
 
     order_by_onion_path_length(squares) {
