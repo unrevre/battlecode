@@ -88,6 +88,7 @@ class MyRobot extends BCAbstractRobot {
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
 
+            // TODO: improve this, really
             let castle_safety = this.evaluate_castle_safety(
                 visibles, enemies);
 
@@ -174,7 +175,7 @@ class MyRobot extends BCAbstractRobot {
                 });
             }
 
-            // broadcast coordinates (highest 4 bits)
+            // broadcast coordinates at the beginning of the game
             switch (step) {
                 case 0:
                     castle_talk_value = this.me.x + 0x80;
@@ -186,11 +187,9 @@ class MyRobot extends BCAbstractRobot {
 
             this.castle_talk(castle_talk_value);
 
+            // queue pilgrims on all available local resources after clearing
+            // initial build queue
             // TODO: check and replenish pilgrims occasionally if time allows
-            // (in case pilgrims are killed)
-
-            // put pilgrims on all available local resources after initial
-            // build queue is cleared
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length === 0) {
                     let square = this.next_available_resource_from(
@@ -298,6 +297,7 @@ class MyRobot extends BCAbstractRobot {
 
             let enemies = this.filter_visible_enemy_robots(visibles);
 
+            // TODO: improve this, really
             let church_safety = this.evaluate_church_safety(visibles, enemies);
 
             switch (church_safety) {
@@ -318,9 +318,6 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: decide units/target resource based on distribution of
             // resources
-
-            // FIXME: units in the build queue are not guaranteed to actually
-            // be built
             for (let i = 0; i < 2; i++) {
                 if (this.unit_queue.length === 0) {
                     let square = this.next_available_resource_from(
@@ -356,7 +353,6 @@ class MyRobot extends BCAbstractRobot {
             this.log('Pilgrim [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            // listen to radio for directions from the castle/church
             if (step === 0) {
                 this.fountain = this.get_adjacent_deposit_point();
 
@@ -365,6 +361,7 @@ class MyRobot extends BCAbstractRobot {
 
             let visibles = this.get_visible_robots();
 
+            // listen to radio for instructions from the castle/church
             let radioing = this.filter_allied_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
@@ -383,7 +380,7 @@ class MyRobot extends BCAbstractRobot {
                 this.target = null;
 
                 // TODO: more reliable conditions to determine if on church
-                // building mission would be nice
+                // building mission, likely together with initial signal
                 if (this.is_on_resource(this.karbonite_map)
                         && this.get_adjacent_deposit_point() == null
                         && this.distance_to(this.fountain) > 25) {
@@ -414,8 +411,6 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (attacked_count > 0) {
-                // evade enemies by moving to edge of map
-                // TODO: be careful not to be overly scared
                 this.mode = 1;
             }
 
@@ -460,6 +455,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // mine resources if safe and appropriate
+            // TODO: deposit resources more frequently when necessary so that
+            // units may be built earlier
             if (this.target == null) {
                 if (this.is_on_resource(this.karbonite_map)
                         && this.me.karbonite < 19) {
@@ -472,13 +469,6 @@ class MyRobot extends BCAbstractRobot {
                     return this.mine();
                 }
             }
-
-            // TODO: always check and update for adjacent deposit points
-            // possible to try to build churches in the path between the
-            // resource and the original 'birth' castle/church
-
-            // TODO: deposit resources more frequently if close to
-            // castle/church so that units may be built earlier
 
             if (this.is_adjacent_deposit_point(this.fountain)
                     && (this.me.karbonite || this.me.fuel)) {
@@ -505,7 +495,6 @@ class MyRobot extends BCAbstractRobot {
 
             this.path = this.get_pilgrimage_path_to(this.target);
 
-            // proceed to target
             if (this.path != null && this.path.length > 0) {
                 let destination = this.get_next_step_on(this.path);
 
@@ -524,7 +513,6 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
-                // TODO: also save robot id for castle talk identification
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
@@ -544,11 +532,7 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // NOTES:
-            //     memory: long-term target location (only castles)
-            //     objective: current enemy target location
-            //     victim: short-term enemy robot object
-
+            // TODO: overhaul attack targeting system
             let enemies = this.filter_visible_enemy_robots(visibles);
 
             // identify castle if it is within range
@@ -574,8 +558,8 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            // start with victim (target to focus)
-            // this usually is either the last enemy attacked, or the castle
+            // start with victim (target to focus) - this usually is either the
+            // last enemy attacked, or the castle
             // TODO: use victim to remember attacked units - preferentially
             // attacked since they have lower health
             if (this.victim != null && this.is_alive(this.victim)) {
@@ -608,7 +592,6 @@ class MyRobot extends BCAbstractRobot {
 
             this.log('  target: ' + this.target);
 
-            // proceed to target destination
             if (this.path != null && this.path.length > 0) {
                 let destination = this.get_next_step_on(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
@@ -623,7 +606,6 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
-                // TODO: also save robot id for castle talk identification
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
@@ -634,9 +616,7 @@ class MyRobot extends BCAbstractRobot {
                 let robot = radioing[i];
                 if (robot.unit === 0 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
-                    this.log('DEBUG: RADIO: receive target info');
                     if (this.memory == null) {
-                        this.log('DEBUG: RADIO: acquire target info');
                         this.memory = this.decode_coordinates(robot.signal)[0];
                         break;
                     }
@@ -687,7 +667,6 @@ class MyRobot extends BCAbstractRobot {
 
             this.log('  target: ' + this.target);
 
-            // proceed to target destination
             if (this.path != null && this.path.length > 0) {
                 let destination = this.get_next_step_on(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
@@ -702,7 +681,6 @@ class MyRobot extends BCAbstractRobot {
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
             if (step === 0) {
-                // TODO: also save robot id for castle talk identification
                 this.fountain = this.get_adjacent_deposit_point();
             }
 
@@ -713,9 +691,7 @@ class MyRobot extends BCAbstractRobot {
                 let robot = radioing[i];
                 if (robot.unit === 0 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
-                    this.log('DEBUG: RADIO: receive target info');
                     if (this.memory == null) {
-                        this.log('DEBUG: RADIO: acquire target info');
                         this.memory = this.decode_coordinates(robot.signal)[0];
                         break;
                     }
@@ -764,7 +740,6 @@ class MyRobot extends BCAbstractRobot {
 
             this.log('  target: ' + this.target);
 
-            // proceed to target destination
             if (this.path != null && this.path.length > 0) {
                 let destination = this.get_next_step_on(this.path);
                 this.log('  - moving to destination: (' + destination[0] + ', '
