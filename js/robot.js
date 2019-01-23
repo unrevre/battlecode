@@ -478,26 +478,15 @@ class MyRobot extends BCAbstractRobot {
                         this.mode = 1;
                     }
 
-                    // TODO: refactor this to avoid duplication
                     else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                         // trigger deposit if enemies are closing in
-                        if (this.is_adjacent(this.fountain)) {
-                            this.log('  - depositing resources [emergency]');
-                            return this.give(this.fountain[0] - this.me.x,
-                                             this.fountain[1] - this.me.y,
-                                             this.me.karbonite, this.me.fuel);
-                        }
+                        this.mode = 2;
                     }
                 }
 
                 else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                     // trigger deposit if enemies are closing in
-                    if (this.is_adjacent(this.fountain)) {
-                        this.log('  - depositing resources [emergency]');
-                        return this.give(this.fountain[0] - this.me.x,
-                                         this.fountain[1] - this.me.y,
-                                         this.me.karbonite, this.me.fuel);
-                    }
+                    this.mode = 2;
                 }
             }
 
@@ -508,6 +497,15 @@ class MyRobot extends BCAbstractRobot {
 
             if (this.mode === 1) {
                 this.target = this.get_square_away_from_symmetry_axis();
+            }
+
+            else if (this.mode === 2) {
+                if (this.is_adjacent(this.fountain)) {
+                    this.log('  - depositing resources [emergency]');
+                    return this.give(this.fountain[0] - this.me.x,
+                                     this.fountain[1] - this.me.y,
+                                     this.me.karbonite, this.me.fuel);
+                }
             }
 
             // mine resources if safe and appropriate
