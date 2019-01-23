@@ -451,7 +451,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             else if (this.mode === 2) {
-                if (this.is_adjacent(this.fountain)) {
+                if (this.is_adjacent_deposit_point(this.fountain)) {
                     this.log('  - depositing resources [emergency]');
                     return this.give(this.fountain[0] - this.me.x,
                                      this.fountain[1] - this.me.y,
@@ -480,7 +480,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: deposit resources more frequently if close to
             // castle/church so that units may be built earlier
 
-            if (this.is_adjacent(this.fountain)
+            if (this.is_adjacent_deposit_point(this.fountain)
                     && (this.me.karbonite || this.me.fuel)) {
                 this.target = null;
                 this.log('  - depositing resources');
@@ -884,6 +884,19 @@ class MyRobot extends BCAbstractRobot {
 
     are_adjacent(square, target) {
         return (this.distance(square, target) < 3);
+    }
+
+    is_adjacent_deposit_point(square) {
+        if (square == null || !this.is_adjacent(square)) {
+            return false;
+        }
+
+        let robot_id = this.get_visible_robot_map()[square[1]][square[0]];
+        if (robot_id < 1) {
+            return false;
+        }
+
+        return (this.get_robot(robot_id).unit < 2);
     }
 
     is_buildable(square) {
