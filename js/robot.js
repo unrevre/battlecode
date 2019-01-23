@@ -98,7 +98,8 @@ class MyRobot extends BCAbstractRobot {
                         let candidate = this.get_church_candidate(
                             this.filter_by_nearest_distance_greater_than(
                                 this.get_resources(this.karbonite_map),
-                                this.deposit_points, 25),
+                                this.deposit_points.concat(this.objectives),
+                                25),
                             this.deposit_points, this.objectives);
                         this.log('DEBUG: CHURCH: ' + candidate);
                         if (candidate != null) {
