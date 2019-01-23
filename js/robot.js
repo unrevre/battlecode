@@ -1287,68 +1287,6 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
-    astar_companion(start, end, adjacency) {
-        let trace = {};
-
-        let G = {};
-        let open_squares = {};
-
-        G[start] = 0;
-        open_squares[start] = this.distance(start, end);
-
-        let closed_squares = {};
-
-        while (Object.keys(open_squares).length > 0) {
-            let head = null;
-            let score = 0;
-
-            for (let square in open_squares) {
-                let square_score = open_squares[square];
-                if (head == null || square_score < score) {
-                    head = JSON.parse('[' + square + ']');
-                    score = square_score;
-                }
-            }
-
-            if (this.are_adjacent(head, end)) {
-                let path = [head];
-                while (head in trace) {
-                    head = trace[head];
-                    path.push(head);
-                }
-                path.reverse();
-                path.splice(0, 1);
-                return path;
-            }
-
-            delete open_squares[head];
-            closed_squares[head] = 0;
-
-            let adjacent = adjacency(head);
-            for (let i = 0; i < adjacent.length; i++) {
-                let square = adjacent[i];
-
-                if (closed_squares[square] == 0) {
-                    continue;
-                }
-
-                let total = G[head] + this.distance(head, square);
-
-                if (open_squares[square] != undefined && total >= G[square]) {
-                    continue;
-                }
-
-                trace[square] = head;
-
-                G[square] = total;
-                open_squares[square] = total + this.distance(square, end);
-            }
-        }
-
-        this.log('ERROR: no path found!');
-        return null;
-    }
-
     get_two_onion_rings_around(square) {
         const ring_two = [
             [0, -2], [1, -1], [2, 0], [1, 1],
@@ -1444,6 +1382,68 @@ class MyRobot extends BCAbstractRobot {
 
             if (this.distance(head, end) <= range) {
                 let path = [end, head];
+                while (head in trace) {
+                    head = trace[head];
+                    path.push(head);
+                }
+                path.reverse();
+                path.splice(0, 1);
+                return path;
+            }
+
+            delete open_squares[head];
+            closed_squares[head] = 0;
+
+            let adjacent = layering(head);
+            for (let i = 0; i < adjacent.length; i++) {
+                let square = adjacent[i];
+
+                if (closed_squares[square] == 0) {
+                    continue;
+                }
+
+                let total = G[head] + this.distance(head, square);
+
+                if (open_squares[square] != undefined && total >= G[square]) {
+                    continue;
+                }
+
+                trace[square] = head;
+
+                G[square] = total;
+                open_squares[square] = total + this.distance(square, end);
+            }
+        }
+
+        this.log('ERROR: no path found!');
+        return null;
+    }
+
+    onion_companion(start, end, layering) {
+        let trace = {};
+
+        let G = {};
+        let open_squares = {};
+
+        G[start] = 0;
+        open_squares[start] = this.distance(start, end);
+
+        let closed_squares = {};
+
+        while (Object.keys(open_squares).length > 0) {
+            let head = null;
+            let score = 0;
+
+            for (let square in open_squares) {
+                let square_score = open_squares[square];
+                if (head == null || square_score < score) {
+                    head = JSON.parse('[' + square + ']');
+                    score = square_score;
+                }
+            }
+
+            if (this.are_adjacent(head, end)) {
+                let path = [head];
                 while (head in trace) {
                     head = trace[head];
                     path.push(head);
@@ -1603,8 +1603,8 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (target[0] == this.fountain[0] && target[1] == this.fountain[1]) {
-            return this.astar_companion([this.me.x, this.me.y], this.fountain,
-                this.get_adjacent_passable_empty_squares_at.bind(this));
+            return this.onion_companion([this.me.x, this.me.y], this.fountain,
+                this.get_two_onion_rings_around.bind(this));
         }
 
         let final_target = this.adjust_target_for_obstructions(target);
