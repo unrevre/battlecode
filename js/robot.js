@@ -363,10 +363,6 @@ class MyRobot extends BCAbstractRobot {
             // TODO: decide units/target resource based on distribution of
             // resources
 
-            if (step == 0) {
-                this.enqueue_unit(SPECS.PROPHET, null, null);
-            }
-
             // FIXME: units in the build queue are not guaranteed to actually
             // be built
             for (let i = 0; i < 2; i++) {
@@ -382,7 +378,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.unit_queue.length == 0) {
-                if (step > 10 && this.is_available(80, 200)) {
+                if (this.is_available(60, 200)) {
                     this.enqueue_unit(SPECS.PROPHET, null, null);
                 }
             }
@@ -486,8 +482,7 @@ class MyRobot extends BCAbstractRobot {
                     // TODO: refactor this to avoid duplication
                     else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                         // trigger deposit if enemies are closing in
-                        if (this.is_adjacent(this.fountain)
-                                && (this.me.karbonite || this.me.fuel)) {
+                        if (this.is_adjacent(this.fountain)) {
                             this.log('  - depositing resources [emergency]');
                             return this.give(this.fountain[0] - this.me.x,
                                              this.fountain[1] - this.me.y,
@@ -498,8 +493,7 @@ class MyRobot extends BCAbstractRobot {
 
                 else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                     // trigger deposit if enemies are closing in
-                    if (this.is_adjacent(this.fountain)
-                            && (this.me.karbonite || this.me.fuel)) {
+                    if (this.is_adjacent(this.fountain)) {
                         this.log('  - depositing resources [emergency]');
                         return this.give(this.fountain[0] - this.me.x,
                                          this.fountain[1] - this.me.y,
