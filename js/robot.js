@@ -225,7 +225,7 @@ class MyRobot extends BCAbstractRobot {
             // continuously produce crusaders if rushing
             if (this.unit_queue.length === 0) {
                 // produce prophets otherwise, to build up defences
-                if (step > 10 && this.is_available(80, 200)) {
+                if (this.is_available(160, 300)) {
                     this.enqueue_unit(SPECS.PROPHET, this.objective, null);
                 }
             }
@@ -361,7 +361,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.unit_queue.length === 0) {
-                if (this.is_available(60, 200)) {
+                if (this.is_available(160, 300)) {
                     this.enqueue_unit(SPECS.PROPHET, null, null);
                 }
             }
