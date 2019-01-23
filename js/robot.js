@@ -911,7 +911,7 @@ class MyRobot extends BCAbstractRobot {
         let y = square[1];
         for (let i = -4; i < 5; i++) {
             for (let j = -4; j < 5; j++) {
-                if (!this.is_passable([y + j, x + i])) {
+                if (!this.is_passable([x + i, y + j])) {
                     count++;
                 }
             }
