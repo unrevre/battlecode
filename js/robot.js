@@ -200,11 +200,6 @@ class MyRobot extends BCAbstractRobot {
 
             this.castle_talk(castle_talk_value);
 
-            if (step === 0) {
-                this.enqueue_unit(SPECS.CRUSADER, this.objective,
-                    this.objective);
-            }
-
             // TODO: check and replenish pilgrims occasionally if time allows
             // (in case pilgrims are killed)
 
@@ -219,14 +214,6 @@ class MyRobot extends BCAbstractRobot {
                             this.local_resources[i].occupied[square] = true;
                         }
                     }
-                }
-            }
-
-            // continuously produce crusaders if rushing
-            if (this.unit_queue.length === 0) {
-                // produce prophets otherwise, to build up defences
-                if (this.is_available(160, 300)) {
-                    this.enqueue_unit(SPECS.PROPHET, this.objective, null);
                 }
             }
 
@@ -357,12 +344,6 @@ class MyRobot extends BCAbstractRobot {
                             this.local_resources[i].occupied[square] = true;
                         }
                     }
-                }
-            }
-
-            if (this.unit_queue.length === 0) {
-                if (this.is_available(160, 300)) {
-                    this.enqueue_unit(SPECS.PROPHET, null, null);
                 }
             }
 
