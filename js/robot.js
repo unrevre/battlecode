@@ -253,11 +253,9 @@ class MyRobot extends BCAbstractRobot {
                 let spawn = this.get_buildable_square_closest_to(unit.target);
 
                 if (spawn != null) {
-                    const signal = unit.signal;
-                    if (signal != null) {
-                        this.signal(this.encode_coordinates(signal, this.mark),
-                                    this.distance([this.me.x, this.me.y],
-                                                  spawn) + 1);
+                    if (unit.signal != null) {
+                        this.signal(this.encode_coordinates(
+                            unit.signal, this.mark), 2);
                     }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
@@ -395,11 +393,9 @@ class MyRobot extends BCAbstractRobot {
                 let spawn = this.get_buildable_square_closest_to(unit.target);
 
                 if (spawn != null) {
-                    const signal = unit.signal;
-                    if (signal != null) {
-                        this.signal(this.encode_coordinates(signal, this.mark),
-                                    this.distance([this.me.x, this.me.y],
-                                                  spawn) + 1);
+                    if (unit.signal != null) {
+                        this.signal(this.encode_coordinates(
+                            unit.signal, this.mark), 2);
                     }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
