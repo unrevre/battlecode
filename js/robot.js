@@ -441,8 +441,7 @@ class MyRobot extends BCAbstractRobot {
                 // building mission would be nice
                 if (this.is_on_resource(this.karbonite_map)
                         && this.get_adjacent_deposit_point() == null
-                        && this.distance([this.me.x, this.me.y],
-                                         this.fountain) > 25) {
+                        && this.distance_to(this.fountain) > 25) {
                     let church =
                         this.get_buildable_square_by_adjacent_resources();
                     if (church != null) {
@@ -478,10 +477,9 @@ class MyRobot extends BCAbstractRobot {
             else if (enemies.length > 0) {
                 let enemies_by_units = this.group_by_unit_types(enemies);
                 if (enemies_by_units[SPECS.CRUSADER].length > 0) {
-                    let nearest_crusader = this.get_closest_robot(
+                    let crusader = this.get_closest_robot(
                         enemies_by_units[SPECS.CRUSADER]);
-                    if (this.distance([nearest_crusader.x, nearest_crusader.y],
-                                      [this.me.x, this.me.y]) <= 20) {
+                    if (this.distance_to([crusader.x, crusader.y]) <= 20) {
                         this.mode = 1;
                     }
 
@@ -613,8 +611,7 @@ class MyRobot extends BCAbstractRobot {
 
             // identify castle if it is within range
             if (this.memory != null
-                    && this.distance([this.me.x, this.me.y],
-                                     this.memory) < 50) {
+                    && this.distance_to(this.memory) < 50) {
                 let castle_prescence = null;
                 for (let i = 0; i < enemies.length; i++) {
                     if (enemies[i].unit == 0) {
@@ -625,8 +622,7 @@ class MyRobot extends BCAbstractRobot {
 
                 if (castle_prescence == null) {
                     let message = this.encode_coordinates(this.memory, 0xd);
-                    this.signal(message, this.distance(
-                        [this.me.x, this.me.y], this.fountain));
+                    this.signal(message, this.distance_to(this.fountain));
 
                     this.victim = null;
                     this.objective = null;
@@ -952,7 +948,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_adjacent(square) {
-        return (this.distance([this.me.x, this.me.y], square) < 3);
+        return (this.distance_to(square) < 3);
     }
 
     are_adjacent(square, target) {
@@ -1096,6 +1092,11 @@ class MyRobot extends BCAbstractRobot {
         return (r[0] - s[0]) * (r[0] - s[0]) + (r[1] - s[1]) * (r[1] - s[1]);
     }
 
+    distance_to(s) {
+        return (this.me.x - s[0]) * (this.me.x - s[0])
+            + (this.me.y - s[1]) * (this.me.y - s[1]);
+    }
+
     get_closest_distance(square, targets) {
         if (targets.length == 0) {
             return null;
@@ -1120,7 +1121,7 @@ class MyRobot extends BCAbstractRobot {
         let index = 0;
         let minimum = 16384;
         for (let i = 0; i < squares.length; i++) {
-            let distance = this.distance([this.me.x, this.me.y], squares[i]);
+            let distance = this.distance_to(squares[i]);
             if (distance < minimum) {
                 index = i;
                 minimum = distance;
@@ -1430,7 +1431,7 @@ class MyRobot extends BCAbstractRobot {
 
         let next = null;
         for (let i = 1; i < path.length; i++) {
-            if (this.distance([this.me.x, this.me.y], path[i]) > range) {
+            if (this.distance_to(path[i]) > range) {
                 next = path[i - 1];
                 break;
             }
@@ -1447,8 +1448,7 @@ class MyRobot extends BCAbstractRobot {
         let paths = [];
 
         for (let i = 0; i < squares.length; i++) {
-            paths.push(this.onion_search(
-                [this.me.x, this.me.y], squares[i], 4,
+            paths.push(this.onion_search([this.me.x, this.me.y], squares[i], 4,
                 this.get_two_onion_rings_around.bind(this)));
         }
 
@@ -1651,7 +1651,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
-            if (this.distance([this.me.x, this.me.y], square) < value) {
+            if (this.distance_to(square) < value) {
                 filtered.push(square);
             }
         }
@@ -1677,8 +1677,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (this.distance([this.me.x, this.me.y],
-                              [robot.x, robot.y]) < value) {
+            if (this.distance_to([robot.x, robot.y]) < value) {
                 filtered.push(robot);
             }
         }
@@ -1816,7 +1815,7 @@ class MyRobot extends BCAbstractRobot {
         const min_attack_range = [1, 0, 0, 1, 16, 1];
         const max_attack_range = [64, 0, 0, 16, 64, 16];
 
-        let range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        let range = this.distance_to([robot.x, robot.y]);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
     }
@@ -1825,7 +1824,7 @@ class MyRobot extends BCAbstractRobot {
         const min_attack_range = [1, 0, 0, 1, 16, 1];
         const max_attack_range = [64, 0, 0, 16, 64, 26];
 
-        let range = this.distance([this.me.x, this.me.y], [robot.x, robot.y]);
+        let range = this.distance_to([robot.x, robot.y]);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
     }
@@ -1887,8 +1886,7 @@ class MyRobot extends BCAbstractRobot {
         let minimum = 100;
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            let distance = this.distance([this.me.x, this.me.y],
-                                         [robot.x, robot.y]);
+            let distance = this.distance_to([robot.x, robot.y]);
             if (distance < minimum) {
                 index = i;
                 minimum = distance;
@@ -1940,8 +1938,7 @@ class MyRobot extends BCAbstractRobot {
         if (enemies_by_units[5].length > comrades_by_units[4].length) {
             let nearest = this.get_closest_robot(enemies_by_units[5]);
 
-            if (this.distance([this.me.x, this.me.y],
-                              [nearest.x, nearest.y]) <= 25) {
+            if (this.distance_to([nearest.x, nearest.y]) <= 25) {
                 return 2;
             }
 
@@ -1975,8 +1972,7 @@ class MyRobot extends BCAbstractRobot {
         if (enemies_by_units[5].length > comrades_by_units[4].length) {
             let nearest = this.get_closest_robot(enemies_by_units[5]);
 
-            if (this.distance([this.me.x, this.me.y],
-                              [nearest.x, nearest.y]) <= 25) {
+            if (this.distance_to([nearest.x, nearest.y]) <= 25) {
                 return 2;
             }
 
