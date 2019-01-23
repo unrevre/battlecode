@@ -496,7 +496,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.mode === 1) {
-                this.target = this.get_square_away_from_symmetry_axis();
+                this.target = this.evade_threat_from(
+                    this.get_threat_direction_from(enemies));
             }
 
             else if (this.mode === 2) {
@@ -889,17 +890,6 @@ class MyRobot extends BCAbstractRobot {
 
     reflect_about_symmetry_axis(square) {
         square[this.symmetry] = this.size - 1 - square[this.symmetry];
-
-        return square;
-    }
-
-    get_square_away_from_symmetry_axis() {
-        let square = [this.me.x, this.me.y];
-        let major = square[this.symmetry];
-        let side = (major > this.map.length / 2);
-
-        square[this.symmetry] = side ? Math.min(major + 3, this.size - 1) :
-            Math.max(major - 3, 0);
 
         return square;
     }
@@ -1538,6 +1528,66 @@ class MyRobot extends BCAbstractRobot {
 
             return this.get_closest_square_by_distance(
                 this.get_next_to_adjacent_passable_empty_squares_at(target));
+        }
+
+        return target;
+    }
+
+    get_threat_direction_from(enemies) {
+        let threat_x = 0;
+        let threat_y = 0;
+
+        for (let i = 0; i < enemies.length; i++) {
+            let enemy = enemies[i];
+            let separation = this.distance_to([enemy.x, enemy.y]);
+            threat_x += (this.me.x - enemy.x) / separation;
+            threat_y += (this.me.y - enemy.y) / separation;
+        }
+
+        if (threat_x * threat_y !== 0) {
+            let max = Math.max(Math.abs(threat_x), Math.abs(threat_y));
+            threat_x = Math.round(threat_x * 4 / max);
+            threat_y = Math.round(threat_y * 4 / max);
+        }
+
+        else {
+            threat_x = 4 * Math.sign(threat_x);
+            threat_y = 4 * Math.sign(threat_y);
+        }
+
+        return [threat_x, threat_y];
+    }
+
+    four_step_decompose(vector) {
+        let steps = [];
+
+        for (let i = 4; i > 0; i--) {
+            steps.push([Math.floor(vector[0] / i), Math.floor(vector[1] / 4)]);
+            vector[0] -= steps[4 - i][0];
+            vector[1] -= steps[4 - i][1];
+        }
+
+        return steps;
+    }
+
+    evade_threat_from(threat) {
+        let projection = [this.me.x + threat[0], this.me.y + threat[1]];
+
+        if (this.is_passable(projection)) {
+            return projection;
+        }
+
+        let target = [this.me.x, this.me.y];
+
+        let steps = this.four_step_decompose(threat);
+        for (let i = 0; i < steps.length; i++) {
+            let head = [target[0] + steps[i][0], target[1] + steps[i][1]];
+
+            if (!this.is_passable(head)) {
+                break;
+            }
+
+            target = head;
         }
 
         return target;
