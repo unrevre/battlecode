@@ -1,4 +1,6 @@
-import {BCAbstractRobot, SPECS} from 'battlecode';
+import { BCAbstractRobot, SPECS } from 'battlecode';
+
+import binary_heap from './binary_heap.js';
 
 let step = -1;
 
@@ -1211,60 +1213,59 @@ class MyRobot extends BCAbstractRobot {
     }
 
     onion_search(start, end, range, layering) {
-        let trace = {};
-
-        let G = {};
-        let open_squares = {};
-
-        G[start] = 0;
-        open_squares[start] = this.metric(start, end);
-
-        let closed_squares = {};
-
-        while (Object.keys(open_squares).length > 0) {
-            let head = null;
-            let score = 0;
-
-            for (let square in open_squares) {
-                let square_score = open_squares[square];
-                if (head == null || square_score < score) {
-                    head = JSON.parse('[' + square + ']');
-                    score = square_score;
-                }
+        let node_map = [];
+        for (let i = 0; i < this.size; i++) {
+            node_map[i] = [];
+            for (let j = 0; j < this.size; j++) {
+                node_map[i][j] = {
+                    key: [j, i],
+                    f: 0,
+                    g: 0,
+                    closed: false,
+                    trace: null
+                };
             }
+        }
+
+        let node_heap = new binary_heap();
+        node_map[start[1]][start[0]].f = this.metric(start, end);
+        node_heap.insert(node_map[start[1]][start[0]]);
+
+        while (!node_heap.empty()) {
+            let node = node_heap.pop();
+            let head = node.key;
 
             if (this.distance(head, end) <= range) {
-                let path = [end, head];
-                while (head in trace) {
-                    head = trace[head];
-                    path.push(head);
+                let path = [end];
+                while (node.trace != null) {
+                    path.push(node.key);
+                    node = node.trace;
                 }
                 path.reverse();
-                path.splice(0, 1);
                 return path;
             }
 
-            delete open_squares[head];
-            closed_squares[head] = 0;
+            node.closed = true;
 
             let adjacent = layering(head);
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
+                let object = node_map[square[1]][square[0]];
 
-                if (closed_squares[square] === 0) {
+                if (object.closed === true) {
                     continue;
                 }
 
-                let total = G[head] + this.metric(head, square);
+                let total = node.g + this.metric(head, square);
 
-                if (open_squares[square] != undefined && total >= G[square]) {
+                if (object.f != 0 && total >= object.g) {
                     continue;
                 }
 
-                trace[square] = head;
-
-                G[square] = total;
-                open_squares[square] = total + this.metric(square, end);
+                object.trace = node;
+                object.g = total;
+                object.f = total + this.metric(square, end);
+                node_heap.insert(object);
             }
         }
 
@@ -1273,60 +1274,59 @@ class MyRobot extends BCAbstractRobot {
     }
 
     onion_companion(start, end, layering) {
-        let trace = {};
-
-        let G = {};
-        let open_squares = {};
-
-        G[start] = 0;
-        open_squares[start] = this.metric(start, end);
-
-        let closed_squares = {};
-
-        while (Object.keys(open_squares).length > 0) {
-            let head = null;
-            let score = 0;
-
-            for (let square in open_squares) {
-                let square_score = open_squares[square];
-                if (head == null || square_score < score) {
-                    head = JSON.parse('[' + square + ']');
-                    score = square_score;
-                }
+        let node_map = [];
+        for (let i = 0; i < this.size; i++) {
+            node_map[i] = [];
+            for (let j = 0; j < this.size; j++) {
+                node_map[i][j] = {
+                    key: [j, i],
+                    f: 0,
+                    g: 0,
+                    closed: false,
+                    trace: null
+                };
             }
+        }
+
+        let node_heap = new binary_heap();
+        node_map[start[1]][start[0]].f = this.metric(start, end);
+        node_heap.insert(node_map[start[1]][start[0]]);
+
+        while (!node_heap.empty()) {
+            let node = node_heap.pop();
+            let head = node.key;
 
             if (this.are_adjacent(head, end)) {
-                let path = [head];
-                while (head in trace) {
-                    head = trace[head];
-                    path.push(head);
+                let path = [];
+                while (node.trace != null) {
+                    path.push(node.key);
+                    node = node.trace;
                 }
                 path.reverse();
-                path.splice(0, 1);
                 return path;
             }
 
-            delete open_squares[head];
-            closed_squares[head] = 0;
+            node.closed = true;
 
             let adjacent = layering(head);
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
+                let object = node_map[square[1]][square[0]];
 
-                if (closed_squares[square] === 0) {
+                if (object.closed === true) {
                     continue;
                 }
 
-                let total = G[head] + this.metric(head, square);
+                let total = node.g + this.metric(head, square);
 
-                if (open_squares[square] != undefined && total >= G[square]) {
+                if (object.f != 0 && total >= object.g) {
                     continue;
                 }
 
-                trace[square] = head;
-
-                G[square] = total;
-                open_squares[square] = total + this.metric(square, end);
+                object.trace = node;
+                object.g = total;
+                object.f = total + this.metric(square, end);
+                node_heap.insert(object);
             }
         }
 
