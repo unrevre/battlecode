@@ -20,7 +20,6 @@ class MyRobot extends BCAbstractRobot {
 
         this.castle_coords = [];
 
-        this.castle_points = [];
         this.deposit_points = [];
         this.objectives = [];
 
@@ -78,7 +77,6 @@ class MyRobot extends BCAbstractRobot {
                     [this.me.x, this.me.y]);
                 this.objectives.push(this.objective);
 
-                this.castle_points.push([this.me.x, this.me.y]);
                 this.deposit_points.push([this.me.x, this.me.y]);
             }
 
@@ -157,7 +155,6 @@ class MyRobot extends BCAbstractRobot {
                     for (let i = 0; i < this.castles; i++) {
                         let coords = [this.castle_coords[i],
                                       this.castle_coords[i + this.castles]];
-                        this.castle_points.push(coords.slice());
                         this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
@@ -269,11 +266,12 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            let radioing = this.filter_allied_radioing_robots(visibles);
+            let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (step === 0 && robot.unit === 3) {
-                    let message = this.decode_coordinates(robot.signal);
+                let message = this.decode_coordinates(robot.signal);
+                if (step === 0 && robot.unit === 3
+                        && robot.team === this.me.team) {
                     this.target = message[0];
                     this.mark = message[1];
                     this.memory = this.target;
@@ -281,6 +279,13 @@ class MyRobot extends BCAbstractRobot {
                         [this.me.x, this.me.y]);
                     this.objectives.push(this.objective);
                     break;
+                }
+
+                else if (message[1] === 0xc) {
+                    let candidate = message[0];
+                    if (this.is_resource(candidate, this.karbonite_map)) {
+                        this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
+                    }
                 }
             }
 
@@ -1031,7 +1036,7 @@ class MyRobot extends BCAbstractRobot {
         return squares[index];
     }
 
-    get_closest_target_by_distance_from(square, targets) {
+    index_of_closest_target_by_distance_from(square, targets) {
         let index = 0;
         let minimum = 16384;
         for (let i = 0; i < targets.length; i++) {
@@ -1042,7 +1047,7 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        return targets[index];
+        return index;
     }
 
     /*
@@ -2032,16 +2037,22 @@ class MyRobot extends BCAbstractRobot {
                 return;
             }
 
-            let closest_castle = this.get_closest_target_by_distance_from(
-                candidate, this.castle_points);
-            if (this.me.x === closest_castle[0]
-                    && this.me.y === closest_castle[1]) {
+            let index = this.index_of_closest_target_by_distance_from(
+                candidate, this.deposit_points);
+            if (index === this.mark) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
-                // push first to prevent multiple pilgrims being sent here to
-                // build a new church (updated later through castle talk)
-                this.deposit_points.push(candidate);
-                this.reserve_resources(75, 250);
             }
+
+            else if (index >= this.castles) {
+                // send signal to church
+                this.signal(this.encode_coordinates(candidate, 0xc),
+                    this.distance_to(this.deposit_points[index]));
+            }
+
+            // push first to prevent multiple pilgrims being sent here to build
+            // a new church (updated later through castle talk)
+            this.deposit_points.push(candidate);
+            this.reserve_resources(75, 250);
         }
     }
 
