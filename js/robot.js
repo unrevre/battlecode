@@ -258,6 +258,9 @@ class MyRobot extends BCAbstractRobot {
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
                     occupied: [] });
+
+                this.objective = this.reflect_about_symmetry_axis(
+                    [this.me.x, this.me.y]);
             }
 
             let radioing = this.filter_radioing_robots(visibles);
