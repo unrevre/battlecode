@@ -367,9 +367,10 @@ class MyRobot extends BCAbstractRobot {
             if (step === 0 && this.distance_to(this.target) > 36) {
                 this.objective = this.get_optimal_square_by_adjacent_resources(
                     this.target);
-                let path = this.onion_companion([this.me.x, this.me.y],
-                    this.objective, this.get_two_onion_rings_around.bind(this));
-                this.target = path[path.length - 1];
+                let path = this.reverse_raw_onion_search(
+                    this.objective, [this.me.x, this.me.y],
+                    this.get_two_raw_onion_rings_around.bind(this));
+                this.target = path[path.length - 2];
             }
 
             // clear target destination after arrival
@@ -495,7 +496,7 @@ class MyRobot extends BCAbstractRobot {
             this.path = this.get_pilgrimage_path_to(this.target);
 
             if (this.path != null && this.path.length > 0) {
-                let destination = this.get_next_step_on(this.path);
+                let destination = this.path[1];
 
                 // don't move into attack range of enemies
                 if (this.is_safe(destination, enemies)) {
@@ -588,7 +589,7 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.path != null && this.path.length > 0) {
-                let destination = this.get_next_step_on(this.path);
+                let destination = this.path[1];
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -659,7 +660,7 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.path != null && this.path.length > 0) {
-                let destination = this.get_next_step_on(this.path);
+                let destination = this.path[1];
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -728,7 +729,7 @@ class MyRobot extends BCAbstractRobot {
             this.log('  target: ' + this.target);
 
             if (this.path != null && this.path.length > 0) {
-                let destination = this.get_next_step_on(this.path);
+                let destination = this.path[1];
                 this.log('  - moving to destination: (' + destination[0] + ', '
                     + destination[1] + ')');
                 return this.move(destination[0] - this.me.x,
@@ -1169,6 +1170,33 @@ class MyRobot extends BCAbstractRobot {
         return adjacent;
     }
 
+    get_two_raw_onion_rings_around(square) {
+        const ring_two = [
+            [0, -2], [1, -1], [2, 0], [1, 1],
+            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
+        const ring_one = [
+            [0, -1], [1, 0], [0, 1], [-1, 0]];
+
+        let adjacent = [];
+        for (let i = 0; i < 8; i++) {
+            let rngx = square[0] + ring_two[i][0];
+            let rngy = square[1] + ring_two[i][1];
+            if (this.is_passable([rngx, rngy])) {
+                adjacent.push([rngx, rngy]);
+            }
+        }
+
+        for (let i = 0; i < 4; i++) {
+            let rngx = square[0] + ring_one[i][0];
+            let rngy = square[1] + ring_one[i][1];
+            if (this.is_passable([rngx, rngy])) {
+                adjacent.push([rngx, rngy]);
+            }
+        }
+
+        return adjacent;
+    }
+
     get_three_onion_rings_around(square) {
         const ring_three = [
             [0, -3], [1, -2], [2, -2], [2, -1],
@@ -1212,7 +1240,7 @@ class MyRobot extends BCAbstractRobot {
         return adjacent;
     }
 
-    onion_search(start, end, range, layering) {
+    onion_search(start, end, layering) {
         let node_map = [];
         for (let i = 0; i < this.size; i++) {
             node_map[i] = [];
@@ -1235,11 +1263,11 @@ class MyRobot extends BCAbstractRobot {
             let node = node_heap.pop();
             let head = node.key;
 
-            if (this.distance(head, end) <= range) {
+            if (head[0] === end[0] && head[1] === end[1]) {
                 let path = [end];
                 while (node.trace != null) {
-                    path.push(node.key);
                     node = node.trace;
+                    path.push(node.key);
                 }
                 path.reverse();
                 return path;
@@ -1273,7 +1301,7 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
-    onion_companion(start, end, layering) {
+    reverse_raw_onion_search(start, end, layering) {
         let node_map = [];
         for (let i = 0; i < this.size; i++) {
             node_map[i] = [];
@@ -1289,20 +1317,44 @@ class MyRobot extends BCAbstractRobot {
         }
 
         let node_heap = new binary_heap();
-        node_map[start[1]][start[0]].f = this.metric(start, end);
-        node_heap.insert(node_map[start[1]][start[0]]);
+
+        let node = node_map[start[1]][start[0]];
+        node.f = this.metric(start, end);
+        node.closed = true;
+
+        let head = node.key;
+
+        let adjacent = this.get_adjacent_passable_empty_squares_at(head);
+        for (let i = 0; i < adjacent.length; i++) {
+            let target = adjacent[i];
+            let cell = node_map[target[1]][target[0]];
+
+            if (cell.closed === true) {
+                continue;
+            }
+
+            let total = node.g + this.metric(head, target) + 0.01;
+
+            if (cell.f != 0 && total >= cell.g) {
+                continue;
+            }
+
+            cell.trace = node;
+            cell.g = total;
+            cell.f = total + this.metric(target, end);
+            node_heap.insert(cell);
+        }
 
         while (!node_heap.empty()) {
-            let node = node_heap.pop();
-            let head = node.key;
+            node = node_heap.pop();
+            head = node.key;
 
-            if (this.are_adjacent(head, end)) {
-                let path = [];
+            if (head[0] === end[0] && head[1] === end[1]) {
+                let path = [end];
                 while (node.trace != null) {
-                    path.push(node.key);
                     node = node.trace;
+                    path.push(node.key);
                 }
-                path.reverse();
                 return path;
             }
 
@@ -1312,6 +1364,11 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
                 let object = node_map[square[1]][square[0]];
+
+                if ((square[0] !== end[0] || square[1] !== end[1])
+                        && !this.is_empty(square)) {
+                    continue;
+                }
 
                 if (object.closed === true) {
                     continue;
@@ -1332,42 +1389,15 @@ class MyRobot extends BCAbstractRobot {
 
         this.log('ERROR: no path found!');
         return null;
-    }
-
-    total_path_distance(path) {
-        let total = 0;
-        for (let i = 1; i < path.length; i++) {
-            total += this.distance(path[i], path[i - 1]);
-        }
-
-        return total;
-    }
-
-    get_next_step_on(path) {
-        const movement_speed = [0, 0, 4, 9, 4, 4];
-        const range = movement_speed[this.me.unit];
-
-        let next = null;
-        for (let i = 1; i < path.length; i++) {
-            if (this.distance_to(path[i]) > range) {
-                next = path[i - 1];
-                break;
-            }
-        }
-
-        if (next == null) {
-            next = path[path.length - 1];
-        }
-
-        return next;
     }
 
     order_by_onion_path_length(squares) {
         let paths = [];
 
         for (let i = 0; i < squares.length; i++) {
-            paths.push(this.onion_search([this.me.x, this.me.y], squares[i], 4,
-                this.get_two_onion_rings_around.bind(this)));
+            paths.push(this.onion_search(
+                [this.me.x, this.me.y], squares[i],
+                this.get_two_raw_onion_rings_around.bind(this)));
         }
 
         paths.sort(function(r, s) { return r.length - s.length; });
@@ -1396,7 +1426,7 @@ class MyRobot extends BCAbstractRobot {
             return adjacent[Math.floor(Math.random() * adjacent.length)];
         }
 
-        let distances = [];
+        let steps = [];
 
         for (let i = 0; i < adjacent.length; i++) {
             let square = adjacent[i];
@@ -1405,12 +1435,11 @@ class MyRobot extends BCAbstractRobot {
                 return target;
             }
 
-            distances.push(this.total_path_distance(this.onion_search(
-                square, target, 4,
-                this.get_two_onion_rings_around.bind(this))));
+            steps.push(this.reverse_raw_onion_search(square, target,
+                this.get_two_raw_onion_rings_around.bind(this)).length);
         }
 
-        return adjacent[this.index_of_minimum_element_in(distances)];
+        return adjacent[this.index_of_minimum_element_in(steps)];
     }
 
     get_optimal_square_by_adjacent_resources(square) {
@@ -1464,13 +1493,14 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (target[0] === this.fountain[0] && target[1] === this.fountain[1]) {
-            return this.onion_companion([this.me.x, this.me.y], this.fountain,
-                this.get_two_onion_rings_around.bind(this));
+            return this.reverse_raw_onion_search(
+                this.fountain, [this.me.x, this.me.y],
+                this.get_two_raw_onion_rings_around.bind(this));
         }
 
         let final_target = this.adjust_target_for_obstructions(target);
         if (final_target != null) {
-            return this.onion_search([this.me.x, this.me.y], final_target, 4,
+            return this.onion_search([this.me.x, this.me.y], final_target,
                 this.get_two_onion_rings_around.bind(this));
         }
 
@@ -1589,11 +1619,11 @@ class MyRobot extends BCAbstractRobot {
         }
 
         if (this.me.unit === SPECS.CRUSADER) {
-            return this.onion_search([this.me.x, this.me.y], target, 9,
+            return this.onion_search([this.me.x, this.me.y], target,
                 this.get_three_onion_rings_around.bind(this));
         }
 
-        return this.onion_search([this.me.x, this.me.y], target, 4,
+        return this.onion_search([this.me.x, this.me.y], target,
             this.get_two_onion_rings_around.bind(this));
     }
 
