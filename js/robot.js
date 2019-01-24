@@ -1217,7 +1217,7 @@ class MyRobot extends BCAbstractRobot {
         let open_squares = {};
 
         G[start] = 0;
-        open_squares[start] = this.distance(start, end);
+        open_squares[start] = this.metric(start, end);
 
         let closed_squares = {};
 
@@ -1255,7 +1255,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                let total = G[head] + this.distance(head, square);
+                let total = G[head] + this.metric(head, square);
 
                 if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
@@ -1264,7 +1264,7 @@ class MyRobot extends BCAbstractRobot {
                 trace[square] = head;
 
                 G[square] = total;
-                open_squares[square] = total + this.distance(square, end);
+                open_squares[square] = total + this.metric(square, end);
             }
         }
 
@@ -1279,7 +1279,7 @@ class MyRobot extends BCAbstractRobot {
         let open_squares = {};
 
         G[start] = 0;
-        open_squares[start] = this.distance(start, end);
+        open_squares[start] = this.metric(start, end);
 
         let closed_squares = {};
 
@@ -1317,7 +1317,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                let total = G[head] + this.distance(head, square);
+                let total = G[head] + this.metric(head, square);
 
                 if (open_squares[square] != undefined && total >= G[square]) {
                     continue;
@@ -1326,7 +1326,7 @@ class MyRobot extends BCAbstractRobot {
                 trace[square] = head;
 
                 G[square] = total;
-                open_squares[square] = total + this.distance(square, end);
+                open_squares[square] = total + this.metric(square, end);
             }
         }
 
