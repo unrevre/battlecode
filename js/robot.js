@@ -256,28 +256,18 @@ class MyRobot extends BCAbstractRobot {
                         this.filter_by_distance_less_than(
                             this.get_resources(this.fuel_map), 26)),
                     occupied: [] });
-
-                let pilgrims = this.filter_allied_pilgrim_coordinates(visibles);
-                // assume pilgrims target only karbonite patches
-                for (let i = 0; i < pilgrims.length; i++) {
-                    if (this.is_resource(pilgrims[i], this.karbonite_map)) {
-                        this.local_resources[0].occupied[pilgrims[i]] = true;
-                    }
-                }
             }
 
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
                 let message = this.decode_coordinates(robot.signal);
-                if (step === 0 && robot.unit === 3
+                if (step === 0 && robot.unit === SPECS.PILGRIM
                         && robot.team === this.me.team) {
                     this.target = message[0];
                     this.mark = message[1];
                     this.memory = this.target;
-                    this.objective = this.reflect_about_symmetry_axis(
-                        [this.me.x, this.me.y]);
-                    this.objectives.push(this.objective);
+                    this.local_resources[0].occupied[message[0]] = true;
                     break;
                 }
 
@@ -372,6 +362,14 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            if (step === 0 && this.distance_to(this.target) > 36) {
+                this.objective = this.get_optimal_square_by_adjacent_resources(
+                    this.target);
+                let path = this.onion_companion([this.me.x, this.me.y],
+                    this.objective, this.get_two_onion_rings_around.bind(this));
+                this.target = path[path.length - 1];
+            }
+
             // clear target destination after arrival
             if (this.target != null && this.target[0] === this.me.x
                     && this.target[1] === this.me.y) {
@@ -379,15 +377,16 @@ class MyRobot extends BCAbstractRobot {
 
                 // TODO: more reliable conditions to determine if on church
                 // building mission, likely together with initial signal
-                if (this.is_on_resource(this.karbonite_map)
+                if (this.objective != null
                         && this.get_adjacent_deposit_point() == null
-                        && this.distance_to(this.fountain) > 25) {
+                        && this.distance_to(this.fountain) > 36) {
                     let church =
                         this.get_buildable_square_by_adjacent_resources();
                     if (church != null) {
                         this.signal(this.encode_coordinates(
-                            this.fountain, this.mark), 2);
+                            this.memory, this.mark), 2);
                         this.fountain = church;
+                        this.target = this.memory;
                         this.log('  - build unit type [2] at (' + church[0]
                             + ', ' + church[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
@@ -1412,6 +1411,34 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return adjacent[this.index_of_minimum_element_in(distances)];
+    }
+
+    get_optimal_square_by_adjacent_resources(square) {
+        let maximum = -10;
+        let optimal = square;
+
+        let x = square[0];
+        let y = square[1];
+        for (let i = -2; i < 3; i++) {
+            for (let j = -2; j < 3; j++) {
+                let head = [x + i, y + j];
+                if (this.is_passable(head)) {
+                    let count = this.count_resource_squares_around(head) * 10
+                        - this.count_impassable_squares_around(head);
+                    if (this.is_resource(head, this.karbonite_map)
+                            || this.is_resource(head, this.fuel_map)) {
+                        count -= 30;
+                    }
+
+                    if (count > maximum) {
+                        maximum = count;
+                        optimal = head;
+                    }
+                }
+            }
+        }
+
+        return optimal;
     }
 
     get_buildable_square_by_adjacent_resources() {
