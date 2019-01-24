@@ -1256,7 +1256,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                let total = node.g + this.metric(head, square);
+                let total = node.g + this.metric(head, square) + 0.01;
 
                 if (object.f != 0 && total >= object.g) {
                     continue;
@@ -1317,7 +1317,7 @@ class MyRobot extends BCAbstractRobot {
                     continue;
                 }
 
-                let total = node.g + this.metric(head, square);
+                let total = node.g + this.metric(head, square) + 0.01;
 
                 if (object.f != 0 && total >= object.g) {
                     continue;
