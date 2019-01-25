@@ -1774,13 +1774,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_safe(square, robots) {
-        let safe = true;
-
         for (let i = 0; i < robots.length; i++) {
             if (this.is_square_in_attack_range_of(square, robots[i])) {
                 return false; } }
 
-        return safe;
+        return true;
     }
 
     unit_count(square, robot_map) {
@@ -1788,9 +1786,7 @@ class MyRobot extends BCAbstractRobot {
         if (robot_id < 1) { return 0; }
 
         let robot = this.get_robot(robot_id);
-        if (robot.team === this.me.team) { return -1; }
-
-        return 1;
+        return robot.team === this.me.team ? -1 : 1;
     }
 
     get_unit_count_difference_around(square) {
