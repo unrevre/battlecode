@@ -30,7 +30,6 @@ class MyRobot extends BCAbstractRobot {
         this.unit_queue = [];
         this.signal_queue = [];
 
-        this.message_list = [];
         this.messages = [];
 
         this.reserved = [0, 0];
@@ -99,18 +98,19 @@ class MyRobot extends BCAbstractRobot {
 
             switch (step) {
                 case 0:
-                    this.mark = this.message_list.length;
+                    this.mark = this.messages.length;
                     break;
                 case 2:
                     this.castles /= 2;
                     for (let i = 0; i < this.castles; i++) {
-                        let coords = [this.message_list[i],
-                                      this.message_list[i + this.castles]];
+                        let coords = [this.messages[i],
+                                      this.messages[i + this.castles]];
                         this.castle_points.push(coords.slice());
                         this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
                     }
+                    this.messages.length = 0;
                     break;
             }
 
@@ -1736,7 +1736,7 @@ class MyRobot extends BCAbstractRobot {
     process_castle_talk(robot, message) {
         if (step < 3) {
             this.castles++;
-            this.message_list.push(message);
+            this.messages.push(message);
             return;
         }
 
