@@ -1622,6 +1622,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     step_towards(direction) {
+        if (direction[0] == null || direction[1] == null) {
+            return [this.me.x, this.me.y]; }
+
         let steps = [[this.me.x, this.me.y]];
 
         for (let i = 0; i < 4; i++) {
