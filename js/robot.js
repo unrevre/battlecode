@@ -18,7 +18,6 @@ class MyRobot extends BCAbstractRobot {
 
         this.castles = 0;
         this.mark = 0;
-        this.global_mark = 0;
 
         this.castle_coords = [];
 
@@ -133,7 +132,7 @@ class MyRobot extends BCAbstractRobot {
                     }
 
                     else if (message >= 0xF0) {
-                        this.global_mark = message - 0xF0 + 1;
+                        this.update_objectives(message - 0xF0);
                     }
 
                     else if (message >= 0x70) {
@@ -231,8 +230,7 @@ class MyRobot extends BCAbstractRobot {
                         && coordinates[0] === this.objective[0]
                         && coordinates[1] === this.objective[1]) {
                     this.castle_talk(0xF0 + this.mark);
-                    this.objectives.shift();
-                    this.objective = this.objectives[0];
+                    this.update_objectives(this.mark);
                 }
             }
         }
@@ -1663,6 +1661,21 @@ class MyRobot extends BCAbstractRobot {
         }
 
         this.deposit_points.push(coordinates.slice());
+    }
+
+    update_objectives(mark) {
+        if (this.mark < mark) {
+            this.objectives.splice(mark, 1);
+        }
+
+        else if (this.mark > mark) {
+            this.objectives.splice(mark + 1, 1);
+        }
+
+        else {
+            this.objectives.shift();
+            this.objective = this.objectives[0];
+        }
     }
 
     /*
