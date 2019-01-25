@@ -19,8 +19,7 @@ class MyRobot extends BCAbstractRobot {
         this.castles = 0;
         this.mark = 0;
 
-        this.castle_coords = [];
-
+        this.castle_points = [];
         this.deposit_points = [];
         this.objectives = [];
 
@@ -31,6 +30,7 @@ class MyRobot extends BCAbstractRobot {
         this.unit_queue = [];
         this.signal_queue = [];
 
+        this.message_list = [];
         this.messages = [];
 
         this.reserved = [0, 0];
@@ -78,6 +78,7 @@ class MyRobot extends BCAbstractRobot {
                     [this.me.x, this.me.y]);
                 this.objectives.push(this.objective);
 
+                this.castle_points.push([this.me.x, this.me.y]);
                 this.deposit_points.push([this.me.x, this.me.y]);
             }
 
@@ -98,13 +99,14 @@ class MyRobot extends BCAbstractRobot {
 
             switch (step) {
                 case 0:
-                    this.mark = this.castle_coords.length;
+                    this.mark = this.message_list.length;
                     break;
                 case 2:
                     this.castles /= 2;
                     for (let i = 0; i < this.castles; i++) {
-                        let coords = [this.castle_coords[i],
-                                      this.castle_coords[i + this.castles]];
+                        let coords = [this.message_list[i],
+                                      this.message_list[i + this.castles]];
+                        this.castle_points.push(coords.slice());
                         this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
@@ -1734,7 +1736,7 @@ class MyRobot extends BCAbstractRobot {
     process_castle_talk(robot, message) {
         if (step < 3) {
             this.castles++;
-            this.castle_coords.push(message);
+            this.message_list.push(message);
             return;
         }
 
@@ -2203,8 +2205,12 @@ class MyRobot extends BCAbstractRobot {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
             } else if (index >= this.castles) {
                 // send signal to church
-                this.signal(this.encode_coordinates(candidate, 0xc),
-                    this.distance_to(this.deposit_points[index]));
+                let near_castle = this.get_closest_square_by_distance_from(
+                    this.deposit_points[index], this.castle_points);
+                if (this.me.x === near_castle[0]
+                        && this.me.y === near_castle[1]) {
+                    this.signal(this.encode_coordinates(candidate, 0xc),
+                        this.distance_to(this.deposit_points[index])); }
             }
 
             // push first to prevent multiple pilgrims being sent here to build
