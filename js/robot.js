@@ -1034,16 +1034,18 @@ class MyRobot extends BCAbstractRobot {
         return resources;
     }
 
-    count_resource_squares_around(square) {
+    score_resource_squares_around(square) {
         let adjacent = this.get_adjacent_passable_squares_at(square);
 
-        let count = 0;
+        let score = 0;
         for (let i = 0; i < adjacent.length; i++) {
-            if (this.is_resource(adjacent[i], this.karbonite_map)
-                    || this.is_resource(adjacent[i], this.fuel_map)) {
-                count++; } }
+            if (this.is_resource(adjacent[i], this.karbonite_map)) {
+                score += 1.1; }
+            if (this.is_resource(adjacent[i], this.fuel_map)) {
+                score += 1; }
+        }
 
-        return count;
+        return score;
     }
 
     next_available_resource_from(resource) {
@@ -1498,7 +1500,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_optimal_square_by_adjacent_resources(square) {
-        let maximum = -40;
+        let maximum = -128;
         let optimal = square;
 
         let x = square[0];
@@ -1508,14 +1510,16 @@ class MyRobot extends BCAbstractRobot {
             for (let j = -2; j < 3; j++) {
                 let head = [x + i, y + j];
                 if (this.is_passable(head)) {
-                    let count = this.count_resource_squares_around(head) * 10
-                        - this.count_adjacent_impassable_squares_around(head);
+                    let score = this.score_resource_squares_around(head) * 10
+                        - this.count_adjacent_impassable_squares_around(head)
+                        - 0.01 * Math.abs(((this.size - 1) / 2)
+                            - head[this.symmetry]);
                     if (this.is_resource(head, this.karbonite_map)
                             || this.is_resource(head, this.fuel_map)) {
-                        count -= 30; }
+                        score -= 30; }
 
-                    if (count > maximum) {
-                        maximum = count;
+                    if (score > maximum) {
+                        maximum = score;
                         optimal = head;
                     }
                 }
@@ -1532,7 +1536,7 @@ class MyRobot extends BCAbstractRobot {
         let counts = [];
 
         for (let i = 0; i < adjacent.length; i++) {
-            counts.push(this.count_resource_squares_around(adjacent[i]) * 10
+            counts.push(this.score_resource_squares_around(adjacent[i]) * 10
                 - this.count_adjacent_impassable_squares_around(adjacent[i])); }
 
         return adjacent[this.index_of_maximum_element_in(counts)];
