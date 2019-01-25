@@ -375,7 +375,7 @@ class MyRobot extends BCAbstractRobot {
                             this.memory, this.mark), 2);
                         this.fountain = church;
                         this.target = this.memory;
-                        this.log('  - build unit type [2] at (' + church[0]
+                        this.log('  - build unit type [1] at (' + church[0]
                             + ', ' + church[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
                                                church[0] - this.me.x,
