@@ -2029,7 +2029,7 @@ class MyRobot extends BCAbstractRobot {
 
             let index = this.index_of_closest_target_by_distance_from(
                 candidate, this.deposit_points);
-            if (index === this.mark) {
+            if (index === 0) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
             } else if (index >= this.castles) {
                 // send signal to church
