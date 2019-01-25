@@ -1355,7 +1355,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_optimal_square_by_adjacent_resources(square) {
-        let maximum = -10;
+        let maximum = -40;
         let optimal = square;
 
         let x = square[0];
@@ -1532,7 +1532,7 @@ class MyRobot extends BCAbstractRobot {
 
     add_or_replace_coordinates(coordinates) {
         for (let i = 0; i < this.deposit_points.length; i++) {
-            if (this.are_adjacent(coordinates, this.deposit_points[i])) {
+            if (this.distance(coordinates, this.deposit_points[i]) < 9) {
                 this.deposit_points[i] = coordinates.slice();
                 return;
             }
@@ -1903,13 +1903,15 @@ class MyRobot extends BCAbstractRobot {
 
     get_splash_attack_at(target) {
         let square = target;
-        let max_count = this.get_unit_count_difference_around(target);
 
+        let max_count = this.get_unit_count_difference_around(target);
         let adjacent = this.get_adjacent_passable_squares_at(target);
         for (let i = 0; i < adjacent.length; i++) {
             let count = this.get_unit_count_difference_around(adjacent[i]);
             if (count > max_count) {
-                square = adjacent[i]; }
+                max_count = count;
+                square = adjacent[i];
+            }
         }
 
         return square;
