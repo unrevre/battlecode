@@ -384,18 +384,18 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            let enemies = this.filter_attack_capable_robots(
-                this.filter_visible_enemy_robots(visibles));
+            let enemies = this.filter_visible_enemy_robots(visibles);
+            let attacking = this.filter_attack_capable_robots(enemies);
 
             let attacked_count = 0;
-            for (let i = 0; i < enemies.length; i++) {
-                if (this.is_in_attack_range_of(enemies[i])) {
+            for (let i = 0; i < attacking.length; i++) {
+                if (this.is_in_attack_range_of(attacking[i])) {
                     attacked_count++; } }
 
             if (attacked_count > 0) {
                 this.mode = 1;
-            } else if (enemies.length > 0) {
-                let enemies_by_units = this.group_by_unit_types(enemies);
+            } else if (attacking.length > 0) {
+                let enemies_by_units = this.group_by_unit_types(attacking);
                 if (enemies_by_units[SPECS.CRUSADER].length > 0) {
                     let crusader = this.get_closest_robot(
                         enemies_by_units[SPECS.CRUSADER]);
@@ -416,7 +416,7 @@ class MyRobot extends BCAbstractRobot {
 
             if (this.mode === 1) {
                 this.target = this.evade_threat_from(
-                    this.get_threat_direction_from(enemies));
+                    this.get_threat_direction_from(attacking));
             } else if (this.mode === 2) {
                 if (this.is_adjacent_deposit_point(this.fountain)) {
                     this.log('  - depositing resources [emergency]');
@@ -471,7 +471,7 @@ class MyRobot extends BCAbstractRobot {
 
                 // don't move into attack range of enemies
                 // TODO: route around enemy attack range to destination
-                if (this.is_safe(destination, enemies)) {
+                if (this.is_safe(destination, attacking)) {
                     this.log('  - moving to destination: ('
                         + destination[0] + ', ' + destination[1] + ')');
                     return this.move(destination[0] - this.me.x,
@@ -929,6 +929,15 @@ class MyRobot extends BCAbstractRobot {
 
     get_buildable_squares_at(square) {
         return this.get_adjacent_passable_empty_squares_at(square);
+    }
+
+    get_aligned_compass_direction_from(vector) {
+        let x = vector[0];
+        let y = vector[1];
+
+        let max = Math.max(Math.abs(x), Math.abs(y));
+
+        return [Math.round(x / max), Math.round(y / max)];
     }
 
     /*
@@ -1424,6 +1433,24 @@ class MyRobot extends BCAbstractRobot {
         return ordered;
     }
 
+    step_towards(direction) {
+        if (direction[0] == null || direction[1] == null) {
+            return [this.me.x, this.me.y]; }
+
+        let steps = [[this.me.x, this.me.y]];
+
+        for (let i = 0; i < 4; i++) {
+            steps.push([steps[i][0] + direction[0],
+                        steps[i][1] + direction[1]]); }
+
+        for (let i = 4; i > 0; i--) {
+            if (this.is_passable(steps[i])) {
+                return steps[i]; } }
+
+        this.log('ERROR: unreachable (step_towards)');
+        return null;
+    }
+
     /*
      * high-level optimisations
      */
@@ -1589,15 +1616,6 @@ class MyRobot extends BCAbstractRobot {
         return [vector_x, vector_y];
     }
 
-    get_aligned_compass_direction_from(vector) {
-        let x = vector[0];
-        let y = vector[1];
-
-        let max = Math.max(Math.abs(x), Math.abs(y));
-
-        return [Math.round(x / max), Math.round(y / max)];
-    }
-
     get_threat_direction_from(enemies) {
         let threat_x = 0;
         let threat_y = 0;
@@ -1609,56 +1627,31 @@ class MyRobot extends BCAbstractRobot {
             threat_y += (this.me.y - enemy.y) / separation;
         }
 
-        if (threat_x * threat_y !== 0) {
-            let max = Math.max(Math.abs(threat_x), Math.abs(threat_y));
-            threat_x = Math.round(threat_x * 4 / max);
-            threat_y = Math.round(threat_y * 4 / max);
-        } else {
-            threat_x = 4 * Math.sign(threat_x);
-            threat_y = 4 * Math.sign(threat_y);
-        }
+        let max = Math.max(Math.abs(threat_x), Math.abs(threat_y));
+        threat_x = Math.round(threat_x * 4 / max);
+        threat_y = Math.round(threat_y * 4 / max);
+
+        if (threat_x == null && threat_y == null) {
+            return [0, 0]; }
 
         return [threat_x, threat_y];
     }
 
-    step_towards(direction) {
-        if (direction[0] == null || direction[1] == null) {
-            return [this.me.x, this.me.y]; }
-
-        let steps = [[this.me.x, this.me.y]];
-
-        for (let i = 0; i < 4; i++) {
-            steps.push([steps[i][0] + direction[0],
-                        steps[i][1] + direction[1]]); }
-
-        for (let i = 4; i > 0; i--) {
-            if (this.is_passable(steps[i])) {
-                return steps[i]; } }
-
-        this.log('ERROR: unreachable (step_towards)');
-        return null;
-    }
-
-    four_step_decompose(vector) {
-        let steps = [];
-
-        for (let i = 4; i > 0; i--) {
-            steps.push([Math.floor(vector[0] / i), Math.floor(vector[1] / 4)]);
-            vector[0] -= steps[4 - i][0];
-            vector[1] -= steps[4 - i][1];
-        }
-
-        return steps;
-    }
-
-    evade_threat_from(threat) {
-        let projection = [this.me.x + threat[0], this.me.y + threat[1]];
+    evade_threat_from(direction) {
+        let projection = [this.me.x + direction[0], this.me.y + direction[1]];
         if (this.is_passable(projection)) { return projection; }
+
+        let steps = [];
+        for (let i = 4; i > 0; i--) {
+            steps.push([Math.floor(direction[0] / i),
+                        Math.floor(direction[1] / 4)]);
+            direction[0] -= steps[4 - i][0];
+            direction[1] -= steps[4 - i][1];
+        }
 
         let target = [this.me.x, this.me.y];
 
-        let steps = this.four_step_decompose(threat);
-        for (let i = 0; i < steps.length; i++) {
+        for (let i = 0; i < 4; i++) {
             let head = [target[0] + steps[i][0], target[1] + steps[i][1]];
             if (!this.is_passable(head)) { break; }
 
