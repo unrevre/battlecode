@@ -1313,6 +1313,82 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
+    reverse_fresh_onion_search(start, end, layering) {
+        let node_map = [];
+        for (let i = 0; i < this.size; i++) {
+            node_map[i] = [];
+            for (let j = 0; j < this.size; j++) {
+                node_map[i][j] = {
+                    key: [j, i],
+                    f: 0,
+                    g: 0,
+                    closed: false,
+                    trace: null
+                };
+            }
+        }
+
+        let node_heap = new binary_heap();
+
+        let node = node_map[start[1]][start[0]];
+        node.f = this.metric(start, end);
+        node.closed = true;
+
+        let head = node.key;
+
+        let adjacent = this.get_adjacent_passable_squares_at(head);
+        for (let i = 0; i < adjacent.length; i++) {
+            let target = adjacent[i];
+            let cell = node_map[target[1]][target[0]];
+            if (cell.closed === true) { continue; }
+
+            let total = node.g + this.metric(head, target) + 0.01;
+
+            if (cell.f != 0 && total >= cell.g) { continue; }
+
+            cell.trace = node;
+            cell.g = total;
+            cell.f = total + this.metric(target, end);
+            node_heap.insert(cell);
+        }
+
+        while (!node_heap.empty()) {
+            node = node_heap.pop();
+            head = node.key;
+
+            if (head[0] === end[0] && head[1] === end[1]) {
+                let path = [end];
+                while (node.trace != null) {
+                    node = node.trace;
+                    path.push(node.key);
+                }
+                return path;
+            }
+
+            node.closed = true;
+
+            let adjacent = layering(head);
+            for (let i = 0; i < adjacent.length; i++) {
+                let square = adjacent[i];
+                let object = node_map[square[1]][square[0]];
+
+                if (object.closed === true) { continue; }
+
+                let total = node.g + this.metric(head, square) + 0.01;
+
+                if (object.f != 0 && total >= object.g) { continue; }
+
+                object.trace = node;
+                object.g = total;
+                object.f = total + this.metric(square, end);
+                node_heap.insert(object);
+            }
+        }
+
+        this.log('ERROR: no path found!');
+        return null;
+    }
+
     order_by_onion_path_length(squares) {
         let paths = [];
         for (let i = 0; i < squares.length; i++) {
@@ -1347,7 +1423,7 @@ class MyRobot extends BCAbstractRobot {
             if (square[0] === target[0] && square[1] === target[1]) {
                 return target; }
 
-            steps.push(this.reverse_raw_onion_search(square, target,
+            steps.push(this.reverse_fresh_onion_search(square, target,
                 this.get_two_raw_onion_rings_around.bind(this)).length);
         }
 
