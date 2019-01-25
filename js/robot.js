@@ -506,7 +506,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit === 0 && robot.x === this.fountain[0]
+                if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.target == null) {
                         this.target = this.decode_coordinates(robot.signal)[0];
@@ -596,7 +596,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit === 0 && robot.x === this.fountain[0]
+                if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
                         this.memory = this.decode_coordinates(robot.signal)[0];
@@ -668,7 +668,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit === 0 && robot.x === this.fountain[0]
+                if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
                         this.memory = this.decode_coordinates(robot.signal)[0];
