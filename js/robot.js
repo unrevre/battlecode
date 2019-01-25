@@ -120,30 +120,12 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // check castle talk - abuse all information available
-            // TODO: improve this
             let castling = this.filter_castling_robots(visibles);
             for (let i = 0; i < castling.length; i++) {
                 let robot = castling[i];
                 if (robot.id !== this.me.id) {
                     let message = robot.castle_talk;
-                    if (step < 3) {
-                        this.castles++;
-                        this.castle_coords.push(message - 0x80);
-                    }
-
-                    else if (message >= 0xF0) {
-                        this.update_objectives(message - 0xF0);
-                    }
-
-                    else if (message >= 0x70) {
-                        this.add_message(robot.id, message - 0x70);
-                        if (this.messages[robot.id].length === 2) {
-                            this.add_or_replace_coordinates(
-                                this.messages[robot.id]);
-                            this.messages[robot.id].length = 0;
-                            this.free_resources(75, 250);
-                        }
-                    }
+                    this.process_castle_talk(robot, message);
                 }
             }
 
@@ -177,10 +159,10 @@ class MyRobot extends BCAbstractRobot {
             // broadcast coordinates at the beginning of the game
             switch (step) {
                 case 0:
-                    castle_talk_value = this.me.x + 0x80;
+                    castle_talk_value = this.me.x;
                     break;
                 case 1:
-                    castle_talk_value = this.me.y + 0x80;
+                    castle_talk_value = this.me.y;
                     break;
             }
 
@@ -229,7 +211,7 @@ class MyRobot extends BCAbstractRobot {
                 if (token === 0xd && this.objectives.length > 1
                         && coordinates[0] === this.objective[0]
                         && coordinates[1] === this.objective[1]) {
-                    this.castle_talk(0xF0 + this.mark);
+                    this.castle_talk(this.mark + 0xF0);
                     this.update_objectives(this.mark);
                 }
             }
@@ -283,11 +265,11 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (step === 0) {
-                castle_talk_value = this.me.x + 0x70;
+                castle_talk_value = this.me.x + 0x80;
             }
 
             else if (step === 1) {
-                castle_talk_value = this.me.y + 0x70;
+                castle_talk_value = this.me.y + 0x80;
             }
 
             this.castle_talk(castle_talk_value);
@@ -1661,6 +1643,29 @@ class MyRobot extends BCAbstractRobot {
         }
 
         this.deposit_points.push(coordinates.slice());
+    }
+
+    // something something modifying global variables silently
+    process_castle_talk(robot, message) {
+        if (step < 3) {
+            this.castles++;
+            this.castle_coords.push(message);
+            return;
+        }
+
+        if (message >= 0xF0) {
+            this.update_objectives(message - 0xF0);
+        }
+
+        else if (message >= 0x80) {
+            this.add_message(robot.id, message - 0x80);
+            if (this.messages[robot.id].length === 2) {
+                this.add_or_replace_coordinates(
+                    this.messages[robot.id]);
+                this.messages[robot.id].length = 0;
+                this.free_resources(75, 250);
+            }
+        }
     }
 
     update_objectives(mark) {
