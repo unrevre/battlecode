@@ -193,11 +193,9 @@ class MyRobot extends BCAbstractRobot {
                 if (this.unit_queue.length === 0) {
                     let square = this.next_available_resource_from(
                         this.local_resources[i]);
-                    if (square != null) {
-                        if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
-                            this.local_resources[i].occupied[square] = true;
-                        }
-                    }
+                    if (square != null && this.enqueue_unit(
+                            SPECS.PILGRIM, square, square)) {
+                        this.local_resources[i].occupied[square] = true; }
                 }
             }
 
@@ -208,8 +206,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
-                            unit.signal, this.mark), 2);
-                    }
+                            unit.signal, this.mark), 2); }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
                         + spawn[0] + ', ' + spawn[1] + ')');
@@ -256,22 +253,21 @@ class MyRobot extends BCAbstractRobot {
                     this.memory = this.target;
                     this.local_resources[0].occupied[message[0]] = true;
                     break;
-                }
-
-                else if (message[1] === 0xc) {
+                } else if (message[1] === 0xc) {
                     let candidate = message[0];
                     if (this.is_resource(candidate, this.karbonite_map)) {
-                        this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
-                    }
+                        this.enqueue_unit(SPECS.PILGRIM,
+                            candidate, candidate); }
                 }
             }
 
-            if (step === 0) {
-                castle_talk_value = this.me.x + 0x80;
-            }
-
-            else if (step === 1) {
-                castle_talk_value = this.me.y + 0x80;
+            switch (step) {
+                case 0:
+                    castle_talk_value = this.me.x + 0x80;
+                    break;
+                case 1:
+                    castle_talk_value = this.me.y + 0x80;
+                    break;
             }
 
             this.castle_talk(castle_talk_value);
@@ -303,11 +299,9 @@ class MyRobot extends BCAbstractRobot {
                 if (this.unit_queue.length === 0) {
                     let square = this.next_available_resource_from(
                         this.local_resources[i]);
-                    if (square != null) {
-                        if (this.enqueue_unit(SPECS.PILGRIM, square, square)) {
-                            this.local_resources[i].occupied[square] = true;
-                        }
-                    }
+                    if (square != null && this.enqueue_unit(
+                            SPECS.PILGRIM, square, square)) {
+                        this.local_resources[i].occupied[square] = true; }
                 }
             }
 
@@ -318,8 +312,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
-                            unit.signal, this.mark), 2);
-                    }
+                            unit.signal, this.mark), 2); }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
                         + spawn[0] + ', ' + spawn[1] + ')');
@@ -390,38 +383,27 @@ class MyRobot extends BCAbstractRobot {
 
             let attacked_count = 0;
             for (let i = 0; i < enemies.length; i++) {
-                let enemy = enemies[i];
-                if (this.is_in_attack_range_of(enemy)) {
-                    attacked_count++;
-                }
-            }
+                if (this.is_in_attack_range_of(enemies[i])) {
+                    attacked_count++; } }
 
             if (attacked_count > 0) {
                 this.mode = 1;
-            }
-
-            else if (enemies.length > 0) {
+            } else if (enemies.length > 0) {
                 let enemies_by_units = this.group_by_unit_types(enemies);
                 if (enemies_by_units[SPECS.CRUSADER].length > 0) {
                     let crusader = this.get_closest_robot(
                         enemies_by_units[SPECS.CRUSADER]);
                     if (this.distance_to([crusader.x, crusader.y]) <= 20) {
                         this.mode = 1;
-                    }
-
-                    else if (this.me.karbonite > 9 || this.me.fuel > 49) {
+                    } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                         // trigger deposit if enemies are closing in
                         this.mode = 2;
                     }
-                }
-
-                else if (this.me.karbonite > 9 || this.me.fuel > 49) {
+                } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                     // trigger deposit if enemies are closing in
                     this.mode = 2;
                 }
-            }
-
-            else if (this.mode > 0) {
+            } else if (this.mode > 0) {
                 this.target = null;
                 this.mode = 0;
             }
@@ -429,9 +411,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.mode === 1) {
                 this.target = this.evade_threat_from(
                     this.get_threat_direction_from(enemies));
-            }
-
-            else if (this.mode === 2) {
+            } else if (this.mode === 2) {
                 if (this.is_adjacent_deposit_point(this.fountain)) {
                     this.log('  - depositing resources [emergency]');
                     return this.give(this.fountain[0] - this.me.x,
@@ -469,14 +449,12 @@ class MyRobot extends BCAbstractRobot {
             // return to nearest resource deposit point
             if (this.mode === 0
                     && (this.me.karbonite > 18 || this.me.fuel > 90)) {
-                this.target = this.fountain;
-            }
+                this.target = this.fountain; }
 
             // target remembered resource after any interruption (deposition,
             // evasion, church building etc..)
             if (this.target == null && this.memory != null) {
-                this.target = this.memory;
-            }
+                this.target = this.memory; }
 
             this.log('  target: ' + this.target);
 
@@ -547,14 +525,13 @@ class MyRobot extends BCAbstractRobot {
             // last enemy attacked, or the castle
             // TODO: use victim to remember attacked units - preferentially
             // attacked since they have lower health
-            if (this.victim != null && this.is_alive(this.victim)) {
-                if (this.is_in_attack_range(this.victim)) {
-                    this.log('  - attack unit [' + this.victim.id
-                        + '], type (' + this.victim.unit + ') at '
-                        + this.victim.x + ', ' + this.victim.y);
-                    return this.attack(this.victim.x - this.me.x,
-                                       this.victim.y - this.me.y);
-                }
+            if (this.victim != null && this.is_alive(this.victim)
+                    && this.is_in_attack_range(this.victim)) {
+                this.log('  - attack unit [' + this.victim.id
+                    + '], type (' + this.victim.unit + ') at '
+                    + this.victim.x + ', ' + this.victim.y);
+                return this.attack(this.victim.x - this.me.x,
+                                   this.victim.y - this.me.y);
             }
 
             let attackables = this.filter_attackable_robots(enemies);
@@ -627,8 +604,7 @@ class MyRobot extends BCAbstractRobot {
                 // move off buildable squares
                 this.target = this.get_closest_square_by_distance(
                     this.get_next_to_adjacent_passable_empty_squares_at(
-                        this.fountain));
-            }
+                        this.fountain)); }
 
             // deposit resources if convenient
             if (this.target == null) {
@@ -698,8 +674,7 @@ class MyRobot extends BCAbstractRobot {
                 // move off buildable squares
                 this.target = this.get_closest_square_by_distance(
                     this.get_next_to_adjacent_passable_empty_squares_at(
-                        this.fountain));
-            }
+                        this.fountain)); }
 
             // deposit resources if convenient
             if (this.target == null) {
@@ -741,14 +716,6 @@ class MyRobot extends BCAbstractRobot {
         return this.castleTalk(value);
     }
 
-    is_radioing(robot) {
-        return this.isRadioing(robot);
-    }
-
-    is_visible(robot) {
-        return this.isVisible(robot);
-    }
-
     get_visible_robots() {
         return this.getVisibleRobots();
     }
@@ -759,6 +726,14 @@ class MyRobot extends BCAbstractRobot {
 
     get_robot(id) {
         return this.getRobot(id);
+    }
+
+    is_visible(robot) {
+        return this.isVisible(robot);
+    }
+
+    is_radioing(robot) {
+        return this.isRadioing(robot);
     }
 
     get_passable_map() {
@@ -778,9 +753,7 @@ class MyRobot extends BCAbstractRobot {
             if (karbonite_map[coord[1]][this.size - 1 - coord[0]]
                     && !(karbonite_map[this.size - 1 - coord[1]][coord[0]])) {
                 return 0;
-            }
-
-            else if (!(karbonite_map[coord[1]][this.size - 1 - coord[0]])
+            } else if (!(karbonite_map[coord[1]][this.size - 1 - coord[0]])
                     && karbonite_map[this.size - 1 - coord[1]][coord[0]]) {
                 return 1;
             }
@@ -807,8 +780,7 @@ class MyRobot extends BCAbstractRobot {
         let y = square[1];
 
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
-            return false;
-        }
+            return false; }
 
         return this.map[y][x];
     }
@@ -824,8 +796,7 @@ class MyRobot extends BCAbstractRobot {
         let y = square[1];
 
         if (x < 0 || x >= this.size || y < 0 || y >= this.size) {
-            return false;
-        }
+            return false; }
 
         let nonempty = this.get_visible_robot_map();
 
@@ -841,14 +812,10 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_adjacent_deposit_point(square) {
-        if (square == null || !this.is_adjacent(square)) {
-            return false;
-        }
+        if (square == null || !this.is_adjacent(square)) { return false; }
 
         let robot_id = this.get_visible_robot_map()[square[1]][square[0]];
-        if (robot_id < 1) {
-            return false;
-        }
+        if (robot_id < 1) { return false; }
 
         return (this.get_robot(robot_id).unit < 2);
     }
@@ -858,17 +825,15 @@ class MyRobot extends BCAbstractRobot {
     }
 
     count_impassable_squares_around(square) {
-        let count = 0;
-
         let x = square[0];
         let y = square[1];
+
+        let count = 0;
+
         for (let i = -4; i < 5; i++) {
             for (let j = -4; j < 5; j++) {
                 if (!this.is_passable([x + i, y + j])) {
-                    count++;
-                }
-            }
-        }
+                    count++; } } }
 
         return count;
     }
@@ -878,10 +843,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < visibles.length; i++) {
             if (visibles[i].unit < 2 && visibles[i].team === this.me.team) {
                 if (this.is_adjacent([visibles[i].x, visibles[i].y])) {
-                    return [visibles[i].x, visibles[i].y];
-                }
-            }
-        }
+                    return [visibles[i].x, visibles[i].y]; } } }
 
         return null;
     }
@@ -893,8 +855,7 @@ class MyRobot extends BCAbstractRobot {
             let adjx = this.me.x + this.compass[i][0];
             let adjy = this.me.y + this.compass[i][1];
             if (this.is_passable([adjx, adjy])) {
-                adjacent.push([adjx, adjy]);
-            }
+                adjacent.push([adjx, adjy]); }
         }
 
         return adjacent;
@@ -907,8 +868,7 @@ class MyRobot extends BCAbstractRobot {
             let adjx = this.me.x + this.compass[i][0];
             let adjy = this.me.y + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
-                adjacent.push([adjx, adjy]);
-            }
+                adjacent.push([adjx, adjy]); }
         }
 
         return adjacent;
@@ -924,8 +884,7 @@ class MyRobot extends BCAbstractRobot {
             let adjx = x + this.compass[i][0];
             let adjy = y + this.compass[i][1];
             if (this.is_passable([adjx, adjy])) {
-                adjacent.push([adjx, adjy]);
-            }
+                adjacent.push([adjx, adjy]); }
         }
 
         return adjacent;
@@ -941,8 +900,7 @@ class MyRobot extends BCAbstractRobot {
             let adjx = x + this.compass[i][0];
             let adjy = y + this.compass[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
-                adjacent.push([adjx, adjy]);
-            }
+                adjacent.push([adjx, adjy]); }
         }
 
         return adjacent;
@@ -963,8 +921,7 @@ class MyRobot extends BCAbstractRobot {
             let adjx = x + next_to_adjacent_directions[i][0];
             let adjy = y + next_to_adjacent_directions[i][1];
             if (this.is_passable_and_empty([adjx, adjy])) {
-                next_to_adjacent.push([adjx, adjy]);
-            }
+                next_to_adjacent.push([adjx, adjy]); }
         }
 
         return next_to_adjacent;
@@ -996,25 +953,20 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_closest_distance(square, targets) {
-        if (targets.length === 0) {
-            return null;
-        }
+        if (targets.length === 0) { return null; }
 
         let minimum = 16384;
         for (let i = 0; i < targets.length; i++) {
             let distance = this.distance(square, targets[i]);
             if (distance < minimum) {
-                minimum = distance;
-            }
+                minimum = distance; }
         }
 
         return minimum;
     }
 
     get_closest_square_by_distance(squares) {
-        if (squares.length === 0) {
-            return null;
-        }
+        if (squares.length === 0) { return null; }
 
         let index = 0;
         let minimum = 16384;
@@ -1061,10 +1013,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < this.size; i++) {
             for (let j = 0; j < this.size; j++) {
                 if (resource_map[i][j]) {
-                    resources.push([j, i]);
-                }
-            }
-        }
+                    resources.push([j, i]); } } }
 
         return resources;
     }
@@ -1076,9 +1025,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < adjacent.length; i++) {
             if (this.is_resource(adjacent[i], this.karbonite_map)
                     || this.is_resource(adjacent[i], this.fuel_map)) {
-                count++;
-            }
-        }
+                count++; } }
 
         return count;
     }
@@ -1086,9 +1033,7 @@ class MyRobot extends BCAbstractRobot {
     next_available_resource_from(resource) {
         for (let i = 0; i < resource.locations.length; i++) {
             if (!resource.occupied[resource.locations[i]]) {
-                return resource.locations[i];
-            }
-        }
+                return resource.locations[i]; } }
 
         return null;
     }
@@ -1141,21 +1086,23 @@ class MyRobot extends BCAbstractRobot {
         const ring_one = [
             [0, -1], [1, 0], [0, 1], [-1, 0]];
 
+        let x = square[0];
+        let y = square[1];
+
         let adjacent = [];
+
         for (let i = 0; i < 8; i++) {
-            let rngx = square[0] + ring_two[i][0];
-            let rngy = square[1] + ring_two[i][1];
+            let rngx = x + ring_two[i][0];
+            let rngy = y + ring_two[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         for (let i = 0; i < 4; i++) {
-            let rngx = square[0] + ring_one[i][0];
-            let rngy = square[1] + ring_one[i][1];
+            let rngx = x + ring_one[i][0];
+            let rngy = y + ring_one[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         return adjacent;
@@ -1168,21 +1115,23 @@ class MyRobot extends BCAbstractRobot {
         const ring_one = [
             [0, -1], [1, 0], [0, 1], [-1, 0]];
 
+        let x = square[0];
+        let y = square[1];
+
         let adjacent = [];
+
         for (let i = 0; i < 8; i++) {
-            let rngx = square[0] + ring_two[i][0];
-            let rngy = square[1] + ring_two[i][1];
+            let rngx = x + ring_two[i][0];
+            let rngy = y + ring_two[i][1];
             if (this.is_passable([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         for (let i = 0; i < 4; i++) {
-            let rngx = square[0] + ring_one[i][0];
-            let rngy = square[1] + ring_one[i][1];
+            let rngx = x + ring_one[i][0];
+            let rngy = y + ring_one[i][1];
             if (this.is_passable([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         return adjacent;
@@ -1204,28 +1153,26 @@ class MyRobot extends BCAbstractRobot {
         let y = square[1];
 
         let adjacent = [];
+
         for (let i = 0; i < 16; i++) {
             let rngx = x + ring_three[i][0];
             let rngy = y + ring_three[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         for (let i = 0; i < 8; i++) {
             let rngx = x + ring_two[i][0];
             let rngy = y + ring_two[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         for (let i = 0; i < 4; i++) {
             let rngx = x + ring_one[i][0];
             let rngy = y + ring_one[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
-                adjacent.push([rngx, rngy]);
-            }
+                adjacent.push([rngx, rngy]); }
         }
 
         return adjacent;
@@ -1270,16 +1217,11 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
                 let object = node_map[square[1]][square[0]];
-
-                if (object.closed === true) {
-                    continue;
-                }
+                if (object.closed === true) { continue; }
 
                 let total = node.g + this.metric(head, square) + 0.01;
 
-                if (object.f != 0 && total >= object.g) {
-                    continue;
-                }
+                if (object.f != 0 && total >= object.g) { continue; }
 
                 object.trace = node;
                 object.g = total;
@@ -1319,16 +1261,11 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < adjacent.length; i++) {
             let target = adjacent[i];
             let cell = node_map[target[1]][target[0]];
-
-            if (cell.closed === true) {
-                continue;
-            }
+            if (cell.closed === true) { continue; }
 
             let total = node.g + this.metric(head, target) + 0.01;
 
-            if (cell.f != 0 && total >= cell.g) {
-                continue;
-            }
+            if (cell.f != 0 && total >= cell.g) { continue; }
 
             cell.trace = node;
             cell.g = total;
@@ -1357,19 +1294,13 @@ class MyRobot extends BCAbstractRobot {
                 let object = node_map[square[1]][square[0]];
 
                 if ((square[0] !== end[0] || square[1] !== end[1])
-                        && !this.is_empty(square)) {
-                    continue;
-                }
+                        && !this.is_empty(square)) { continue; }
 
-                if (object.closed === true) {
-                    continue;
-                }
+                if (object.closed === true) { continue; }
 
                 let total = node.g + this.metric(head, square) + 0.01;
 
-                if (object.f != 0 && total >= object.g) {
-                    continue;
-                }
+                if (object.f != 0 && total >= object.g) { continue; }
 
                 object.trace = node;
                 object.g = total;
@@ -1384,20 +1315,17 @@ class MyRobot extends BCAbstractRobot {
 
     order_by_onion_path_length(squares) {
         let paths = [];
-
         for (let i = 0; i < squares.length; i++) {
             paths.push(this.onion_search(
                 [this.me.x, this.me.y], squares[i],
-                this.get_two_raw_onion_rings_around.bind(this)));
-        }
+                this.get_two_raw_onion_rings_around.bind(this))); }
 
         paths.sort(function(r, s) { return r.length - s.length; });
 
         let ordered = [];
 
         for (let i = 0; i < paths.length; i++) {
-            ordered.push(paths[i][paths[i].length - 1]);
-        }
+            ordered.push(paths[i][paths[i].length - 1]); }
 
         return ordered;
     }
@@ -1408,23 +1336,16 @@ class MyRobot extends BCAbstractRobot {
 
     get_buildable_square_closest_to(target) {
         let adjacent = this.get_buildable_squares();
-
-        if (adjacent.length === 0) {
-            return null;
-        }
+        if (adjacent.length === 0) { return null; }
 
         if (target == null) {
-            return adjacent[Math.floor(Math.random() * adjacent.length)];
-        }
+            return adjacent[Math.floor(Math.random() * adjacent.length)]; }
 
         let steps = [];
-
         for (let i = 0; i < adjacent.length; i++) {
             let square = adjacent[i];
-
             if (square[0] === target[0] && square[1] === target[1]) {
-                return target;
-            }
+                return target; }
 
             steps.push(this.reverse_raw_onion_search(square, target,
                 this.get_two_raw_onion_rings_around.bind(this)).length);
@@ -1439,6 +1360,7 @@ class MyRobot extends BCAbstractRobot {
 
         let x = square[0];
         let y = square[1];
+
         for (let i = -2; i < 3; i++) {
             for (let j = -2; j < 3; j++) {
                 let head = [x + i, y + j];
@@ -1447,8 +1369,7 @@ class MyRobot extends BCAbstractRobot {
                         - this.count_impassable_squares_around(head);
                     if (this.is_resource(head, this.karbonite_map)
                             || this.is_resource(head, this.fuel_map)) {
-                        count -= 30;
-                    }
+                        count -= 30; }
 
                     if (count > maximum) {
                         maximum = count;
@@ -1463,25 +1384,19 @@ class MyRobot extends BCAbstractRobot {
 
     get_buildable_square_by_adjacent_resources() {
         let adjacent = this.get_buildable_squares();
-
-        if (adjacent.length === 0) {
-            return null;
-        }
+        if (adjacent.length === 0) { return null; }
 
         let counts = [];
 
         for (let i = 0; i < adjacent.length; i++) {
             counts.push(this.count_resource_squares_around(adjacent[i]) * 10
-                - this.count_impassable_squares_around(adjacent[i]));
-        }
+                - this.count_impassable_squares_around(adjacent[i])); }
 
         return adjacent[this.index_of_maximum_element_in(counts)];
     }
 
     get_pilgrimage_path_to(target) {
-        if (target == null) {
-            return null;
-        }
+        if (target == null) { return null; }
 
         if (target[0] === this.fountain[0] && target[1] === this.fountain[1]) {
             return this.reverse_raw_onion_search(
@@ -1492,8 +1407,7 @@ class MyRobot extends BCAbstractRobot {
         let final_target = this.adjust_target_for_obstructions(target);
         if (final_target != null) {
             return this.onion_search([this.me.x, this.me.y], final_target,
-                this.get_two_onion_rings_around.bind(this));
-        }
+                this.get_two_onion_rings_around.bind(this)); }
 
         return null;
     }
@@ -1501,16 +1415,11 @@ class MyRobot extends BCAbstractRobot {
     adjust_target_for_obstructions(target) {
         // assume target is never null
         if (!this.is_passable_and_empty(target)) {
-            if (this.is_adjacent(target)) {
-                return null;
-            }
+            if (this.is_adjacent(target)) { return null; }
 
             let adjacent = this.get_adjacent_passable_empty_squares_at(target);
             let closest = this.get_closest_square_by_distance(adjacent);
-
-            if (closest != null) {
-                return closest;
-            }
+            if (closest != null) { return closest; }
 
             return this.get_closest_square_by_distance(
                 this.get_next_to_adjacent_passable_empty_squares_at(target));
@@ -1534,9 +1443,7 @@ class MyRobot extends BCAbstractRobot {
             let max = Math.max(Math.abs(threat_x), Math.abs(threat_y));
             threat_x = Math.round(threat_x * 4 / max);
             threat_y = Math.round(threat_y * 4 / max);
-        }
-
-        else {
+        } else {
             threat_x = 4 * Math.sign(threat_x);
             threat_y = 4 * Math.sign(threat_y);
         }
@@ -1558,20 +1465,14 @@ class MyRobot extends BCAbstractRobot {
 
     evade_threat_from(threat) {
         let projection = [this.me.x + threat[0], this.me.y + threat[1]];
-
-        if (this.is_passable(projection)) {
-            return projection;
-        }
+        if (this.is_passable(projection)) { return projection; }
 
         let target = [this.me.x, this.me.y];
 
         let steps = this.four_step_decompose(threat);
         for (let i = 0; i < steps.length; i++) {
             let head = [target[0] + steps[i][0], target[1] + steps[i][1]];
-
-            if (!this.is_passable(head)) {
-                break;
-            }
+            if (!this.is_passable(head)) { break; }
 
             target = head;
         }
@@ -1580,39 +1481,30 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_final_target_for(target) {
-        if (target != null) {
-            if (!this.is_passable_and_empty(target)) {
-                target = this.smear_centred(target);
-            }
-        }
+        if (target != null && !this.is_passable_and_empty(target)) {
+            target = this.smear_centred(target); }
 
         return target;
     }
 
     smear_centred(square) {
         let squares = this.get_adjacent_passable_empty_squares_at(square);
-
         if (squares.length === 0) {
             squares = this.get_next_to_adjacent_passable_empty_squares_at(
-                square);
-        }
+                square); }
 
         if (squares.length > 0) {
-            return squares[Math.floor(Math.random() * squares.length)];
-        }
+            return squares[Math.floor(Math.random() * squares.length)]; }
 
         return null;
     }
 
     get_path_to(target) {
-        if (target == null) {
-            return null;
-        }
+        if (target == null) { return null; }
 
         if (this.me.unit === SPECS.CRUSADER) {
             return this.onion_search([this.me.x, this.me.y], target,
-                this.get_three_onion_rings_around.bind(this));
-        }
+                this.get_three_onion_rings_around.bind(this)); }
 
         return this.onion_search([this.me.x, this.me.y], target,
             this.get_two_onion_rings_around.bind(this));
@@ -1623,9 +1515,7 @@ class MyRobot extends BCAbstractRobot {
      */
 
     encode_coordinates(square, token) {
-        if (square == null) {
-            return 0;
-        }
+        if (square == null) { return 0; }
 
         return (square[0] | square[1] << 6) + (token << 12);
     }
@@ -1635,9 +1525,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     add_message(id, message) {
-        if (!this.messages[id]) {
-            this.messages[id] = [];
-        }
+        if (!this.messages[id]) { this.messages[id] = []; }
 
         this.messages[id].push(message);
     }
@@ -1663,9 +1551,7 @@ class MyRobot extends BCAbstractRobot {
 
         if (message >= 0xF0) {
             this.update_objectives(message - 0xF0);
-        }
-
-        else if (message >= 0x80) {
+        } else if (message >= 0x80) {
             this.add_message(robot.id, message - 0x80);
             if (this.messages[robot.id].length === 2) {
                 this.add_or_replace_coordinates(
@@ -1679,13 +1565,9 @@ class MyRobot extends BCAbstractRobot {
     update_objectives(mark) {
         if (this.mark < mark) {
             this.objectives.splice(mark, 1);
-        }
-
-        else if (this.mark > mark) {
+        } else if (this.mark > mark) {
             this.objectives.splice(mark + 1, 1);
-        }
-
-        else {
+        } else {
             this.objectives.shift();
             this.objective = this.objectives[0];
         }
@@ -1696,18 +1578,16 @@ class MyRobot extends BCAbstractRobot {
      */
 
     filter_by_map_symmetry(squares) {
-        if (this.symmetry == null) {
-            return [];
-        }
+        if (this.symmetry == null) { return []; }
 
-        let square = [this.me.x, this.me.y];
-        let side = (square[this.symmetry] > this.map.length / 2);
+        let current = [this.me.x, this.me.y];
+        let side = (current[this.symmetry] > this.map.length / 2);
 
         let filtered = [];
         for (let i = 0; i < squares.length; i++) {
-            if ((squares[i][this.symmetry] > this.map.length / 2) === side) {
-                filtered.push(squares[i]);
-            }
+            let square = squares[i];
+            if ((square[this.symmetry] > this.map.length / 2) === side) {
+                filtered.push(square); }
         }
 
         return filtered;
@@ -1719,8 +1599,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
             if (this.distance_to(square) < value) {
-                filtered.push(square);
-            }
+                filtered.push(square); }
         }
 
         return filtered;
@@ -1732,8 +1611,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
             if (this.get_closest_distance(square, references) > value) {
-                filtered.push(square);
-            }
+                filtered.push(square); }
         }
 
         return filtered;
@@ -1745,8 +1623,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.distance_to([robot.x, robot.y]) < value) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1758,8 +1635,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.team === this.me.team && robot.castle_talk !== 0) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1771,8 +1647,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.is_radioing(robot)) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1785,8 +1660,7 @@ class MyRobot extends BCAbstractRobot {
             let robot = robots[i];
             if (this.is_radioing(robot) && robot.id !== this.me.id
                     && robot.team === this.me.team) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1798,8 +1672,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.team === this.me.team) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1811,8 +1684,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.team === this.me.team && robot.unit === SPECS.PILGRIM) {
-                filtered.push([robot.x, robot.y]);
-            }
+                filtered.push([robot.x, robot.y]); }
         }
 
         return filtered;
@@ -1824,8 +1696,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.team !== this.me.team) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1837,8 +1708,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.is_visible(robot) && robot.team !== this.me.team) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1850,8 +1720,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.is_in_attack_range(robot)) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1863,8 +1732,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.unit !== SPECS.CHURCH && robot.unit !== SPECS.PILGRIM) {
-                filtered.push(robot);
-            }
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -1910,23 +1778,17 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             if (this.is_square_in_attack_range_of(square, robots[i])) {
-                return false;
-            }
-        }
+                return false; } }
 
         return safe;
     }
 
     unit_count(square, robot_map) {
         let robot_id = robot_map[square[1]][square[0]];
-        if (robot_id < 1) {
-            return 0;
-        }
+        if (robot_id < 1) { return 0; }
 
         let robot = this.get_robot(robot_id);
-        if (robot.team === this.me.team) {
-            return -1;
-        }
+        if (robot.team === this.me.team) { return -1; }
 
         return 1;
     }
@@ -1938,16 +1800,13 @@ class MyRobot extends BCAbstractRobot {
 
         let adjacent = this.get_adjacent_passable_squares_at(square);
         for (let i = 0; i < adjacent.length; i++) {
-            count += this.unit_count(adjacent[i], robot_map);
-        }
+            count += this.unit_count(adjacent[i], robot_map); }
 
         return count;
     }
 
     get_closest_robot(robots) {
-        if (robots.length === 0) {
-            return null;
-        }
+        if (robots.length === 0) { return null; }
 
         let index = 0;
         let minimum = 100;
@@ -1965,10 +1824,7 @@ class MyRobot extends BCAbstractRobot {
 
     get_coordinates_of_closest_robot(robots) {
         let robot = this.get_closest_robot(robots);
-
-        if (robot == null) {
-            return null;
-        }
+        if (robot == null) { return null; }
 
         return [robot.x, robot.y];
     }
@@ -1985,9 +1841,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     evaluate_castle_safety(visibles, enemies) {
-        if (enemies.length === 0) {
-            return 0;
-        }
+        if (enemies.length === 0) { return 0; }
 
         let comrades = this.filter_robots_by_distance_less_than(
             this.filter_allied_robots(visibles), 10);
@@ -1996,20 +1850,13 @@ class MyRobot extends BCAbstractRobot {
 
         if (enemies_by_units[4].length > comrades_by_units[4].length) {
             return 1;
-        }
-
-        if (enemies_by_units[3].length > comrades_by_units[5].length + 1) {
+        } else if (enemies_by_units[3].length > comrades_by_units[5].length + 1) {
             return 2;
-        }
-
-        if (enemies_by_units[5].length > comrades_by_units[4].length) {
+        } else if (enemies_by_units[5].length > comrades_by_units[4].length) {
             let nearest = this.get_closest_robot(enemies_by_units[5]);
-
             if (this.distance_to([nearest.x, nearest.y]) <= 25) {
                 return 2;
-            }
-
-            else {
+            } else {
                 return 1;
             }
         }
@@ -2019,9 +1866,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     evaluate_church_safety(visibles, enemies) {
-        if (enemies.length === 0) {
-            return 0;
-        }
+        if (enemies.length === 0) { return 0; }
 
         let comrades = this.filter_robots_by_distance_less_than(
             this.filter_allied_robots(visibles), 10);
@@ -2030,20 +1875,13 @@ class MyRobot extends BCAbstractRobot {
 
         if (enemies_by_units[4].length > comrades_by_units[4].length) {
             return 1;
-        }
-
-        if (enemies_by_units[3].length > comrades_by_units[5].length) {
+        } else if (enemies_by_units[3].length > comrades_by_units[5].length) {
             return 2;
-        }
-
-        if (enemies_by_units[5].length > comrades_by_units[4].length) {
+        } else if (enemies_by_units[5].length > comrades_by_units[4].length) {
             let nearest = this.get_closest_robot(enemies_by_units[5]);
-
             if (this.distance_to([nearest.x, nearest.y]) <= 25) {
                 return 2;
-            }
-
-            else {
+            } else {
                 return 1;
             }
         }
@@ -2053,16 +1891,13 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_attack_target_from(attackables, priority) {
-        if (attackables.length === 0) {
-            return null;
-        }
+        if (attackables.length === 0) { return null; }
 
         let attackables_by_units = this.group_by_unit_types(attackables);
         for (let i = 0; i < priority.length; i++) {
             let order = priority[i];
             if (attackables_by_units[order].length > 0) {
-                return this.get_closest_robot(attackables_by_units[order]);
-            }
+                return this.get_closest_robot(attackables_by_units[order]); }
         }
     }
 
@@ -2074,8 +1909,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < adjacent.length; i++) {
             let count = this.get_unit_count_difference_around(adjacent[i]);
             if (count > max_count) {
-                square = adjacent[i];
-            }
+                square = adjacent[i]; }
         }
 
         return square;
@@ -2103,9 +1937,7 @@ class MyRobot extends BCAbstractRobot {
             resources, allied_bases, enemy_bases);
 
         let index = this.index_of_maximum_element_in(safety);
-        if (index != null) {
-            return resources[index];
-        }
+        if (index != null) { return resources[index]; }
 
         return null;
     }
@@ -2119,17 +1951,13 @@ class MyRobot extends BCAbstractRobot {
                     25),
                 this.deposit_points, this.objectives);
 
-            if (candidate == null) {
-                return;
-            }
+            if (candidate == null) { return; }
 
             let index = this.index_of_closest_target_by_distance_from(
                 candidate, this.deposit_points);
             if (index === this.mark) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
-            }
-
-            else if (index >= this.castles) {
+            } else if (index >= this.castles) {
                 // send signal to church
                 this.signal(this.encode_coordinates(candidate, 0xc),
                     this.distance_to(this.deposit_points[index]));
@@ -2147,9 +1975,7 @@ class MyRobot extends BCAbstractRobot {
      */
 
     index_of_minimum_element_in(values) {
-        if (values.length === 0) {
-            return null;
-        }
+        if (values.length === 0) { return null; }
 
         let minimum = 16384;
         let index = 0;
@@ -2165,9 +1991,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     index_of_maximum_element_in(values) {
-        if (values.length === 0) {
-            return null;
-        }
+        if (values.length === 0) { return null; }
 
         let maximum = -16384;
         let index = 0;
