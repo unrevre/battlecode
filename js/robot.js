@@ -202,7 +202,8 @@ class MyRobot extends BCAbstractRobot {
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let spawn = this.get_buildable_square_closest_to(unit.target);
+                let spawn = this.get_buildable_square_for(
+                    unit.unit, unit.target);
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
@@ -308,7 +309,8 @@ class MyRobot extends BCAbstractRobot {
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
-                let spawn = this.get_buildable_square_closest_to(unit.target);
+                let spawn = this.get_buildable_square_for(
+                    unit.unit, unit.target);
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
@@ -1409,6 +1411,14 @@ class MyRobot extends BCAbstractRobot {
     /*
      * high-level optimisations
      */
+
+    get_buildable_square_for(unit, target) {
+        if (unit === SPECS.PILGRIM) {
+            return this.get_buildable_square_closest_to(target);
+        } else {
+            return this.get_buildable_square_for_attack_on(unit, target);
+        }
+    }
 
     get_buildable_square_closest_to(target) {
         let adjacent = this.get_buildable_squares();
