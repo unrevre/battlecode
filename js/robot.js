@@ -830,18 +830,8 @@ class MyRobot extends BCAbstractRobot {
         return this.is_passable_and_empty(square);
     }
 
-    count_impassable_squares_around(square) {
-        let x = square[0];
-        let y = square[1];
-
-        let count = 0;
-
-        for (let i = -4; i < 5; i++) {
-            for (let j = -4; j < 5; j++) {
-                if (!this.is_passable([x + i, y + j])) {
-                    count++; } } }
-
-        return count;
+    count_adjacent_impassable_squares_around(square) {
+        return 8 - this.get_adjacent_passable_squares_at(square).length;
     }
 
     get_adjacent_deposit_point() {
@@ -1519,7 +1509,7 @@ class MyRobot extends BCAbstractRobot {
                 let head = [x + i, y + j];
                 if (this.is_passable(head)) {
                     let count = this.count_resource_squares_around(head) * 10
-                        - this.count_impassable_squares_around(head);
+                        - this.count_adjacent_impassable_squares_around(head);
                     if (this.is_resource(head, this.karbonite_map)
                             || this.is_resource(head, this.fuel_map)) {
                         count -= 30; }
@@ -1543,7 +1533,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < adjacent.length; i++) {
             counts.push(this.count_resource_squares_around(adjacent[i]) * 10
-                - this.count_impassable_squares_around(adjacent[i])); }
+                - this.count_adjacent_impassable_squares_around(adjacent[i])); }
 
         return adjacent[this.index_of_maximum_element_in(counts)];
     }
@@ -2172,7 +2162,7 @@ class MyRobot extends BCAbstractRobot {
             let square = squares[i];
             safety.push(this.get_closest_distance(square, enemies)
                 - this.get_closest_distance(square, comrades)
-                + this.count_impassable_squares_around(square));
+                + this.count_adjacent_impassable_squares_around(square));
         }
 
         return safety;
