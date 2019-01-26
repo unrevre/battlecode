@@ -613,9 +613,9 @@ class MyRobot extends BCAbstractRobot {
                 this.target = null; }
 
             // move off buildable squares, resources
-            if (this.target == null && this.is_adjacent(this.fountain)
+            if (this.target == null && (this.is_adjacent(this.fountain)
                     || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map)) {
+                    || this.is_on_resource(this.fuel_map))) {
                 this.target = this.get_next_lattice_point(); }
 
             // deposit resources if convenient
@@ -685,9 +685,9 @@ class MyRobot extends BCAbstractRobot {
                     && this.me.y === this.target[1]) {
                 this.target = null; }
 
-            if (this.target == null && this.is_adjacent(this.fountain)
+            if (this.target == null && (this.is_adjacent(this.fountain)
                     || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map)) {
+                    || this.is_on_resource(this.fuel_map))) {
                 // move off buildable squares, resources
                 // TODO: move in current direction away from fountain
                 this.target = this.get_closest_square_by_distance(
