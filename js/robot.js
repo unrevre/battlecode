@@ -395,9 +395,15 @@ class MyRobot extends BCAbstractRobot {
             } else if (attacking.length > 0) {
                 let enemies_by_units = this.group_by_unit_types(attacking);
                 if (enemies_by_units[SPECS.CRUSADER].length > 0) {
-                    let crusader = this.get_closest_robot(
-                        enemies_by_units[SPECS.CRUSADER]);
-                    if (this.distance_to([crusader.x, crusader.y]) <= 20) {
+                    let old = this.get_closest_robot(
+                        this.filter_older_robots(
+                            enemies_by_units[SPECS.CRUSADER]));
+                    let young = this.get_closest_robot(
+                        this.filter_younger_robots(
+                            enemies_by_units[SPECS.CRUSADER]));
+                    if ((old != null && this.distance_to([old.x, old.y]) <= 20)
+                            || (young != null && this.distance_to(
+                                [young.x, young.y])) <= 40) {
                         this.mode = 1;
                     } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                         // trigger deposit if enemies are closing in
@@ -2106,6 +2112,30 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.is_square_in_attack_range_of(square, robot)) {
+                filtered.push(robot); }
+        }
+
+        return filtered;
+    }
+
+    filter_older_robots(robots) {
+        let filtered = [];
+
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (robot.turn > this.me.turn) {
+                filtered.push(robot); }
+        }
+
+        return filtered;
+    }
+
+    filter_younger_robots(robots) {
+        let filtered = [];
+
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (robot.turn <= this.me.turn) {
                 filtered.push(robot); }
         }
 
