@@ -615,7 +615,8 @@ class MyRobot extends BCAbstractRobot {
             // move off buildable squares, resources
             if (this.target == null && (this.is_adjacent(this.fountain)
                     || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map))) {
+                    || this.is_on_resource(this.fuel_map)
+                    || !this.is_on_lattice_point())) {
                 this.target = this.get_next_lattice_point(); }
 
             // deposit resources if convenient
