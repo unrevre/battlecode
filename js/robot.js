@@ -556,7 +556,8 @@ class MyRobot extends BCAbstractRobot {
             // TODO: consider using pilgrims for vision
 
             this.target = this.get_crusader_target_for(this.objective);
-            this.path = this.get_path_to(this.target);
+            this.path = this.get_path_to(
+                this.target, this.get_three_onion_rings_around);
 
             this.log('  target: ' + this.target);
 
@@ -631,7 +632,8 @@ class MyRobot extends BCAbstractRobot {
                 // TODO: implement daisy chaining resources back to base
             }
 
-            this.path = this.get_path_to(this.target);
+            this.path = this.get_path_to(
+                this.target, this.get_two_onion_rings_around);
 
             this.log('  target: ' + this.target);
 
@@ -706,7 +708,8 @@ class MyRobot extends BCAbstractRobot {
             }
 
             this.target = this.get_preacher_target_for(this.target, enemies);
-            this.path = this.get_path_to(this.target);
+            this.path = this.get_path_to(
+                this.target, this.get_two_onion_rings_around);
 
             this.log('  target: ' + this.target);
 
@@ -1830,15 +1833,11 @@ class MyRobot extends BCAbstractRobot {
         return null;
     }
 
-    get_path_to(target) {
+    get_path_to(target, layering) {
         if (target == null) { return null; }
 
-        if (this.me.unit === SPECS.CRUSADER) {
-            return this.onion_search([this.me.x, this.me.y], target,
-                this.get_three_onion_rings_around.bind(this)); }
-
         return this.onion_search([this.me.x, this.me.y], target,
-            this.get_two_onion_rings_around.bind(this));
+            layering.bind(this));
     }
 
     /*
