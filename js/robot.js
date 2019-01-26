@@ -493,9 +493,9 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.target == null) {
-                        this.target = this.decode_coordinates(robot.signal)[0];
-                        this.memory = this.target;
-                        this.objective = this.target;
+                        this.memory = this.decode_coordinates(robot.signal)[0];
+                        this.objective = this.memory;
+                        this.target = this.memory;
                         break;
                     }
                 }
@@ -505,6 +505,8 @@ class MyRobot extends BCAbstractRobot {
             let enemies = this.filter_visible_enemy_robots(visibles);
 
             // identify castle if it is within range
+            // TODO: change this to not be specific for castles, and have
+            // castle targets marked out separately
             if (this.memory != null
                     && this.distance_to(this.memory) < 50) {
                 let castle_prescence = null;
@@ -520,9 +522,9 @@ class MyRobot extends BCAbstractRobot {
                     this.signal(message, this.distance_to(this.fountain));
 
                     this.victim = null;
-                    this.objective = null;
-                    this.memory = null;
 
+                    this.memory = null;
+                    this.objective = null;
                     this.target = null;
                 }
             }
@@ -555,7 +557,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: wrap around defenders (if possible) to attack castle
             // TODO: consider using pilgrims for vision
 
-            this.target = this.get_final_target_for(this.target);
+            this.target = this.get_crusader_target_for(this.objective);
             this.path = this.get_path_to(this.target);
 
             this.log('  target: ' + this.target);
@@ -1004,6 +1006,25 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return squares[index];
+    }
+
+    get_closest_squares_by_distance_from(target, squares) {
+        // assume squares has nonzero length
+        let closest = [];
+
+        let minimum = 16384;
+        for (let i = 0; i < squares.length; i++) {
+            let distance = this.distance(squares[i], target);
+            if (distance < minimum) {
+                minimum = distance;
+                closest.length = 0;
+                closest.push(squares[i]);
+            } else if (distance === minimum) {
+                closest.push(squares[i]);
+            }
+        }
+
+        return closest;
     }
 
     index_of_closest_target_by_distance_from(square, targets) {
@@ -1516,7 +1537,7 @@ class MyRobot extends BCAbstractRobot {
 
             let predamage = [];
             for (let i = 0; i < candidates.length; i++) {
-                predamage.push(this.total_damage_for(
+                predamage.push(this.total_damage_from(
                     this.filter_younger_robots_attacking_square(
                         candidates[i], enemies))); }
 
@@ -1659,6 +1680,37 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return target;
+    }
+
+    get_crusader_target_for(target, enemies) {
+        if (this.distance_to(target) > 121) { return target; }
+
+        // TODO: special targeting for rushes
+        // TODO: attempt to position itself directly between enemy units in a
+        // line if preachers exist (or next to the castle)
+
+        let movable = this.get_reachable_squares_for_crusaders();
+        let forward = this.filter_by_distance_less_than(
+            movable, this.distance_to(target));
+
+        if (forward.length === 0) {
+            if (this.is_safe([this.me.x, this.me.y], enemies)) {
+                return null; }
+
+            let adjacent = this.get_adjacent_passable_empty_squares();
+            if (adjacent.length === 0) { return null; }
+
+            let damage = this.total_damage_on_squares_from(adjacent, enemies);
+            return adjacent[this.index_of_minimum_element_in(damage)];
+        }
+
+        // TODO: different modes: brave, braver
+
+        let closest = this.get_closest_squares_by_distance_from(
+            target, forward);
+        let damage = this.total_damage_on_squares_from(closest, enemies);
+
+        return closest[this.index_of_minimum_element_in(damage)];
     }
 
     get_final_target_for(target) {
@@ -2008,6 +2060,15 @@ class MyRobot extends BCAbstractRobot {
         return true;
     }
 
+    count_attacks_on(square, enemies) {
+        let attacks = 0;
+        for (let i = 0; i < enemies.length; i++) {
+            if (this.is_square_in_attack_range_of(square, enemies[i])) {
+                attacks++; } }
+
+        return attacks;
+    }
+
     unit_count(square, robot_map) {
         let robot_id = robot_map[square[1]][square[0]];
         if (robot_id < 1) { return 0; }
@@ -2063,7 +2124,45 @@ class MyRobot extends BCAbstractRobot {
         return grouped;
     }
 
-    total_damage_for(robots) {
+    get_reachable_squares_for_crusaders() {
+        const ring_three = [
+            [0, -3], [1, -2], [2, -2], [2, -1],
+            [3, 0], [2, 1], [2, 2], [1, 2],
+            [0, 3], [-1, 2], [-2, 2], [-2, 1],
+            [-3, 0], [-2, -1], [-2, -2], [-1, -2]];
+        const ring_two = [
+            [0, -2], [1, -1], [2, 0], [1, 1],
+            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
+        const ring_one = [
+            [0, -1], [1, 0], [0, 1], [-1, 0]];
+
+        let x = this.me.x;
+        let y = this.me.y;
+
+        let reachables = [];
+
+        for (let i = 0; i < 16; i++) {
+            let target = [x + ring_three[i][0], y + ring_three[i][1]];
+            if (this.is_passable_and_empty(target)) {
+                reachables.push(target); }
+        }
+
+        for (let i = 0; i < 8; i++) {
+            let target = [x + ring_two[i][0], y + ring_two[i][1]];
+            if (this.is_passable_and_empty(target)) {
+                reachables.push(target); }
+        }
+
+        for (let i = 0; i < 4; i++) {
+            let target = [x + ring_one[i][0], y + ring_one[i][1]];
+            if (this.is_passable_and_empty(target)) {
+                reachables.push(target); }
+        }
+
+        return reachables;
+    }
+
+    total_damage_from(robots) {
         const attack_damage = [10, 0, 0, 10, 10, 20];
 
         let total = 0;
@@ -2072,6 +2171,16 @@ class MyRobot extends BCAbstractRobot {
             total += attack_damage[robots[i].unit]; }
 
         return total;
+    }
+
+    total_damage_on_squares_from(squares, robots) {
+        let damage = [];
+
+        for (let i = 0; i < squares.length; i++) {
+            damage.push(this.total_damage_from(
+                this.filter_robots_attacking_square(squares[i], robots))); }
+
+        return damage;
     }
 
     evaluate_castle_safety(visibles, enemies) {
