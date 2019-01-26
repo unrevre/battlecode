@@ -2392,7 +2392,7 @@ class MyRobot extends BCAbstractRobot {
                 candidate, this.deposit_points);
             if (index === 0) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
-            } else if (index >= this.castles) {
+            } else if (index > this.castles) {
                 // send signal to church
                 let near_castle = this.get_closest_square_by_distance_from(
                     this.deposit_points[index], this.castle_points);
