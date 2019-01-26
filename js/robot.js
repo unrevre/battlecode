@@ -91,25 +91,23 @@ class MyRobot extends BCAbstractRobot {
             for (let i = 0; i < castling.length; i++) {
                 let robot = castling[i];
                 if (robot.id !== this.me.id) {
-                    let message = robot.castle_talk;
-                    this.process_castle_talk(robot, message);
-                }
+                    this.process_castle_talk(robot, robot.castle_talk); }
             }
 
             switch (step) {
                 case 0:
-                    this.mark = this.messages.length;
+                    this.mark = this.castles;
                     break;
                 case 2:
                     this.castles /= 2;
-                    for (let i = 0; i < this.castles; i++) {
-                        let coords = [this.messages[i],
-                                      this.messages[i + this.castles]];
+                    for (let key in this.messages) {
+                        let coords = this.messages[key];
                         this.castle_points.push(coords.slice());
                         this.deposit_points.push(coords.slice());
                         this.objectives.push(
                             this.reflect_about_symmetry_axis(coords));
                     }
+
                     this.messages.length = 0;
                     break;
             }
@@ -1868,7 +1866,7 @@ class MyRobot extends BCAbstractRobot {
     process_castle_talk(robot, message) {
         if (step < 3) {
             this.castles++;
-            this.messages.push(message);
+            this.add_message(robot.id, message);
             return;
         }
 
