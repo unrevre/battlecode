@@ -608,6 +608,9 @@ class MyRobot extends BCAbstractRobot {
                     && this.me.y === this.target[1]) {
                 this.target = null; }
 
+            if (this.target != null && this.is_allied_unit_at(this.target)) {
+                this.target = null; }
+
             // move off buildable squares, resources
             if (this.target == null && this.is_adjacent(this.fountain)
                     || this.is_on_resource(this.karbonite_map)
@@ -2109,6 +2112,16 @@ class MyRobot extends BCAbstractRobot {
 
     is_alive(robot) {
         return this.get_robot(robot.id) != null;
+    }
+
+    is_allied_unit_at(square) {
+        if (!this.is_square_visible(square)) { return false; }
+
+        let robot_map = this.get_visible_robot_map();
+        let robot_id = robot_map[square[1]][square[0]];
+        if (robot_id < 1) { return false; }
+
+        return this.get_robot(robot_id).team === this.me.team;
     }
 
     is_in_attack_range(robot) {
