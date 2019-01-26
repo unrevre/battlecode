@@ -204,7 +204,7 @@ class MyRobot extends BCAbstractRobot {
                 let unit = this.unit_queue.shift();
 
                 let spawn = this.get_buildable_square_for(
-                    unit.unit, unit.target, allies);
+                    unit.unit, unit.target, allies, enemies);
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
@@ -312,7 +312,7 @@ class MyRobot extends BCAbstractRobot {
                 let unit = this.unit_queue.shift();
 
                 let spawn = this.get_buildable_square_for(
-                    unit.unit, unit.target, allies);
+                    unit.unit, unit.target, allies, enemies);
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
@@ -1504,14 +1504,15 @@ class MyRobot extends BCAbstractRobot {
      * high-level optimisations
      */
 
-    get_buildable_square_for(unit, target, allies) {
+    get_buildable_square_for(unit, target, allies, enemies) {
         if (unit === SPECS.PILGRIM) {
             return this.get_buildable_square_closest_to(target);
         } else {
             if (target == null) {
                 return this.get_buildable_square_supporting(allies);
             } else {
-                return this.get_buildable_square_for_attacking(unit, target);
+                return this.get_buildable_square_for_attacking(
+                    unit, target, enemies);
             }
         }
     }
