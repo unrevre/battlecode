@@ -585,6 +585,7 @@ class MyRobot extends BCAbstractRobot {
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
                         this.memory = this.decode_coordinates(robot.signal)[0];
+                        this.target = this.memory;
                         break;
                     }
                 }
@@ -604,15 +605,16 @@ class MyRobot extends BCAbstractRobot {
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
-            this.target = null;
+            // clear target after arrival
+            if (this.target != null && this.me.x === this.target[0]
+                    && this.me.y === this.target[1]) {
+                this.target = null; }
 
-            // TODO: also move off resource squares
-            // TODO: form lattice structure
-            if (this.is_adjacent(this.fountain)) {
-                // move off buildable squares
-                this.target = this.get_closest_square_by_distance(
-                    this.get_next_to_adjacent_passable_empty_squares_at(
-                        this.fountain)); }
+            // move off buildable squares, resources
+            if (this.target == null && this.is_adjacent(this.fountain)
+                    || this.is_on_resource(this.karbonite_map)
+                    || this.is_on_resource(this.fuel_map)) {
+                this.target = this.get_next_lattice_point(); }
 
             // deposit resources if convenient
             if (this.target == null) {
@@ -628,7 +630,6 @@ class MyRobot extends BCAbstractRobot {
                 // TODO: implement daisy chaining resources back to base
             }
 
-            this.target = this.get_final_target_for(this.target);
             this.path = this.get_path_to(this.target);
 
             this.log('  target: ' + this.target);
@@ -1126,6 +1127,29 @@ class MyRobot extends BCAbstractRobot {
     /*
      * pathing
      */
+
+    breadth_first_search(directions) {
+        let head = [this.me.x, this.me.y];
+
+        let open = [];
+        let closed = [];
+
+        while (!this.is_passable_and_empty(head)) {
+            directions.reverse();
+            for (let i = 0; i < directions.length; i++) {
+                let next = [head[0] + directions[i][0],
+                            head[1] + directions[i][1]];
+                if (next in closed) { continue; }
+
+                closed[next] = 0;
+                open.push(next);
+            }
+
+            head = open.shift();
+        }
+
+        return head;
+    }
 
     get_two_onion_rings_around(square) {
         const ring_two = [
@@ -1711,6 +1735,39 @@ class MyRobot extends BCAbstractRobot {
         let damage = this.total_damage_on_squares_from(closest, enemies);
 
         return closest[this.index_of_minimum_element_in(damage)];
+    }
+
+    get_adjacent_lattice_point() {
+        if ((this.me.x + this.me.y) % 2 === 0) {
+            return [this.me.x, this.me.y]; }
+
+        let position = [this.me.x, this.me.y];
+        position[this.symmetry]
+            += (position[this.symmetry] > ((this.size - 1) / 2)) ? -1 : 1;
+
+        return position;
+    }
+
+    get_next_lattice_point() {
+        let point = this.get_adjacent_lattice_point();
+        let aligned = [point[0] - this.fountain[0],
+                       point[1] - this.fountain[1]];
+        let compass = this.get_aligned_compass_direction_from(aligned);
+
+        let directions = [];
+        if (compass[0] === 0) {
+            directions.push([1, compass[1]]);
+            directions.push([-1, compass[1]]);
+        } else if (compass[1] === 0) {
+            directions.push([compass[0], 1]);
+            directions.push([compass[0], -1]);
+        } else {
+            directions.push([-compass[0], compass[1]]);
+            directions.push(compass);
+            directions.push([compass[0], -compass[1]]);
+        }
+
+        return this.breadth_first_search(directions);
     }
 
     get_final_target_for(target) {
