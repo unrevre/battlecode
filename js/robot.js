@@ -2404,7 +2404,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     consider_church_expansion() {
-        if (this.is_available(120, 300)) {
+        if (step > 2 && this.is_available(75, 250)) {
             let candidate = this.get_church_candidate(
                 this.filter_by_nearest_distance_greater_than(
                     this.get_resources(this.karbonite_map),
