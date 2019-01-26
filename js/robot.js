@@ -2372,16 +2372,18 @@ class MyRobot extends BCAbstractRobot {
 
         let comrades = this.filter_robots_by_distance_less_than(
             this.filter_allied_robots(visibles), 10);
-        let enemies_by_units = this.group_by_unit_types(enemies);
-        let comrades_by_units = this.group_by_unit_types(comrades);
+        let enemy_units = this.group_by_unit_types(enemies);
+        let comrade_units = this.group_by_unit_types(comrades);
 
-        if (enemies_by_units[4].length > comrades_by_units[4].length) {
+        if (enemy_units[4].length > comrade_units[4].length) {
             return 1;
-        } else if (enemies_by_units[3].length > comrades_by_units[5].length + 1) {
+        } else if (enemy_units[3].length > comrade_units[5].length + 1) {
             return 2;
-        } else if (enemies_by_units[5].length > comrades_by_units[4].length) {
-            let nearest = this.get_closest_robot(enemies_by_units[5]);
-            if (this.distance_to([nearest.x, nearest.y]) <= 25) {
+        } else if (enemy_units[5].length > comrade_units[4].length) {
+            let nearest = this.get_closest_robot(enemy_units[5]);
+            if (this.distance_to([nearest.x, nearest.y]) > 64) {
+                return 2;
+            } else if (enemy_units[5].length > comrade_units[5].length) {
                 return 2;
             } else {
                 return 1;
@@ -2397,16 +2399,18 @@ class MyRobot extends BCAbstractRobot {
 
         let comrades = this.filter_robots_by_distance_less_than(
             this.filter_allied_robots(visibles), 10);
-        let enemies_by_units = this.group_by_unit_types(enemies);
-        let comrades_by_units = this.group_by_unit_types(comrades);
+        let enemy_units = this.group_by_unit_types(enemies);
+        let comrade_units = this.group_by_unit_types(comrades);
 
-        if (enemies_by_units[4].length > comrades_by_units[4].length) {
+        if (enemy_units[4].length > comrade_units[4].length) {
             return 1;
-        } else if (enemies_by_units[3].length > comrades_by_units[5].length) {
+        } else if (enemy_units[3].length > comrade_units[5].length) {
             return 2;
-        } else if (enemies_by_units[5].length > comrades_by_units[4].length) {
-            let nearest = this.get_closest_robot(enemies_by_units[5]);
-            if (this.distance_to([nearest.x, nearest.y]) <= 25) {
+        } else if (enemy_units[5].length > comrade_units[4].length) {
+            let nearest = this.get_closest_robot(enemy_units[5]);
+            if (this.distance_to([nearest.x, nearest.y]) > 64) {
+                return 2;
+            } else if (enemy_units[5].length > comrade_units[5].length) {
                 return 2;
             } else {
                 return 1;
