@@ -401,7 +401,15 @@ class MyRobot extends BCAbstractRobot {
                         this.mode = 1;
                     } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                         // trigger deposit if enemies are closing in
-                        this.mode = 2;
+                        if (this.mode === 1) {
+                            this.mode = 3;
+                            this.target = [this.me.x, this.me.y];
+                        } else {
+                            this.mode = 2;
+                        }
+                    } else {
+                        this.mode = 3;
+                        this.target = [this.me.x, this.me.y];
                     }
                 } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                     // trigger deposit if enemies are closing in
@@ -412,17 +420,17 @@ class MyRobot extends BCAbstractRobot {
                 this.mode = 0;
             }
 
+            if (this.mode === 2
+                    && this.is_adjacent_deposit_point(this.fountain)) {
+                this.log('  - depositing resources [emergency]');
+                return this.give(this.fountain[0] - this.me.x,
+                                 this.fountain[1] - this.me.y,
+                                 this.me.karbonite, this.me.fuel);
+            }
+
             if (this.mode === 1) {
                 this.target = this.evade_threat_from(
-                    this.get_threat_direction_from(attacking));
-            } else if (this.mode === 2) {
-                if (this.is_adjacent_deposit_point(this.fountain)) {
-                    this.log('  - depositing resources [emergency]');
-                    return this.give(this.fountain[0] - this.me.x,
-                                     this.fountain[1] - this.me.y,
-                                     this.me.karbonite, this.me.fuel);
-                }
-            }
+                    this.get_threat_direction_from(attacking)); }
 
             // mine resources if safe and appropriate
             // TODO: deposit resources more frequently when necessary so that
@@ -1635,7 +1643,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_pilgrimage_path_to(target) {
-        if (target == null) { return null; }
+        if (target == null || (target[0] === this.me.x
+                && target[1] === this.me.y)) { return null; }
 
         if (target[0] === this.fountain[0] && target[1] === this.fountain[1]) {
             return this.reverse_raw_onion_search(
