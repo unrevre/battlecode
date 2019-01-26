@@ -657,6 +657,7 @@ class MyRobot extends BCAbstractRobot {
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
                         this.memory = this.decode_coordinates(robot.signal)[0];
+                        this.target = this.memory;
                         break;
                     }
                 }
@@ -676,11 +677,16 @@ class MyRobot extends BCAbstractRobot {
                 return this.attack(point[0] - this.me.x, point[1] - this.me.y);
             }
 
-            this.target = null;
+            // clear target after arrival
+            if (this.target != null && this.me.x === this.target[0]
+                    && this.me.y === this.target[1]) {
+                this.target = null; }
 
-            // TODO: also move off resource squares
-            if (this.is_adjacent(this.fountain)) {
-                // move off buildable squares
+            if (this.target == null && this.is_adjacent(this.fountain)
+                    || this.is_on_resource(this.karbonite_map)
+                    || this.is_on_resource(this.fuel_map)) {
+                // move off buildable squares, resources
+                // TODO: move in current direction away from fountain
                 this.target = this.get_closest_square_by_distance(
                     this.get_next_to_adjacent_passable_empty_squares_at(
                         this.fountain)); }
@@ -698,7 +704,7 @@ class MyRobot extends BCAbstractRobot {
                 // TODO: implement daisy chaining resources back to base
             }
 
-            this.target = this.get_final_target_for(this.target);
+            this.target = this.get_preacher_target_for(this.target, enemies);
             this.path = this.get_path_to(this.target);
 
             this.log('  target: ' + this.target);
@@ -1768,6 +1774,33 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return this.breadth_first_search(directions);
+    }
+
+    get_preacher_target_for(target, enemies) {
+        if (target == null) { return null; }
+
+        if (this.distance_to(target) > 16) { return target; }
+
+        let movable = this.get_reachable_squares_for_preachers();
+        let forward = this.filter_by_distance_less_than(
+            movable, this.distance_to(target));
+
+        if (forward.length === 0) {
+            if (this.is_safe([this.me.x, this.me.y], enemies)) {
+                return null; }
+
+            let adjacent = this.get_adjacent_passable_empty_squares();
+            if (adjacent.length === 0) { return null; }
+
+            let damage = this.total_damage_on_squares_from(adjacent, enemies);
+            return adjacent[this.index_of_minimum_element_in(damage)];
+        }
+
+        let closest = this.get_closest_squares_by_distance_from(
+            target, forward);
+        let damage = this.total_damage_on_squares_from(closest, enemies);
+
+        return closest[this.index_of_minimum_element_in(damage)];
     }
 
     get_final_target_for(target) {
