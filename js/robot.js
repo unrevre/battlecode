@@ -42,6 +42,7 @@ class MyRobot extends BCAbstractRobot {
         this.path = null;
 
         this.mode = 0;
+        this.mission = 0;
     }
 
     turn() {
@@ -140,9 +141,10 @@ class MyRobot extends BCAbstractRobot {
             if (next_signal != undefined) {
                 let message = this.decode_coordinates(next_signal.signal);
                 // check coordinates
-                let token = message[1];
                 let coordinates = message[0];
-                if (token === 0xd && this.objectives.length > 1
+                let token = message[1];
+                let tag = message[2];
+                if (tag === 2 && this.objectives.length > 1
                         && coordinates[0] === this.objective[0]
                         && coordinates[1] === this.objective[1]) {
                     castle_talk_value = this.mark + 0xF0;
@@ -167,13 +169,13 @@ class MyRobot extends BCAbstractRobot {
                 case 1:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null,
-                        this.get_coordinates_of_closest_robot(enemies));
+                        this.get_coordinates_of_closest_robot(enemies), 0);
                     break;
                 case 2:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER,
                         this.get_coordinates_of_closest_robot(enemies),
-                        this.get_coordinates_of_closest_robot(enemies));
+                        this.get_coordinates_of_closest_robot(enemies), 0);
                     break;
                 case 3: {
                     let prey = this.get_attack_target_from(
@@ -195,7 +197,7 @@ class MyRobot extends BCAbstractRobot {
                     let square = this.next_available_resource_from(
                         this.local_resources[i]);
                     if (square != null && this.enqueue_unit(
-                            SPECS.PILGRIM, square, square)) {
+                            SPECS.PILGRIM, square, square, 0)) {
                         this.local_resources[i].occupied[square] = true; }
                 }
             }
@@ -208,7 +210,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
-                            unit.signal, this.mark), 2); }
+                            unit.signal, this.mark, unit.tag), 2); }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
                         + spawn[0] + ', ' + spawn[1] + ')');
@@ -255,11 +257,12 @@ class MyRobot extends BCAbstractRobot {
                     this.memory = this.target;
                     this.local_resources[0].occupied[message[0]] = true;
                     break;
-                } else if (message[1] === 0xc) {
+                } else if (message[2] === 1) {
+                    this.mark = message[1];
                     let candidate = message[0];
                     if (this.is_resource(candidate, this.karbonite_map)) {
                         this.enqueue_unit(SPECS.PILGRIM,
-                            candidate, candidate); }
+                            candidate, candidate, 1); }
                 }
             }
 
@@ -286,13 +289,13 @@ class MyRobot extends BCAbstractRobot {
                 case 1:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null,
-                        this.get_coordinates_of_closest_robot(enemies));
+                        this.get_coordinates_of_closest_robot(enemies), 0);
                     break;
                 case 2:
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER,
                         this.get_coordinates_of_closest_robot(enemies),
-                        this.get_coordinates_of_closest_robot(enemies));
+                        this.get_coordinates_of_closest_robot(enemies), 0);
                     break;
             }
 
@@ -303,7 +306,7 @@ class MyRobot extends BCAbstractRobot {
                     let square = this.next_available_resource_from(
                         this.local_resources[i]);
                     if (square != null && this.enqueue_unit(
-                            SPECS.PILGRIM, square, square)) {
+                            SPECS.PILGRIM, square, square, 0)) {
                         this.local_resources[i].occupied[square] = true; }
                 }
             }
@@ -316,7 +319,7 @@ class MyRobot extends BCAbstractRobot {
                 if (spawn != null) {
                     if (unit.signal != null) {
                         this.signal(this.encode_coordinates(
-                            unit.signal, this.mark), 2); }
+                            unit.signal, this.mark, unit.tag), 2); }
 
                     this.log('  - build unit type [' + unit.unit + '] at ('
                         + spawn[0] + ', ' + spawn[1] + ')');
@@ -340,14 +343,14 @@ class MyRobot extends BCAbstractRobot {
                     let message = this.decode_coordinates(robot.signal);
                     this.target = message[0];
                     this.mark = message[1];
+                    this.mission = message[2];
                     this.memory = this.target;
                     break;
                 }
             }
 
             // on a church building mission
-            // TODO: make this part of the initial build signal
-            if (step === 0 && this.distance_to(this.target) > 36) {
+            if (step === 0 && this.mission === 1) {
                 this.objective = this.get_optimal_square_by_adjacent_resources(
                     this.target);
                 let path = this.reverse_raw_onion_search(
@@ -361,18 +364,15 @@ class MyRobot extends BCAbstractRobot {
                     && this.target[1] === this.me.y) {
                 this.target = null;
 
-                // TODO: more reliable conditions to determine if on church
-                // building mission, likely together with initial signal
-                if (this.objective != null
-                        && this.get_adjacent_deposit_point() == null
-                        && this.distance_to(this.fountain) > 36) {
+                if (this.mission === 1) {
                     let church =
                         this.get_buildable_square_by_adjacent_resources();
                     if (church != null) {
                         this.signal(this.encode_coordinates(
-                            this.memory, this.mark), 2);
+                            this.memory, this.mark, 0), 2);
                         this.fountain = church;
                         this.target = this.memory;
+                        this.mission = 0;
                         this.log('  - build unit type [1] at (' + church[0]
                             + ', ' + church[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
@@ -516,7 +516,8 @@ class MyRobot extends BCAbstractRobot {
                 }
 
                 if (castle_prescence == null) {
-                    let message = this.encode_coordinates(this.memory, 0xd);
+                    let message = this.encode_coordinates(
+                        this.memory, this.mark, 2);
                     this.signal(message, this.distance_to(this.fountain));
 
                     this.victim = null;
@@ -1123,7 +1124,7 @@ class MyRobot extends BCAbstractRobot {
      * unit queue
      */
 
-    enqueue_unit(unit, signal, target) {
+    enqueue_unit(unit, signal, target, tag) {
         const karbonite_costs = [0, 50, 10, 15, 25, 30];
         const fuel_costs = [0, 200, 50, 50, 50, 50];
 
@@ -1132,7 +1133,8 @@ class MyRobot extends BCAbstractRobot {
             this.unit_queue.push({
                 unit: unit,
                 signal: signal,
-                target: target
+                target: target,
+                tag: tag
             });
 
             return true;
@@ -1849,14 +1851,16 @@ class MyRobot extends BCAbstractRobot {
      * signals
      */
 
-    encode_coordinates(square, token) {
+    encode_coordinates(square, token, mode) {
         if (square == null) { return 0; }
 
-        return (square[0] | square[1] << 6) + (token << 12);
+        return (square[0] | square[1] << 6) + (token << 12) + (mode << 14);
     }
 
     decode_coordinates(signal) {
-        return [[signal & 0x003f, (signal & 0x0fc0) >> 6], signal >> 12];
+        return [[signal & 0x003f, (signal & 0x0fc0) >> 6],
+                (signal & 0x3000) >> 12,
+                signal >> 14];
     }
 
     add_message(id, message) {
@@ -2413,14 +2417,15 @@ class MyRobot extends BCAbstractRobot {
             let index = this.index_of_closest_target_by_distance_from(
                 candidate, this.deposit_points);
             if (index === 0) {
-                this.enqueue_unit(SPECS.PILGRIM, candidate, candidate);
+                this.enqueue_unit(SPECS.PILGRIM, candidate, candidate, 1);
             } else if (index > this.castles) {
                 // send signal to church
                 let near_castle = this.get_closest_square_by_distance_from(
                     this.deposit_points[index], this.castle_points);
                 if (this.me.x === near_castle[0]
                         && this.me.y === near_castle[1]) {
-                    this.signal(this.encode_coordinates(candidate, 0xc),
+                    this.signal(this.encode_coordinates(
+                            candidate, this.mark, 1),
                         this.distance_to(this.deposit_points[index])); }
             }
 
