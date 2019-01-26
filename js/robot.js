@@ -1145,8 +1145,8 @@ class MyRobot extends BCAbstractRobot {
      * pathing
      */
 
-    breadth_first_search(directions) {
-        let head = [this.me.x, this.me.y];
+    breadth_first_search(point, directions) {
+        let head = point;
 
         let open = [];
         let closed = [];
@@ -1755,8 +1755,12 @@ class MyRobot extends BCAbstractRobot {
         return closest[this.index_of_minimum_element_in(damage)];
     }
 
+    is_on_lattice_point() {
+        return (this.me.x + this.me.y) % 2 === 0;
+    }
+
     get_adjacent_lattice_point() {
-        if ((this.me.x + this.me.y) % 2 === 0) {
+        if (this.is_on_lattice_point()) {
             return [this.me.x, this.me.y]; }
 
         let position = [this.me.x, this.me.y];
@@ -1785,7 +1789,7 @@ class MyRobot extends BCAbstractRobot {
             directions.push([compass[0], -compass[1]]);
         }
 
-        return this.breadth_first_search(directions);
+        return this.breadth_first_search(point, directions);
     }
 
     get_preacher_target_for(target, enemies) {
