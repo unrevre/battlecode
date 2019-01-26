@@ -788,6 +788,12 @@ class MyRobot extends BCAbstractRobot {
      * map
      */
 
+    is_square_visible(square) {
+        const vision_range = [100, 100, 100, 49, 64, 16];
+
+        return this.distance_to(square) < vision_range[this.me.unit];
+    }
+
     is_passable(square) {
         let x = square[0];
         let y = square[1];
@@ -1552,7 +1558,7 @@ class MyRobot extends BCAbstractRobot {
         let adjacent = this.get_buildable_squares();
         if (adjacent.length === 0) { return null; }
 
-        if (this.is_visible(target)) {
+        if (this.is_square_visible(target)) {
             let candidates = [];
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
