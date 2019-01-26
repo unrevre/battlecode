@@ -556,7 +556,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: wrap around defenders (if possible) to attack castle
             // TODO: consider using pilgrims for vision
 
-            this.target = this.get_crusader_target_for(this.objective);
+            this.target = this.get_crusader_target_for(this.objective, enemies);
             this.path = this.get_path_to(
                 this.target, this.get_three_onion_rings_around);
 
@@ -1727,6 +1727,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_crusader_target_for(target, enemies) {
+        if (target == null) { return null; }
+
         if (this.distance_to(target) > 121) { return target; }
 
         // TODO: special targeting for rushes
@@ -2262,6 +2264,33 @@ class MyRobot extends BCAbstractRobot {
             if (this.is_passable_and_empty(target)) {
                 reachables.push(target); }
         }
+
+        for (let i = 0; i < 8; i++) {
+            let target = [x + ring_two[i][0], y + ring_two[i][1]];
+            if (this.is_passable_and_empty(target)) {
+                reachables.push(target); }
+        }
+
+        for (let i = 0; i < 4; i++) {
+            let target = [x + ring_one[i][0], y + ring_one[i][1]];
+            if (this.is_passable_and_empty(target)) {
+                reachables.push(target); }
+        }
+
+        return reachables;
+    }
+
+    get_reachable_squares_for_preachers() {
+        const ring_two = [
+            [0, -2], [1, -1], [2, 0], [1, 1],
+            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
+        const ring_one = [
+            [0, -1], [1, 0], [0, 1], [-1, 0]];
+
+        let x = this.me.x;
+        let y = this.me.y;
+
+        let reachables = [];
 
         for (let i = 0; i < 8; i++) {
             let target = [x + ring_two[i][0], y + ring_two[i][1]];
