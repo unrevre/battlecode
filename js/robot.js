@@ -212,7 +212,7 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            if (this.is_available(150, 300) && this.unit_queue.length === 0) {
+            if (this.is_available(100, 200) && this.unit_queue.length === 0) {
                 this.enqueue_unit(SPECS.PROPHET, null, null, 0); }
 
             if (this.unit_queue.length > 0) {
