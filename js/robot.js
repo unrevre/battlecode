@@ -2015,13 +2015,13 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
-    filter_by_distance_to_target_less_than(target, squares, value) {
+    filter_robots_by_distance_to_target_less_than(target, robots, value) {
         let filtered = [];
 
-        for (let i = 0; i < squares.length; i++) {
-            let square = squares[i];
-            if (this.distance(square, target) < value) {
-                filtered.push(square); }
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (this.distance([robot.x, robot.y], target) < value) {
+                filtered.push(robot); }
         }
 
         return filtered;
@@ -2475,7 +2475,7 @@ class MyRobot extends BCAbstractRobot {
         let target = closest[0];
         let distance = closest[1];
 
-        let defenders = this.filter_by_distance_to_target_less_than(
+        let defenders = this.filter_robots_by_distance_to_target_less_than(
             [target.x, target.y], allies, distance);
         let defender_units = this.group_by_unit_types(defenders);
 
@@ -2516,7 +2516,7 @@ class MyRobot extends BCAbstractRobot {
         let target = closest[0];
         let distance = closest[1];
 
-        let defenders = this.filter_by_distance_to_target_less_than(
+        let defenders = this.filter_robots_by_distance_to_target_less_than(
             [target.x, target.y], allies, distance);
         let defender_units = this.group_by_unit_types(defenders);
 
