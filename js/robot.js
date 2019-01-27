@@ -33,6 +33,7 @@ class MyRobot extends BCAbstractRobot {
         this.messages = [];
 
         this.reserved = [0, 0];
+        this.backlog = [0, 0];
 
         this.fountain = null;
         this.memory = null;
@@ -167,15 +168,19 @@ class MyRobot extends BCAbstractRobot {
                     this.consider_church_expansion();
                     break;
                 case 1:
+                    this.save_and_release_resources();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null,
                         this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
                     break;
                 case 2:
+                    this.save_and_release_resources();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER,
                         this.get_coordinates_of_closest_robot(enemies),
                         this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
                     break;
                 case 3: {
                     let prey = this.get_attack_target_from(
@@ -1132,6 +1137,20 @@ class MyRobot extends BCAbstractRobot {
     free_resources(karbonite, fuel) {
         this.reserved[0] -= karbonite;
         this.reserved[1] -= fuel;
+    }
+
+    save_and_release_resources() {
+        this.backlog[0] = this.reserved[0];
+        this.backlog[1] = this.reserved[1];
+
+        this.reserved = [0, 0];
+    }
+
+    restore_resources() {
+        this.reserved[0] = this.backlog[0];
+        this.reserved[1] = this.backlog[1];
+
+        this.backlog = [0, 0];
     }
 
     /*
