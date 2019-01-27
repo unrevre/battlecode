@@ -779,15 +779,13 @@ class MyRobot extends BCAbstractRobot {
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
 
-            let victim = this.get_attack_target_from(
-                attackables, [4, 5, 2, 0, 3, 1]);
-            if (victim != null) {
-                // TODO: be sure not to splash on own castle (is this
-                // possible?)
-                let point = this.get_splash_attack_at([victim.x, victim.y]);
-                this.log('  - attack unit [' + victim.id + '], type ('
-                    + victim.unit + ') at ' + point[0] + ', ' + point[1]);
-                return this.attack(point[0] - this.me.x, point[1] - this.me.y);
+            if (enemies.length > 0) {
+                let point = this.get_splash_attack();
+                if (point != null) {
+                    this.log('  - attack ' + point[0] + ', ' + point[1]);
+                    return this.attack(point[0] - this.me.x,
+                                       point[1] - this.me.y);
+                }
             }
 
             // don't stray too far
@@ -2418,9 +2416,10 @@ class MyRobot extends BCAbstractRobot {
         let robot_id = robot_map[square[1]][square[0]];
         if (robot_id < 1) { return 0; }
 
-        const unit_weights = [2, 2, 1.2, 1, 1.1, 1.3];
+        const unit_weights = [10, 4, 1.2, 1, 1.1, 1.3];
 
         let robot = this.get_robot(robot_id);
+        if (robot == null) { return 0; }
         let adjust = robot.team === this.me.team ? -1 : 1;
         return adjust * unit_weights[robot.unit];
     }
@@ -2688,6 +2687,37 @@ class MyRobot extends BCAbstractRobot {
             if (attackables_by_units[order].length > 0) {
                 return this.get_closest_robot(attackables_by_units[order]); }
         }
+    }
+
+    get_splash_attack() {
+        const attack_range = [
+            [4, 0], [3, 1], [3, 2], [2, 3], [1, 3],
+            [0, 4], [-1, 3], [-2, 3], [-3, 2], [-3, 1],
+            [-4, 0], [-3, -1], [-3, -2], [-2, -3], [-1, -3],
+            [0, -4], [1, -3], [2, -3], [3, -2], [3, -1],
+            [3, 0], [2, 1], [2, 2], [1, 2],
+            [0, 3], [-1, 2], [-2, 2], [-2, 1],
+            [-3, 0], [-2, -1], [-2, -2], [-1, -2],
+            [0, -3], [1, -2], [2, -2], [2, -1],
+            [2, 0], [1, 1], [0, 2], [-1, 1],
+            [-2, 0], [-1, -1], [0, -2], [1, -1],
+            [1, 0], [0, 1], [-1, 0], [0, -1]];
+
+        let best = null;
+        let max_count = -16384;
+        for (let i = 0; i < attack_range.length; i++) {
+            let square = [this.me.x + attack_range[i][0],
+                          this.me.y + attack_range[i][1]];
+            let count = this.get_weighted_unit_count_around(square);
+            if (count > max_count) {
+                max_count = count;
+                best = square;
+            }
+        }
+
+        if (max_count <= 0) { return null; }
+
+        return best;
     }
 
     get_splash_attack_at(target) {
