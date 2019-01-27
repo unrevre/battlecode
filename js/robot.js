@@ -212,6 +212,9 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            if (this.is_available(150, 300) && this.unit_queue.length === 0) {
+                this.enqueue_unit(SPECS.PROPHET, null, null, 0); }
+
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
 
@@ -334,8 +337,14 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
-            if (this.is_available(150, 300) && this.unit_queue.length === 0) {
-                this.enqueue_unit(SPECS.PROPHET, null, null, 0); }
+            if (this.unit_queue.length === 0) {
+                if (Math.abs(this.me.x - this.size / 2) <= 18
+                        && this.is_available(250, 500)) {
+                    this.enqueue_unit(SPECS.PROPHET, null, null, 0);
+                } else if (this.is_available(150, 300)) {
+                    this.enqueue_unit(SPECS.PROPHET, null, null, 0);
+                }
+            }
 
             if (this.unit_queue.length > 0) {
                 let unit = this.unit_queue.shift();
