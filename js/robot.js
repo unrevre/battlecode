@@ -1704,8 +1704,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_buildable_square_supporting(allies) {
-        let direction = this.get_aligned_compass_direction_from(
-            this.get_vector_sum_of_metric_weighted_directions(allies));
+        let direction = (allies.length < 10)
+            ? this.get_aligned_compass_direction_from(
+                this.get_vector_sum_of_metric_weighted_directions(allies))
+            : this.get_aligned_compass_direction_from(
+                [this.objective[0] - this.me.x, this.objective[1] - this.me.y]);
 
         return this.get_buildable_square_closest_to(
             this.step_towards(direction));
