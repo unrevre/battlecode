@@ -844,6 +844,13 @@ class MyRobot extends BCAbstractRobot {
      * map
      */
 
+    is_out_of_bounds(square) {
+        let x = square[0];
+        let y = square[1];
+
+        return (x < 0 || x >= this.size || y < 0 || y >= this.size);
+    }
+
     is_square_visible(square) {
         const vision_range = [100, 100, 100, 49, 64, 16];
 
@@ -1209,7 +1216,7 @@ class MyRobot extends BCAbstractRobot {
      * pathing
      */
 
-    breadth_first_search(point, directions) {
+    breadth_first_search(point, directions, compass) {
         let head = point;
 
         let open = [];
@@ -1227,6 +1234,12 @@ class MyRobot extends BCAbstractRobot {
             }
 
             head = open.shift();
+
+            if (this.is_out_of_bounds(head)
+                    && this.is_out_of_bounds([head[0] + compass[0],
+                                              head[1] + compass[1]])) {
+                directions = [[1, 1], [1, -1], [-1, -1], [-1, 1]];
+            }
         }
 
         return head;
@@ -1877,7 +1890,7 @@ class MyRobot extends BCAbstractRobot {
         }
 
         let point = this.get_adjacent_lattice_point();
-        return this.breadth_first_search(point, directions);
+        return this.breadth_first_search(point, directions, compass);
     }
 
     get_preacher_target_for(target, enemies) {
