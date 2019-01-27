@@ -575,8 +575,6 @@ class MyRobot extends BCAbstractRobot {
 
             // start with victim (target to focus) - this usually is either the
             // last enemy attacked, or the castle
-            // TODO: use victim to remember attacked units - preferentially
-            // attacked since they have lower health
             if (this.victim != null && this.is_alive(this.victim)
                     && this.is_in_attack_range(this.victim)) {
                 this.log('  - attack unit [' + this.victim.id
@@ -591,6 +589,7 @@ class MyRobot extends BCAbstractRobot {
                                                    [2, 0, 4, 5, 3, 1]);
 
             if (prey != null) {
+                this.victim = prey;
                 this.log('  - attack unit [' + prey.id + '], type ('
                     + prey.unit + ') at ' + prey.x + ', ' + prey.y);
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
@@ -649,6 +648,17 @@ class MyRobot extends BCAbstractRobot {
 
             // TODO: prophets generally should seek out choke points or cover
             // behind friend units and remain stationary
+
+            // start with victim (target to focus) - this usually is either the
+            // last enemy attacked, or the castle
+            if (this.victim != null && this.is_alive(this.victim)
+                    && this.is_in_attack_range(this.victim)) {
+                this.log('  - attack unit [' + this.victim.id
+                    + '], type (' + this.victim.unit + ') at '
+                    + this.victim.x + ', ' + this.victim.y);
+                return this.attack(this.victim.x - this.me.x,
+                                   this.victim.y - this.me.y);
+            }
 
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
