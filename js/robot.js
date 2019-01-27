@@ -2434,6 +2434,19 @@ class MyRobot extends BCAbstractRobot {
         return damage;
     }
 
+    appropriate_replacement(unit) {
+        const karbonite_costs = [0, 50, 10, 15, 25, 30];
+        const fuel_costs = [0, 200, 50, 50, 50, 50];
+
+        if (this.karbonite >= karbonite_costs[unit]
+                && this.fuel >= fuel_costs[unit]) { return unit; }
+
+        if (unit === SPECS.PREACHER && this.karbonite >= 15
+                && this.fuel >= 50) { return SPECS.CRUSADER; }
+
+        return 1;
+    }
+
     evaluate_castle_safety(visibles, enemies) {
         if (enemies.length === 0) { return 0; }
 
@@ -2453,22 +2466,22 @@ class MyRobot extends BCAbstractRobot {
         if (distance < 50) {
             if (enemy_units[SPECS.PROPHET].length === enemies.length
                     && enemies.length < 3 && comrades.length > 2) {
-                return SPECS.CRUSADER; }
+                return this.appropriate_replacement(SPECS.CRUSADER); }
 
             if (defender_units[SPECS.CRUSADER].length
                     + defender_units[SPECS.PREACHER].length
                     > enemies.length + 1) {
-                return SPECS.PROPHET; }
+                return this.appropriate_replacement(SPECS.PROPHET); }
 
-            return SPECS.PREACHER;
+            return this.appropriate_replacement(SPECS.PREACHER);
         } else {
             if (enemy_units[SPECS.CRUSADER].length
                     + enemy_units[SPECS.PREACHER].length
                     > defender_units[SPECS.PREACHER].length) {
-                return SPECS.PREACHER; }
+                return this.appropriate_replacement(SPECS.PREACHER); }
 
             if (enemies.length > defenders.length) {
-                return SPECS.PROPHET; }
+                return this.appropriate_replacement(SPECS.PROPHET); }
         }
 
         // not necessary to build new units, try attacking
@@ -2494,35 +2507,37 @@ class MyRobot extends BCAbstractRobot {
         if (distance < 50) {
             if (enemy_units[SPECS.PROPHET].length === enemies.length
                     && enemies.length < 3 && comrades.length > 2) {
-                return SPECS.CRUSADER; }
+                return this.appropriate_replacement(SPECS.CRUSADER); }
 
             if (defender_units[SPECS.CRUSADER].length
                     + defender_units[SPECS.PREACHER].length
                     > enemies.length + 1) {
-                return SPECS.PROPHET; }
+                return this.appropriate_replacement(SPECS.PROPHET); }
 
-            return SPECS.PREACHER;
+            return this.appropriate_replacement(SPECS.PREACHER);
         } else {
             if (enemy_units[SPECS.CRUSADER].length
                     + enemy_units[SPECS.PREACHER].length
                     > defender_units[SPECS.PREACHER].length) {
-                return SPECS.PREACHER; }
+                return this.appropriate_replacement(SPECS.PREACHER); }
 
             if (enemy_units[SPECS.PROPHET].length
                     > defender_units[SPECS.PROPHET].length) {
-                return SPECS.PREACHER; }
+                return this.appropriate_replacement(SPECS.PREACHER); }
 
             if (enemy_units[SPECS.CASTLE].length
                     + enemy_units[SPECS.CHURCH].length
                     + enemy_units[SPECS.PILGRIM].length
                     === enemies.length) {
                 if (enemy_units[SPECS.CHURCH].length > 0) {
-                    return SPECS.PROPHET; }
+                    return this.appropriate_replacement(SPECS.PROPHET); }
 
                 if (defender_units[SPECS.PROPHET].length === 0) {
-                    return SPECS.PROPHET; }
+                    return this.appropriate_replacement(SPECS.PROPHET); }
             }
         }
+
+        return 0;
     }
 
     get_attack_target_from(attackables, priority) {
