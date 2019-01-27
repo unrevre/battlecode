@@ -415,6 +415,7 @@ class MyRobot extends BCAbstractRobot {
                     this.target = [this.me.x, this.me.y];
                 } else if (nearest.turn - 20 > this.me.turn) {
                     this.castle_talk(0x0F);
+                    this.mission = 0;
                     this.memory = null;
                     this.mode = 1;
                 }
@@ -689,6 +690,11 @@ class MyRobot extends BCAbstractRobot {
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
+            if (this.mode > 0 && enemies.length === 0) {
+                this.mode = 0;
+                this.target = this.memory;
+            }
+
             // clear target after arrival
             if (this.target != null && this.me.x === this.target[0]
                     && this.me.y === this.target[1]) {
@@ -703,6 +709,14 @@ class MyRobot extends BCAbstractRobot {
                     || this.is_on_resource(this.fuel_map)
                     || !this.is_on_lattice_point())) {
                 this.target = this.get_next_lattice_point(); }
+
+            if (enemies.length > 0) {
+                this.mode = 1;
+                let nearest = this.get_closest_robot(enemies);
+                this.target = this.evade_threat_from(
+                    this.get_aligned_compass_direction_from(
+                        [nearest.x - this.me.x, nearest.y - this.me.y]));
+            }
 
             // deposit resources if convenient
             if (this.target == null) {
@@ -2037,6 +2051,8 @@ class MyRobot extends BCAbstractRobot {
                 this.messages[robot.id].length = 0;
                 this.free_resources(75, 250);
             }
+        } else if (message === 0x0F) {
+            this.free_resources(75, 250);
         }
     }
 
