@@ -1598,8 +1598,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.is_passable(steps[i])) {
                 return steps[i]; } }
 
-        this.log('ERROR: unreachable (step_towards)');
-        return null;
+        return [this.me.x, this.me.y];
     }
 
     /*
@@ -1627,6 +1626,7 @@ class MyRobot extends BCAbstractRobot {
         if (safe.length === 0) { return null; }
 
         let nearest = this.get_closest_robot(enemies);
+        if (nearest == null) { return null; }
         let target = [nearest.x, nearest.y];
 
         let distance = [];
