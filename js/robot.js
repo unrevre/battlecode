@@ -399,6 +399,26 @@ class MyRobot extends BCAbstractRobot {
             }
 
             let enemies = this.filter_visible_enemy_robots(visibles);
+            let attacking = this.filter_attack_capable_robots(enemies);
+            let attacking_units = this.group_by_unit_types(attacking);
+
+            if (this.mission === 1 && enemies.length > 0
+                    && this.is_safe([this.me.x, this.me.y], attacking)
+                    && this.distance_to(this.memory) <= 100
+                    && this.distance_to(this.fountain) > 49) {
+                let nearest = this.get_closest_robot(enemies);
+                if (enemies.length === 1
+                        || (attacking_units.length < 4
+                            && this.only_close_range_units(attacking_units))
+                        || (this.is_available(300, 500))) {
+                    this.mode = 3;
+                    this.target = [this.me.x, this.me.y];
+                } else if (nearest.turn - 20 > this.me.turn) {
+                    this.castle_talk(0x0F);
+                    this.memory = null;
+                    this.mode = 1;
+                }
+            }
 
             // clear target destination after arrival
             if (this.target != null && this.target[0] === this.me.x
@@ -432,7 +452,6 @@ class MyRobot extends BCAbstractRobot {
                     }
                 }
             }
-            let attacking = this.filter_attack_capable_robots(enemies);
 
             let attacked_count = 0;
             for (let i = 0; i < attacking.length; i++) {
@@ -442,14 +461,13 @@ class MyRobot extends BCAbstractRobot {
             if (attacked_count > 0) {
                 this.mode = 1;
             } else if (attacking.length > 0) {
-                let enemies_by_units = this.group_by_unit_types(attacking);
-                if (enemies_by_units[SPECS.CRUSADER].length > 0) {
+                if (attacking_units[SPECS.CRUSADER].length > 0) {
                     let old = this.get_closest_robot(
                         this.filter_older_robots(
-                            enemies_by_units[SPECS.CRUSADER]));
+                            attacking_units[SPECS.CRUSADER]));
                     let young = this.get_closest_robot(
                         this.filter_younger_robots(
-                            enemies_by_units[SPECS.CRUSADER]));
+                            attacking_units[SPECS.CRUSADER]));
                     if ((old != null && this.distance_to([old.x, old.y]) <= 20)
                             || (young != null && this.distance_to(
                                 [young.x, young.y])) <= 40) {
@@ -2699,9 +2717,6 @@ class MyRobot extends BCAbstractRobot {
     get_church_candidate(resources, allied_bases, enemy_bases) {
         let priority = this.evaluate_priority_for_each(
             resources, allied_bases, enemy_bases);
-
-        for (let i = 0; i < resources.length; i++) {
-            this.log('DEBUG: CHURCH: ' + priority[i] + ' - ' + resources[i]); }
 
         let index = this.index_of_maximum_element_in(priority);
         if (index != null) { return resources[index]; }
