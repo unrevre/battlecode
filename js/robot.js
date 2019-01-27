@@ -44,6 +44,8 @@ class MyRobot extends BCAbstractRobot {
 
         this.mode = 0;
         this.mission = 0;
+
+        this.patience = 0;
     }
 
     turn() {
@@ -82,6 +84,9 @@ class MyRobot extends BCAbstractRobot {
                 this.castle_points.push([this.me.x, this.me.y]);
                 this.deposit_points.push([this.me.x, this.me.y]);
             }
+
+            if (this.patience === 1) { this.release_resources(); }
+            if (this.patience > 0) { this.patience--; }
 
             let visibles = this.get_visible_robots();
 
@@ -1227,6 +1232,13 @@ class MyRobot extends BCAbstractRobot {
     free_resources(karbonite, fuel) {
         this.reserved[0] -= karbonite;
         this.reserved[1] -= fuel;
+
+        this.reserved[0] = Math.max(0, this.reserved[0]);
+        this.reserved[1] = Math.max(0, this.reserved[1]);
+    }
+
+    release_resources() {
+        this.reserved = [0, 0];
     }
 
     save_and_release_resources() {
@@ -2758,15 +2770,18 @@ class MyRobot extends BCAbstractRobot {
                 candidate, this.deposit_points);
             if (index === 0) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate, 1);
+                this.patience = 15;
             } else if (index > this.castles) {
                 // send signal to church
                 let near_castle = this.get_closest_square_by_distance_from(
                     this.deposit_points[index], this.castle_points);
                 if (this.me.x === near_castle[0]
                         && this.me.y === near_castle[1]) {
+                    this.patience = 15;
                     this.signal(this.encode_coordinates(
                             candidate, this.mark, 1),
-                        this.distance_to(this.deposit_points[index])); }
+                        this.distance_to(this.deposit_points[index]));
+                }
             }
 
             // push first to prevent multiple pilgrims being sent here to build
