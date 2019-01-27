@@ -143,7 +143,6 @@ class MyRobot extends BCAbstractRobot {
                 let message = this.decode_coordinates(next_signal.signal);
                 // check coordinates
                 let coordinates = message[0];
-                let token = message[1];
                 let tag = message[2];
                 if (tag === 2 && this.objectives.length > 1
                         && coordinates[0] === this.objective[0]
@@ -2475,7 +2474,6 @@ class MyRobot extends BCAbstractRobot {
         let allies = this.filter_attacking_allied_robots(visibles);
         let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
-        let comrade_units = this.group_by_unit_types(comrades);
 
         let closest = this.get_closest_robot_with_distance(enemies);
         let target = closest[0];
@@ -2516,7 +2514,6 @@ class MyRobot extends BCAbstractRobot {
         let allies = this.filter_attacking_allied_robots(visibles);
         let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
-        let comrade_units = this.group_by_unit_types(comrades);
 
         let closest = this.get_closest_robot_with_distance(enemies);
         let target = closest[0];
