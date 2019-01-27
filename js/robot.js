@@ -383,7 +383,10 @@ class MyRobot extends BCAbstractRobot {
                     this.objective, [this.me.x, this.me.y],
                     this.get_two_raw_onion_rings_around.bind(this));
                 this.target = path[path.length - 2];
+                this.objective = this.target;
             }
+
+            let enemies = this.filter_visible_enemy_robots(visibles);
 
             // clear target destination after arrival
             if (this.target != null && this.target[0] === this.me.x
@@ -391,14 +394,24 @@ class MyRobot extends BCAbstractRobot {
                 this.target = null;
 
                 if (this.mission === 1) {
-                    let church =
-                        this.get_buildable_square_by_adjacent_resources();
+                    let church = (this.me.x !== this.objective[0]
+                        || this.me.y !== this.objective[1])
+                        ? this.get_safe_buildable_square_closest_to(enemies)
+                        : this.get_buildable_square_by_adjacent_resources();
+
+                    if (this.distance_to_nearest_deposit_point(visibles) < 16) {
+                        church = null; }
+
                     if (church != null) {
                         this.signal(this.encode_coordinates(
                             this.memory, this.mark, 0), 2);
                         this.fountain = church;
-                        this.target = this.memory;
-                        this.mission = 0;
+                        if (this.distance_to(this.objective) < 9) {
+                            this.target = this.memory;
+                            this.mission = 0;
+                        } else {
+                            this.target = this.objective;
+                        }
                         this.log('  - build unit type [1] at (' + church[0]
                             + ', ' + church[1] + ')');
                         return this.build_unit(SPECS.CHURCH,
@@ -407,8 +420,6 @@ class MyRobot extends BCAbstractRobot {
                     }
                 }
             }
-
-            let enemies = this.filter_visible_enemy_robots(visibles);
             let attacking = this.filter_attack_capable_robots(enemies);
 
             let attacked_count = 0;
@@ -1600,6 +1611,25 @@ class MyRobot extends BCAbstractRobot {
         }
     }
 
+    get_safe_buildable_square_closest_to(enemies) {
+        let adjacent = this.get_buildable_squares();
+        if (adjacent.length === 0) { return null; }
+
+        let safe = this.filter_safe_squares(adjacent, enemies);
+        if (safe.length === 0) { return null; }
+
+        let nearest = this.get_closest_robot(enemies);
+        let target = [nearest.x, nearest.y];
+
+        let distance = [];
+        for (let i = 0; i < safe.length; i++) {
+            let square = safe[i];
+            distance.push(this.distance(square, target));
+        }
+
+        return adjacent[this.index_of_minimum_element_in(distance)];
+    }
+
     get_buildable_square_closest_to(target) {
         let adjacent = this.get_buildable_squares();
         if (adjacent.length === 0) { return null; }
@@ -2223,6 +2253,18 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
+    filter_safe_squares(squares, robots) {
+        let filtered = [];
+
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            if (this.is_safe(square, robots)) {
+                filtered.push(square); }
+        }
+
+        return filtered;
+    }
+
     /*
      * bleep-bloop, i'm a robot
      */
@@ -2680,5 +2722,19 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return index;
+    }
+
+    /*
+     * other
+     */
+
+    distance_to_nearest_deposit_point(visibles) {
+        let allies = this.filter_allied_robots(visibles);
+        let allied_units = this.group_by_unit_types(allies);
+
+        let deposit_points = allied_units[0].concat(allied_units[1]);
+        if (deposit_points.length === 0) { return 16384; }
+
+        return this.get_closest_robot_with_distance(deposit_points)[1];
     }
 }
