@@ -2648,7 +2648,7 @@ class MyRobot extends BCAbstractRobot {
             if (square[0] === resource[0] && square[1] === resource[1]) {
                 continue; }
 
-            score += 120 / this.distance(square, resource);
+            if (this.distance(square, resource) < 100) { score += 40; }
         }
 
         for (let i = 0; i < fuel.length; i++) {
@@ -2656,10 +2656,16 @@ class MyRobot extends BCAbstractRobot {
             if (square[0] === resource[0] && square[1] === resource[1]) {
                 continue; }
 
-            score += 100 / this.distance(square, resource);
+            if (this.distance(square, resource) < 100) { score += 30; }
         }
 
         return score;
+    }
+
+    positional_bonus(square) {
+        let centre = [Math.floor(this.size / 2), Math.floor(this.size / 2)];
+
+        return this.distance(square, centre);
     }
 
     evaluate_priority_for_each(squares, comrades, enemies) {
@@ -2668,8 +2674,8 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
             priority.push(
-                Math.min(400, this.get_closest_distance(square, enemies))
-                - Math.min(900, this.get_closest_distance(square, comrades))
+                Math.min(324, this.get_closest_distance(square, enemies))
+                - Math.min(400, this.get_closest_distance(square, comrades))
                 + this.count_adjacent_impassable_squares_around(square)
                 + this.resource_proximity_score(square));
         }
