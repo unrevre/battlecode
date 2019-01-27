@@ -493,6 +493,11 @@ class MyRobot extends BCAbstractRobot {
                 } else if (this.me.karbonite > 9 || this.me.fuel > 49) {
                     // trigger deposit if enemies are closing in
                     this.mode = 2;
+                } else if (this.is_safe(attacking)) {
+                    if (this.mode > 0) {
+                        this.target = null;
+                        this.mode = 0;
+                    }
                 }
             } else if (this.mode > 0) {
                 this.target = null;
