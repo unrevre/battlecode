@@ -262,7 +262,7 @@ class MyRobot extends BCAbstractRobot {
                     this.memory = this.target;
                     this.local_resources[0].occupied[message[0]] = true;
                     break;
-                } else if (message[2] === 1) {
+                } else if (message[2] === 1 && robot.id !== this.me.id) {
                     this.mark = message[1];
                     let candidate = message[0];
                     if (this.is_resource(candidate, this.karbonite_map)) {
