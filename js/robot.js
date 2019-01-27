@@ -2628,24 +2628,54 @@ class MyRobot extends BCAbstractRobot {
      * map analysis
      */
 
-    evaluate_safety_for_each(squares, comrades, enemies) {
-        let safety = [];
+    resource_proximity_score(square) {
+        let karbonite = this.get_resources(this.karbonite_map);
+        let fuel = this.get_resources(this.fuel_map);
+
+        let score = 0;
+
+        for (let i = 0; i < karbonite.length; i++) {
+            let resource = karbonite[i];
+            if (square[0] === resource[0] && square[1] === resource[1]) {
+                continue; }
+
+            score += 120 / this.distance(square, resource);
+        }
+
+        for (let i = 0; i < fuel.length; i++) {
+            let resource = fuel[i];
+            if (square[0] === resource[0] && square[1] === resource[1]) {
+                continue; }
+
+            score += 100 / this.distance(square, resource);
+        }
+
+        return score;
+    }
+
+    evaluate_priority_for_each(squares, comrades, enemies) {
+        let priority = [];
 
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
-            safety.push(this.get_closest_distance(square, enemies)
-                - this.get_closest_distance(square, comrades)
-                + this.count_adjacent_impassable_squares_around(square));
+            priority.push(
+                Math.min(400, this.get_closest_distance(square, enemies))
+                - Math.min(900, this.get_closest_distance(square, comrades))
+                + this.count_adjacent_impassable_squares_around(square)
+                + this.resource_proximity_score(square));
         }
 
-        return safety;
+        return priority;
     }
 
     get_church_candidate(resources, allied_bases, enemy_bases) {
-        let safety = this.evaluate_safety_for_each(
+        let priority = this.evaluate_priority_for_each(
             resources, allied_bases, enemy_bases);
 
-        let index = this.index_of_maximum_element_in(safety);
+        for (let i = 0; i < resources.length; i++) {
+            this.log('DEBUG: CHURCH: ' + priority[i] + ' - ' + resources[i]); }
+
+        let index = this.index_of_maximum_element_in(priority);
         if (index != null) { return resources[index]; }
 
         return null;
