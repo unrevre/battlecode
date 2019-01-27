@@ -281,6 +281,9 @@ class MyRobot extends BCAbstractRobot {
                 }
             }
 
+            if (step === 0 && this.distance_to(this.memory) > 16) {
+                this.objective = this.memory; }
+
             switch (step) {
                 case 0:
                     castle_talk_value = this.me.x + 0x80;
