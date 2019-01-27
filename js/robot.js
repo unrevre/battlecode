@@ -2540,8 +2540,8 @@ class MyRobot extends BCAbstractRobot {
         if (this.karbonite >= karbonite_costs[unit]
                 && this.fuel >= fuel_costs[unit]) { return unit; }
 
-        if (unit === SPECS.PREACHER && this.karbonite >= 15
-                && this.fuel >= 50) { return SPECS.CRUSADER; }
+        if (unit === SPECS.PREACHER && this.karbonite >= 25
+                && this.fuel >= 50) { return SPECS.PROPHET; }
 
         return 1;
     }
