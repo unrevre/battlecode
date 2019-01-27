@@ -1567,7 +1567,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     step_towards(direction) {
-        if (direction[0] == null || direction[1] == null) {
+        if (isNaN(direction[0]) || isNaN(direction[1])) {
             return [this.me.x, this.me.y]; }
 
         let steps = [[this.me.x, this.me.y]];
