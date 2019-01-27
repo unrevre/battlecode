@@ -552,31 +552,14 @@ class MyRobot extends BCAbstractRobot {
             // TODO: overhaul attack targeting system
             let enemies = this.filter_visible_enemy_robots(visibles);
 
-            // identify castle if it is within range
-            // TODO: change this to not be specific for castles, and have
-            // castle targets marked out separately
-            if (this.memory != null
-                    && this.distance_to(this.memory) < 50) {
-                let castle_prescence = null;
-                for (let i = 0; i < enemies.length; i++) {
-                    if (enemies[i].unit === 0) {
-                        castle_prescence = enemies[i];
-                        break;
-                    }
-                }
+            // TODO: castle destruction confirmation
+            // clear target after arrival
+            if (this.target != null && this.me.x === this.target[0]
+                    && this.me.y === this.target[1]) {
+                this.target = null; }
 
-                if (castle_prescence == null) {
-                    let message = this.encode_coordinates(
-                        this.memory, this.mark, 2);
-                    this.signal(message, this.distance_to(this.fountain));
-
-                    this.victim = null;
-
-                    this.memory = null;
-                    this.objective = null;
-                    this.target = null;
-                }
-            }
+            if (this.target != null && this.is_allied_unit_at(this.target)) {
+                this.target = null; }
 
             // start with victim (target to focus) - this usually is either the
             // last enemy attacked, or the castle
@@ -592,7 +575,6 @@ class MyRobot extends BCAbstractRobot {
             }
 
             let attackables = this.filter_attackable_robots(enemies);
-
             let prey = this.get_attack_target_from(attackables,
                                                    [2, 0, 4, 5, 3, 1]);
 
@@ -602,8 +584,9 @@ class MyRobot extends BCAbstractRobot {
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
-            if (this.target != null && this.is_square_visible(this.target)) {
-                this.target = null; }
+            // advance towards enemy
+            if (this.target == null && enemies.length > 0) {
+                this.target = this.get_coordinates_of_closest_robot(enemies); }
 
             // move off buildable squares, resources
             if (this.target == null && (this.is_adjacent(this.fountain)
