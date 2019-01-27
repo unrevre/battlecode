@@ -530,7 +530,6 @@ class MyRobot extends BCAbstractRobot {
                         && robot.y === this.fountain[1]) {
                     if (this.target == null) {
                         this.memory = this.decode_coordinates(robot.signal)[0];
-                        this.objective = this.memory;
                         this.target = this.memory;
                         break;
                     }
@@ -590,13 +589,24 @@ class MyRobot extends BCAbstractRobot {
                 return this.attack(prey.x - this.me.x, prey.y - this.me.y);
             }
 
+            if (this.target != null && this.is_square_visible(this.target)) {
+                this.target = null; }
+
+            // move off buildable squares, resources
+            if (this.target == null && (this.is_adjacent(this.fountain)
+                    || this.is_on_resource(this.karbonite_map)
+                    || this.is_on_resource(this.fuel_map))) {
+                this.target = this.get_closest_square_by_distance(
+                    this.get_next_to_adjacent_passable_empty_squares_at(
+                        this.fountain)); }
+
             // TODO: fuzzy target destinations to surround enemies properly
             // TODO: wrap around defenders (if possible) to attack castle
             // TODO: consider using pilgrims for vision
 
-            this.target = this.get_crusader_target_for(this.objective, enemies);
             this.path = this.get_path_to(
-                this.target, this.get_three_onion_rings_around);
+                this.get_crusader_target_for(this.target, enemies),
+                this.get_three_onion_rings_around);
 
             this.log('  target: ' + this.target);
 
@@ -719,6 +729,10 @@ class MyRobot extends BCAbstractRobot {
                     + victim.unit + ') at ' + point[0] + ', ' + point[1]);
                 return this.attack(point[0] - this.me.x, point[1] - this.me.y);
             }
+
+            // don't stray too far
+            if (this.target != null && this.is_square_visible(this.target)) {
+                this.target = null; }
 
             // clear target after arrival
             if (this.target != null && this.me.x === this.target[0]
@@ -1787,6 +1801,8 @@ class MyRobot extends BCAbstractRobot {
         // TODO: special targeting for rushes
         // TODO: attempt to position itself directly between enemy units in a
         // line if preachers exist (or next to the castle)
+
+        if (this.is_safe(target, enemies)) { return target; }
 
         let movable = this.get_reachable_squares_for_crusaders();
         let forward = this.filter_by_distance_less_than(
