@@ -160,29 +160,13 @@ class MyRobot extends BCAbstractRobot {
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
 
-            // TODO: improve this, really
             let castle_safety = this.evaluate_castle_safety(visibles, enemies);
 
             switch (castle_safety) {
                 case 0:
                     this.consider_church_expansion();
                     break;
-                case 1:
-                    this.save_and_release_resources();
-                    this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PROPHET, null,
-                        this.get_coordinates_of_closest_robot(enemies), 0);
-                    this.restore_resources();
-                    break;
-                case 2:
-                    this.save_and_release_resources();
-                    this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PREACHER,
-                        this.get_coordinates_of_closest_robot(enemies),
-                        this.get_coordinates_of_closest_robot(enemies), 0);
-                    this.restore_resources();
-                    break;
-                case 3: {
+                case 1: {
                     let prey = this.get_attack_target_from(
                         attackables, [4, 5, 2, 3, 1, 0]);
                     if (prey != null) {
@@ -192,6 +176,28 @@ class MyRobot extends BCAbstractRobot {
                     }
                     break;
                 }
+                case SPECS.CRUSADER:
+                    this.save_and_release_resources();
+                    this.unit_queue.length = 0;
+                    this.enqueue_unit(SPECS.CRUSADER, null,
+                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
+                    break;
+                case SPECS.PROPHET:
+                    this.save_and_release_resources();
+                    this.unit_queue.length = 0;
+                    this.enqueue_unit(SPECS.PROPHET, null,
+                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
+                    break;
+                case SPECS.PREACHER:
+                    this.save_and_release_resources();
+                    this.unit_queue.length = 0;
+                    this.enqueue_unit(SPECS.PREACHER,
+                        this.get_coordinates_of_closest_robot(enemies),
+                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
+                    break;
             }
 
             // queue pilgrims on all available local resources after clearing
@@ -287,22 +293,33 @@ class MyRobot extends BCAbstractRobot {
             let allies = this.filter_attacking_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
 
-            // TODO: improve this, really
             let church_safety = this.evaluate_church_safety(visibles, enemies);
 
             switch (church_safety) {
                 case 0:
+                    this.consider_church_expansion();
                     break;
-                case 1:
+                case SPECS.CRUSADER:
+                    this.save_and_release_resources();
+                    this.unit_queue.length = 0;
+                    this.enqueue_unit(SPECS.CRUSADER, null,
+                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
+                    break;
+                case SPECS.PROPHET:
+                    this.save_and_release_resources();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null,
                         this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
                     break;
-                case 2:
+                case SPECS.PREACHER:
+                    this.save_and_release_resources();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER,
                         this.get_coordinates_of_closest_robot(enemies),
                         this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.restore_resources();
                     break;
             }
 
@@ -1982,6 +1999,18 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
+    filter_by_distance_to_target_less_than(target, squares, value) {
+        let filtered = [];
+
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            if (this.distance(square, target) < value) {
+                filtered.push(square); }
+        }
+
+        return filtered;
+    }
+
     filter_by_nearest_distance_greater_than(squares, references, value) {
         let filtered = [];
 
@@ -2284,6 +2313,23 @@ class MyRobot extends BCAbstractRobot {
         return robots[index];
     }
 
+    get_closest_robot_with_distance(robots) {
+        if (robots.length === 0) { return null; }
+
+        let index = 0;
+        let minimum = 100;
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            let distance = this.distance_to([robot.x, robot.y]);
+            if (distance < minimum) {
+                index = i;
+                minimum = distance;
+            }
+        }
+
+        return [robots[index], minimum];
+    }
+
     get_coordinates_of_closest_robot(robots) {
         let robot = this.get_closest_robot(robots);
         if (robot == null) { return null; }
@@ -2391,55 +2437,92 @@ class MyRobot extends BCAbstractRobot {
     evaluate_castle_safety(visibles, enemies) {
         if (enemies.length === 0) { return 0; }
 
-        let comrades = this.filter_robots_by_distance_less_than(
-            this.filter_allied_robots(visibles), 10);
+        let allies = this.filter_attacking_allied_robots(visibles);
+        let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
         let comrade_units = this.group_by_unit_types(comrades);
 
-        if (enemy_units[4].length > comrade_units[4].length) {
-            return 1;
-        } else if (enemy_units[3].length > comrade_units[5].length + 1) {
-            return 2;
-        } else if (enemy_units[5].length > comrade_units[4].length) {
-            let nearest = this.get_closest_robot(enemy_units[5]);
-            if (this.distance_to([nearest.x, nearest.y]) > 64) {
-                return 2;
-            } else if (enemy_units[5].length > comrade_units[5].length) {
-                return 2;
-            } else {
-                return 1;
-            }
+        let closest = this.get_closest_robot_with_distance(enemies);
+        let target = closest[0];
+        let distance = closest[1];
+
+        let defenders = this.filter_by_distance_to_target_less_than(
+            [target.x, target.y], allies, distance);
+        let defender_units = this.group_by_unit_types(defenders);
+
+        if (distance < 50) {
+            if (enemy_units[SPECS.PROPHET].length === enemies.length
+                    && enemies.length < 3 && comrades.length > 2) {
+                return SPECS.CRUSADER; }
+
+            if (defender_units[SPECS.CRUSADER].length
+                    + defender_units[SPECS.PREACHER].length
+                    > enemies.length + 1) {
+                return SPECS.PROPHET; }
+
+            return SPECS.PREACHER;
+        } else {
+            if (enemy_units[SPECS.CRUSADER].length
+                    + enemy_units[SPECS.PREACHER].length
+                    > defender_units[SPECS.PREACHER].length) {
+                return SPECS.PREACHER; }
+
+            if (enemies.length > defenders.length) {
+                return SPECS.PROPHET; }
         }
 
         // not necessary to build new units, try attacking
-        return 3;
+        return 1;
     }
 
     evaluate_church_safety(visibles, enemies) {
         if (enemies.length === 0) { return 0; }
 
-        let comrades = this.filter_robots_by_distance_less_than(
-            this.filter_allied_robots(visibles), 10);
+        let allies = this.filter_attacking_allied_robots(visibles);
+        let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
         let comrade_units = this.group_by_unit_types(comrades);
 
-        if (enemy_units[4].length > comrade_units[4].length) {
-            return 1;
-        } else if (enemy_units[3].length > comrade_units[5].length) {
-            return 2;
-        } else if (enemy_units[5].length > comrade_units[4].length) {
-            let nearest = this.get_closest_robot(enemy_units[5]);
-            if (this.distance_to([nearest.x, nearest.y]) > 64) {
-                return 2;
-            } else if (enemy_units[5].length > comrade_units[5].length) {
-                return 2;
-            } else {
-                return 1;
+        let closest = this.get_closest_robot_with_distance(enemies);
+        let target = closest[0];
+        let distance = closest[1];
+
+        let defenders = this.filter_by_distance_to_target_less_than(
+            [target.x, target.y], allies, distance);
+        let defender_units = this.group_by_unit_types(defenders);
+
+        if (distance < 50) {
+            if (enemy_units[SPECS.PROPHET].length === enemies.length
+                    && enemies.length < 3 && comrades.length > 2) {
+                return SPECS.CRUSADER; }
+
+            if (defender_units[SPECS.CRUSADER].length
+                    + defender_units[SPECS.PREACHER].length
+                    > enemies.length + 1) {
+                return SPECS.PROPHET; }
+
+            return SPECS.PREACHER;
+        } else {
+            if (enemy_units[SPECS.CRUSADER].length
+                    + enemy_units[SPECS.PREACHER].length
+                    > defender_units[SPECS.PREACHER].length) {
+                return SPECS.PREACHER; }
+
+            if (enemy_units[SPECS.PROPHET].length
+                    > defender_units[SPECS.PROPHET].length) {
+                return SPECS.PREACHER; }
+
+            if (enemy_units[SPECS.CASTLE].length
+                    + enemy_units[SPECS.CHURCH].length
+                    + enemy_units[SPECS.PILGRIM].length
+                    === enemies.length) {
+                if (enemy_units[SPECS.CHURCH].length > 0) {
+                    return SPECS.PROPHET; }
+
+                if (defender_units[SPECS.PROPHET].length === 0) {
+                    return SPECS.PROPHET; }
             }
         }
-
-        // churches cannot attack, so there must always be a response
-        return 1;
     }
 
     get_attack_target_from(attackables, priority) {
