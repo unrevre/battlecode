@@ -1809,9 +1809,8 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_next_lattice_point() {
-        let point = this.get_adjacent_lattice_point();
-        let aligned = [point[0] - this.fountain[0],
-                       point[1] - this.fountain[1]];
+        let aligned = [this.me.x - this.fountain[0],
+                       this.me.y - this.fountain[1]];
         let compass = this.get_aligned_compass_direction_from(aligned);
 
         let directions = [];
@@ -1827,6 +1826,7 @@ class MyRobot extends BCAbstractRobot {
             directions.push([compass[0], -compass[1]]);
         }
 
+        let point = this.get_adjacent_lattice_point();
         return this.breadth_first_search(point, directions);
     }
 
