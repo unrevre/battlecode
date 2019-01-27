@@ -408,7 +408,7 @@ class MyRobot extends BCAbstractRobot {
             let attacking_units = this.group_by_unit_types(attacking);
 
             if (this.mission === 1 && enemies.length > 0
-                    && this.is_safe([this.me.x, this.me.y], attacking)
+                    && this.is_safe(attacking)
                     && this.distance_to(this.memory) <= 100
                     && this.distance_to(this.fountain) > 49) {
                 let nearest = this.get_closest_robot(enemies);
@@ -556,7 +556,7 @@ class MyRobot extends BCAbstractRobot {
 
                 // don't move into attack range of enemies
                 // TODO: route around enemy attack range to destination
-                if (this.is_safe(destination, attacking)) {
+                if (this.is_square_safe(destination, attacking)) {
                     this.log('  - moving to destination: ('
                         + destination[0] + ', ' + destination[1] + ')');
                     return this.move(destination[0] - this.me.x,
@@ -1899,15 +1899,14 @@ class MyRobot extends BCAbstractRobot {
         // TODO: attempt to position itself directly between enemy units in a
         // line if preachers exist (or next to the castle)
 
-        if (this.is_safe(target, enemies)) { return target; }
+        if (this.is_square_safe(target, enemies)) { return target; }
 
         let movable = this.get_reachable_squares_for_crusaders();
         let forward = this.filter_by_distance_less_than(
             movable, this.distance_to(target));
 
         if (forward.length === 0) {
-            if (this.is_safe([this.me.x, this.me.y], enemies)) {
-                return null; }
+            if (this.is_safe(enemies)) { return null; }
 
             let adjacent = this.get_adjacent_passable_empty_squares();
             if (adjacent.length === 0) { return null; }
@@ -1972,8 +1971,7 @@ class MyRobot extends BCAbstractRobot {
             movable, this.distance_to(target));
 
         if (forward.length === 0) {
-            if (this.is_safe([this.me.x, this.me.y], enemies)) {
-                return null; }
+            if (this.is_safe(enemies)) { return null; }
 
             let adjacent = this.get_adjacent_passable_empty_squares();
             if (adjacent.length === 0) { return null; }
@@ -2325,7 +2323,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
-            if (this.is_safe(square, robots)) {
+            if (this.is_square_safe(square, robots)) {
                 filtered.push(square); }
         }
 
@@ -2386,7 +2384,15 @@ class MyRobot extends BCAbstractRobot {
             && (range >= min_attack_range[unit]));
     }
 
-    is_safe(square, robots) {
+    is_safe(robots) {
+        for (let i = 0; i < robots.length; i++) {
+            if (this.is_in_attack_range_of(robots[i])) {
+                return false; } }
+
+        return true;
+    }
+
+    is_square_safe(square, robots) {
         for (let i = 0; i < robots.length; i++) {
             if (this.is_square_in_attack_range_of(square, robots[i])) {
                 return false; } }
