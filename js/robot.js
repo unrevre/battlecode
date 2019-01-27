@@ -2295,22 +2295,25 @@ class MyRobot extends BCAbstractRobot {
         return attacks;
     }
 
-    unit_count(square, robot_map) {
+    weighted_unit_count(square, robot_map) {
         let robot_id = robot_map[square[1]][square[0]];
         if (robot_id < 1) { return 0; }
 
+        const unit_weights = [2, 2, 1.2, 1, 1.1, 1.3];
+
         let robot = this.get_robot(robot_id);
-        return robot.team === this.me.team ? -1 : 1;
+        let adjust = robot.team === this.me.team ? -1 : 1;
+        return adjust * unit_weights[robot.unit];
     }
 
-    get_unit_count_difference_around(square) {
+    get_weighted_unit_count_around(square) {
         let robot_map = this.get_visible_robot_map();
 
-        let count = this.unit_count(square, robot_map);
+        let count = this.weighted_unit_count(square, robot_map);
 
         let adjacent = this.get_adjacent_passable_squares_at(square);
         for (let i = 0; i < adjacent.length; i++) {
-            count += this.unit_count(adjacent[i], robot_map); }
+            count += this.weighted_unit_count(adjacent[i], robot_map); }
 
         return count;
     }
@@ -2573,10 +2576,10 @@ class MyRobot extends BCAbstractRobot {
     get_splash_attack_at(target) {
         let square = target;
 
-        let max_count = this.get_unit_count_difference_around(target);
+        let max_count = this.get_weighted_unit_count_around(target);
         let adjacent = this.get_adjacent_passable_squares_at(target);
         for (let i = 0; i < adjacent.length; i++) {
-            let count = this.get_unit_count_difference_around(adjacent[i]);
+            let count = this.get_weighted_unit_count_around(adjacent[i]);
             if (count > max_count) {
                 max_count = count;
                 square = adjacent[i];
