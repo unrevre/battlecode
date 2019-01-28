@@ -1734,7 +1734,7 @@ class MyRobot extends BCAbstractRobot {
         let adjacent = this.get_buildable_squares();
         if (adjacent.length === 0) { return null; }
 
-        if (!this.is_passable(target)) {
+        if (!this.is_passable(target) || this.distance_to(target) > 400) {
             return this.get_closest_square_by_distance_from(target, adjacent); }
 
         if (this.me.x === target[0] && this.me.y === target[1]) {
