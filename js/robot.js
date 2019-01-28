@@ -1,6 +1,18 @@
 import { BCAbstractRobot, SPECS } from 'battlecode';
 
-import binary_heap from './binary_heap.js';
+const ring_three = [
+    [0, -3], [1, -2], [2, -2], [2, -1],
+    [3, 0], [2, 1], [2, 2], [1, 2],
+    [0, 3], [-1, 2], [-2, 2], [-2, 1],
+    [-3, 0], [-2, -1], [-2, -2], [-1, -2]];
+const ring_two = [
+    [0, -2], [1, -1], [2, 0], [1, 1],
+    [0, 2], [-1, 1], [-2, 0], [-1, -1]];
+const ring_one = [
+    [0, -1], [1, 0], [0, 1], [-1, 0]];
+
+const min_attack_range = [1, 0, 0, 1, 16, 1];
+const max_attack_range = [64, 0, 0, 16, 64, 16];
 
 let step = -1;
 
@@ -1350,12 +1362,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_two_onion_rings_around(square) {
-        const ring_two = [
-            [0, -2], [1, -1], [2, 0], [1, 1],
-            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
-        const ring_one = [
-            [0, -1], [1, 0], [0, 1], [-1, 0]];
-
         let x = square[0];
         let y = square[1];
 
@@ -1379,12 +1385,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_two_raw_onion_rings_around(square) {
-        const ring_two = [
-            [0, -2], [1, -1], [2, 0], [1, 1],
-            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
-        const ring_one = [
-            [0, -1], [1, 0], [0, 1], [-1, 0]];
-
         let x = square[0];
         let y = square[1];
 
@@ -1408,17 +1408,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_three_onion_rings_around(square) {
-        const ring_three = [
-            [0, -3], [1, -2], [2, -2], [2, -1],
-            [3, 0], [2, 1], [2, 2], [1, 2],
-            [0, 3], [-1, 2], [-2, 2], [-2, 1],
-            [-3, 0], [-2, -1], [-2, -2], [-1, -2]];
-        const ring_two = [
-            [0, -2], [1, -1], [2, 0], [1, 1],
-            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
-        const ring_one = [
-            [0, -1], [1, 0], [0, 1], [-1, 0]];
-
         let x = square[0];
         let y = square[1];
 
@@ -1448,6 +1437,38 @@ class MyRobot extends BCAbstractRobot {
         return adjacent;
     }
 
+    pop(heap) {
+        if (!heap.list.length) {
+            return null;
+        }
+
+        if (heap.list.length === 1) {
+            return heap.list.shift();
+        }
+
+        let min = heap.list[0];
+        heap.list[0] = heap.list.pop();
+        heapify(heap, 0);
+        return min;
+    }
+
+    insert(heap, cell) {
+        let i = heap.list.length;
+        heap.list.push(cell);
+        let parent_index = parent_of(i);
+        while (parent_index !== null
+                && compare(heap.list[i], heap.list[parent_index]) < 0) {
+            swap(heap.list, i, parent_index);
+            i = parent_index;
+            parent_index = parent_of(i);
+        }
+        return cell;
+    }
+
+    empty(heap) {
+        return !heap.list.length;
+    }
+
     onion_search(start, end, layering) {
         let node_map = [];
         for (let i = 0; i < this.size; i++) {
@@ -1463,12 +1484,13 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        let node_heap = new binary_heap();
-        node_map[start[1]][start[0]].f = this.metric(start, end);
-        node_heap.insert(node_map[start[1]][start[0]]);
+        let node_heap = { list: [] };
 
-        while (!node_heap.empty()) {
-            let node = node_heap.pop();
+        node_map[start[1]][start[0]].f = this.metric(start, end);
+        this.insert(node_heap, node_map[start[1]][start[0]]);
+
+        while (!this.empty(node_heap)) {
+            let node = this.pop(node_heap);
             let head = node.key;
 
             if (head[0] === end[0] && head[1] === end[1]) {
@@ -1496,7 +1518,7 @@ class MyRobot extends BCAbstractRobot {
                 object.trace = node;
                 object.g = total;
                 object.f = total + this.metric(square, end);
-                node_heap.insert(object);
+                this.insert(node_heap, object);
             }
         }
 
@@ -1519,7 +1541,7 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        let node_heap = new binary_heap();
+        let node_heap = { list: [] };
 
         let node = node_map[start[1]][start[0]];
         node.f = this.metric(start, end);
@@ -1540,11 +1562,11 @@ class MyRobot extends BCAbstractRobot {
             cell.trace = node;
             cell.g = total;
             cell.f = total + this.metric(target, end);
-            node_heap.insert(cell);
+            this.insert(node_heap, cell);
         }
 
-        while (!node_heap.empty()) {
-            node = node_heap.pop();
+        while (!this.empty(node_heap)) {
+            node = this.pop(node_heap);
             head = node.key;
 
             if (head[0] === end[0] && head[1] === end[1]) {
@@ -1575,7 +1597,7 @@ class MyRobot extends BCAbstractRobot {
                 object.trace = node;
                 object.g = total;
                 object.f = total + this.metric(square, end);
-                node_heap.insert(object);
+                this.insert(node_heap, object);
             }
         }
 
@@ -1598,7 +1620,7 @@ class MyRobot extends BCAbstractRobot {
             }
         }
 
-        let node_heap = new binary_heap();
+        let node_heap = { list: [] };
 
         let node = node_map[start[1]][start[0]];
         node.f = this.metric(start, end);
@@ -1619,11 +1641,11 @@ class MyRobot extends BCAbstractRobot {
             cell.trace = node;
             cell.g = total;
             cell.f = total + this.metric(target, end);
-            node_heap.insert(cell);
+            this.insert(node_heap, cell);
         }
 
-        while (!node_heap.empty()) {
-            node = node_heap.pop();
+        while (!this.empty(node_heap)) {
+            node = this.pop(node_heap);
             head = node.key;
 
             if (head[0] === end[0] && head[1] === end[1]) {
@@ -1651,7 +1673,7 @@ class MyRobot extends BCAbstractRobot {
                 object.trace = node;
                 object.g = total;
                 object.f = total + this.metric(square, end);
-                node_heap.insert(object);
+                this.insert(node_heap, object);
             }
         }
 
@@ -2387,36 +2409,24 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_in_attack_range(robot) {
-        const min_attack_range = [1, 0, 0, 1, 16, 1];
-        const max_attack_range = [64, 0, 0, 16, 64, 16];
-
         let range = this.distance_to([robot.x, robot.y]);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
     }
 
     is_in_attack_range_of(robot) {
-        const min_attack_range = [1, 0, 0, 1, 16, 1];
-        const max_attack_range = [64, 0, 0, 16, 64, 26];
-
         let range = this.distance_to([robot.x, robot.y]);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
     }
 
     is_square_in_attack_range_of(square, robot) {
-        const min_attack_range = [1, 0, 0, 1, 16, 1];
-        const max_attack_range = [64, 0, 0, 16, 64, 26];
-
         let range = this.distance(square, [robot.x, robot.y]);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
     }
 
     is_unit_on_square_able_to_attack(unit, square, target) {
-        const min_attack_range = [1, 0, 0, 1, 16, 1];
-        const max_attack_range = [64, 0, 0, 16, 64, 26];
-
         let range = this.distance(square, target);
         return ((range <= max_attack_range[unit])
             && (range >= min_attack_range[unit]));
@@ -2524,17 +2534,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_reachable_squares_for_crusaders() {
-        const ring_three = [
-            [0, -3], [1, -2], [2, -2], [2, -1],
-            [3, 0], [2, 1], [2, 2], [1, 2],
-            [0, 3], [-1, 2], [-2, 2], [-2, 1],
-            [-3, 0], [-2, -1], [-2, -2], [-1, -2]];
-        const ring_two = [
-            [0, -2], [1, -1], [2, 0], [1, 1],
-            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
-        const ring_one = [
-            [0, -1], [1, 0], [0, 1], [-1, 0]];
-
         let x = this.me.x;
         let y = this.me.y;
 
@@ -2562,12 +2561,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_reachable_squares_for_preachers() {
-        const ring_two = [
-            [0, -2], [1, -1], [2, 0], [1, 1],
-            [0, 2], [-1, 1], [-2, 0], [-1, -1]];
-        const ring_one = [
-            [0, -1], [1, 0], [0, 1], [-1, 0]];
-
         let x = this.me.x;
         let y = this.me.y;
 
@@ -2916,4 +2909,39 @@ class MyRobot extends BCAbstractRobot {
 
         return this.get_closest_robot_with_distance(deposit_points)[1];
     }
+}
+
+function compare(a, b) {
+    return a.f > b.f ? 1 : a.f < b.f ? -1 : 0;
+}
+
+function heapify(heap, i) {
+    let l = 2 * i + 1;
+    let r = 2 * i + 2;
+    let smallest = i;
+    if (l < heap.list.length && compare(heap.list[l], heap.list[i]) < 0) {
+        smallest = l;
+    }
+    if (r < heap.list.length
+            && compare(heap.list[r], heap.list[smallest]) < 0) {
+        smallest = r;
+    }
+    if (smallest !== i) {
+        swap(heap.list, i, smallest);
+        heapify(heap, smallest);
+    }
+}
+
+function swap(array, a, b) {
+    let temp = array[a];
+    array[a] = array[b];
+    array[b] = temp;
+}
+
+function parent_of(i) {
+    if (i === 0) {
+        return null;
+    }
+
+    return Math.floor((i - 1) / 2);
 }
