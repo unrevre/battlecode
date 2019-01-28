@@ -809,7 +809,6 @@ class MyRobot extends BCAbstractRobot {
             }
 
             let enemies = this.filter_visible_enemy_robots(visibles);
-            let attackables = this.filter_attackable_robots(enemies);
 
             if (enemies.length > 0) {
                 let point = this.get_splash_attack();
