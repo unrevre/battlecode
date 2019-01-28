@@ -676,8 +676,7 @@ class MyRobot extends BCAbstractRobot {
             // TODO: consider using pilgrims for vision
 
             this.path = this.get_path_to(
-                this.get_crusader_target_for(this.target, enemies),
-                this.get_three_onion_rings_around);
+                this.target, this.get_three_onion_rings_around.bind(this));
 
             this.log('  target: ' + this.target);
 
@@ -779,7 +778,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             this.path = this.get_path_to(
-                this.target, this.get_two_onion_rings_around);
+                this.target, this.get_two_onion_rings_around.bind(this));
 
             this.log('  target: ' + this.target);
 
@@ -857,7 +856,7 @@ class MyRobot extends BCAbstractRobot {
 
             this.target = this.get_preacher_target_for(this.target, enemies);
             this.path = this.get_path_to(
-                this.target, this.get_two_onion_rings_around);
+                this.target, this.get_two_onion_rings_around.bind(this));
 
             this.log('  target: ' + this.target);
 
