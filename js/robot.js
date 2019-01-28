@@ -279,6 +279,7 @@ class MyRobot extends BCAbstractRobot {
                 let robot = radioing[i];
                 let message = this.decode_coordinates(robot.signal);
                 if (step === 0 && robot.unit === SPECS.PILGRIM
+                        && robot.signal_radius == 2
                         && robot.team === this.me.team) {
                     this.target = message[0];
                     this.mark = message[1];
@@ -392,7 +393,8 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_allied_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit < 2 && this.memory == null) {
+                if (robot.signal_radius == 2 && robot.team == this.me.team
+                        && robot.unit < 2 && this.memory == null) {
                     let message = this.decode_coordinates(robot.signal);
                     this.target = message[0];
                     this.mark = message[1];
@@ -595,16 +597,14 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit < 2 && robot.x === this.fountain[0]
+                if (robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
-                    if (this.target == null) {
-                        let signal = this.decode_coordinates(robot.signal);
-                        this.memory = signal[0];
-                        this.mark = signal[1];
-                        this.tag = signal[2];
-                        this.target = this.memory;
-                        break;
-                    }
+                    let signal = this.decode_coordinates(robot.signal);
+                    this.memory = signal[0];
+                    this.mark = signal[1];
+                    this.tag = signal[2];
+                    this.target = this.memory;
+                    break;
                 }
             }
 
@@ -700,16 +700,14 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit < 2 && robot.x === this.fountain[0]
+                if (robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
-                    if (this.memory == null) {
-                        let signal = this.decode_coordinates(robot.signal)[0];
-                        this.memory = signal[0];
-                        this.mark = signal[1];
-                        this.tag = signal[2];
-                        this.target = this.memory;
-                        break;
-                    }
+                    let signal = this.decode_coordinates(robot.signal);
+                    this.memory = signal[0];
+                    this.mark = signal[1];
+                    this.tag = signal[2];
+                    this.target = this.memory;
+                    break;
                 }
             }
 
@@ -804,16 +802,14 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.unit < 2 && robot.x === this.fountain[0]
+                if (robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
-                    if (this.memory == null) {
-                        let signal = this.decode_coordinates(robot.signal)[0];
-                        this.memory = signal[0];
-                        this.mark = signal[1];
-                        this.tag = signal[2];
-                        this.target = this.memory;
-                        break;
-                    }
+                    let signal = this.decode_coordinates(robot.signal);
+                    this.memory = signal[0];
+                    this.mark = signal[1];
+                    this.tag = signal[2];
+                    this.target = this.memory;
+                    break;
                 }
             }
 
