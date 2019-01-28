@@ -205,6 +205,15 @@ class MyRobot extends BCAbstractRobot {
                     break;
             }
 
+            if (step > 750) {
+                // check resources
+                this.enqueue_unit(SPECS.CRUSADER,
+                    this.objective, this.objective, 3);
+            } else if (step > 900) {
+                this.enqueue_unit(SPECS.PREACHER,
+                    this.objective, this.objective, 3);
+            }
+
             // queue pilgrims on all available local resources after clearing
             // initial build queue
             // TODO: check and replenish pilgrims occasionally if time allows
