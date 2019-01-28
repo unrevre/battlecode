@@ -440,7 +440,8 @@ class MyRobot extends BCAbstractRobot {
                     if (this.distance_to_nearest_deposit_point(visibles) < 16) {
                         church = null; }
 
-                    if (church != null) {
+                    if (church != null && this.karbonite >= 50
+                            && this.fuel >= 200) {
                         this.signal(this.encode_coordinates(
                             this.memory, this.mark, 0), 2);
                         this.fountain = church;
@@ -515,6 +516,10 @@ class MyRobot extends BCAbstractRobot {
             if (this.mode === 1) {
                 this.target = this.evade_threat_from(
                     this.get_threat_direction_from(attacking)); }
+
+            if (this.target == null && this.mission === 1
+                    && this.objective != null) {
+                this.target = this.objective; }
 
             // mine resources if safe and appropriate
             // TODO: deposit resources more frequently when necessary so that
