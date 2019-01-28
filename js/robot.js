@@ -18,6 +18,7 @@ class MyRobot extends BCAbstractRobot {
 
         this.castles = 0;
         this.mark = 0;
+        this.tag = 0;
 
         this.castle_points = [];
         this.deposit_points = [];
@@ -588,7 +589,10 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.target == null) {
-                        this.memory = this.decode_coordinates(robot.signal)[0];
+                        let signal = this.decode_coordinates(robot.signal);
+                        this.memory = signal[0];
+                        this.mark = signal[1];
+                        this.tag = signal[2];
                         this.target = this.memory;
                         break;
                     }
@@ -598,7 +602,24 @@ class MyRobot extends BCAbstractRobot {
             // TODO: overhaul attack targeting system
             let enemies = this.filter_visible_enemy_robots(visibles);
 
-            // TODO: castle destruction confirmation
+            // castle destruction confirmation
+            if (this.memory != null && this.distance_to(this.memory) < 50
+                    && this.tag === 0x3) {
+                let castle_presence = null;
+                for (let i = 0; i < enemies.length; i++) {
+                    if (enemies[i].unit === 0) {
+                        castle_presence = enemies[i];
+                        break;
+                    }
+                }
+
+                if (castle_presence == null) {
+                    let message = this.encode_coordinates(
+                        this.memory, this.mark, 2);
+                    this.signal(message, this.distance_to(this.fountain));
+                }
+            }
+
             // clear target after arrival
             if (this.target != null && this.me.x === this.target[0]
                     && this.me.y === this.target[1]) {
@@ -673,7 +694,10 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
-                        this.memory = this.decode_coordinates(robot.signal)[0];
+                        let signal = this.decode_coordinates(robot.signal)[0];
+                        this.memory = signal[0];
+                        this.mark = signal[1];
+                        this.tag = signal[2];
                         this.target = this.memory;
                         break;
                     }
@@ -774,7 +798,10 @@ class MyRobot extends BCAbstractRobot {
                 if (robot.unit < 2 && robot.x === this.fountain[0]
                         && robot.y === this.fountain[1]) {
                     if (this.memory == null) {
-                        this.memory = this.decode_coordinates(robot.signal)[0];
+                        let signal = this.decode_coordinates(robot.signal)[0];
+                        this.memory = signal[0];
+                        this.mark = signal[1];
+                        this.tag = signal[2];
                         this.target = this.memory;
                         break;
                     }
