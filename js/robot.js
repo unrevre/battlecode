@@ -1116,6 +1116,7 @@ class MyRobot extends BCAbstractRobot {
         let y = vector[1];
 
         let max = Math.max(Math.abs(x), Math.abs(y));
+        if (max === 0) { return [0, 0]; }
 
         return [Math.round(x / max), Math.round(y / max)];
     }
@@ -1725,7 +1726,7 @@ class MyRobot extends BCAbstractRobot {
             return this.get_buildable_square_closest_to(target, adjacent);
         } else {
             if (target == null) {
-                return this.get_defensive_buildable_square(allies);
+                return this.get_defensive_buildable_square(allies, adjacent);
             } else {
                 return this.get_offensive_buildable_square(
                     unit, target, adjacent, enemies);
@@ -1757,7 +1758,8 @@ class MyRobot extends BCAbstractRobot {
             : this.get_aligned_compass_direction_from(
                 [this.objective[0] - this.me.x, this.objective[1] - this.me.y]);
 
-        return this.get_buildable_square_closest_to(direction, adjacent);
+        return this.get_buildable_square_closest_to(
+            [this.me.x + direction[0], this.me.y + direction[1]], adjacent);
     }
 
     get_offensive_buildable_square(unit, target, adjacent, enemies) {
