@@ -12,7 +12,7 @@ const ring_one = [
     [0, -1], [1, 0], [0, 1], [-1, 0]];
 
 const min_attack_range = [1, 0, 0, 1, 16, 1];
-const max_attack_range = [64, 0, 0, 16, 64, 16];
+const max_attack_range = [64, 0, 0, 16, 64, 26];
 
 let step = -1;
 
@@ -679,7 +679,7 @@ class MyRobot extends BCAbstractRobot {
             if (this.target == null && (this.is_adjacent(this.fountain)
                     || this.is_on_resource(this.karbonite_map)
                     || this.is_on_resource(this.fuel_map))) {
-                this.target = this.get_closest_square_by_distance(
+                this.target = this.get_closest_square(
                     this.get_next_to_adjacent_passable_empty_squares_at(
                         this.fountain)); }
 
@@ -849,7 +849,7 @@ class MyRobot extends BCAbstractRobot {
                     || this.is_on_resource(this.fuel_map))) {
                 // move off buildable squares, resources
                 // TODO: move in current direction away from fountain
-                this.target = this.get_closest_square_by_distance(
+                this.target = this.get_closest_square(
                     this.get_next_to_adjacent_passable_empty_squares_at(
                         this.fountain)); }
 
@@ -1112,10 +1112,6 @@ class MyRobot extends BCAbstractRobot {
         return this.get_adjacent_passable_empty_squares();
     }
 
-    get_buildable_squares_at(square) {
-        return this.get_adjacent_passable_empty_squares_at(square);
-    }
-
     get_aligned_compass_direction_from(vector) {
         let x = vector[0];
         let y = vector[1];
@@ -1146,12 +1142,12 @@ class MyRobot extends BCAbstractRobot {
             + (this.me.y - s[1]) * (this.me.y - s[1]);
     }
 
-    get_closest_distance(square, targets) {
-        if (targets.length === 0) { return null; }
+    get_closest_distance(target, squares) {
+        if (squares.length === 0) { return null; }
 
         let minimum = 16384;
-        for (let i = 0; i < targets.length; i++) {
-            let distance = this.distance(square, targets[i]);
+        for (let i = 0; i < squares.length; i++) {
+            let distance = this.distance(target, squares[i]);
             if (distance < minimum) {
                 minimum = distance; }
         }
@@ -1159,7 +1155,7 @@ class MyRobot extends BCAbstractRobot {
         return minimum;
     }
 
-    get_closest_square_by_distance(squares) {
+    get_closest_square(squares) {
         if (squares.length === 0) { return null; }
 
         let index = 0;
@@ -1175,7 +1171,7 @@ class MyRobot extends BCAbstractRobot {
         return squares[index];
     }
 
-    get_closest_square_by_distance_from(target, squares) {
+    get_closest_square_to(target, squares) {
         // assume squares has nonzero length
 
         let index = 0;
@@ -1191,7 +1187,7 @@ class MyRobot extends BCAbstractRobot {
         return squares[index];
     }
 
-    get_closest_squares_by_distance_from(target, squares) {
+    get_closest_squares_to(target, squares) {
         // assume squares has nonzero length
         let closest = [];
 
@@ -1210,11 +1206,11 @@ class MyRobot extends BCAbstractRobot {
         return closest;
     }
 
-    index_of_closest_target_by_distance_from(square, targets) {
+    index_of_closest_square_to(target, squares) {
         let index = 0;
         let minimum = 16384;
-        for (let i = 0; i < targets.length; i++) {
-            let distance = this.distance(square, targets[i]);
+        for (let i = 0; i < squares.length; i++) {
+            let distance = this.distance(target, squares[i]);
             if (distance < minimum) {
                 index = i;
                 minimum = distance;
@@ -1698,39 +1694,9 @@ class MyRobot extends BCAbstractRobot {
         return ordered;
     }
 
-    step_towards(direction) {
-        if (isNaN(direction[0]) || isNaN(direction[1])) {
-            return [this.me.x, this.me.y]; }
-
-        let steps = [[this.me.x, this.me.y]];
-
-        for (let i = 0; i < 4; i++) {
-            steps.push([steps[i][0] + direction[0],
-                        steps[i][1] + direction[1]]); }
-
-        for (let i = 4; i > 0; i--) {
-            if (this.is_passable(steps[i])) {
-                return steps[i]; } }
-
-        return [this.me.x, this.me.y];
-    }
-
     /*
      * high-level optimisations
      */
-
-    get_buildable_square_for(unit, target, allies, enemies) {
-        if (unit === SPECS.PILGRIM) {
-            return this.get_buildable_square_closest_to(target);
-        } else {
-            if (target == null) {
-                return this.get_buildable_square_supporting(allies);
-            } else {
-                return this.get_buildable_square_for_attacking(
-                    unit, target, enemies);
-            }
-        }
-    }
 
     get_safe_buildable_square_closest_to(enemies) {
         let adjacent = this.get_buildable_squares();
@@ -1752,15 +1718,25 @@ class MyRobot extends BCAbstractRobot {
         return adjacent[this.index_of_minimum_element_in(distance)];
     }
 
-    get_buildable_square_closest_to(target) {
+    get_buildable_square_for(unit, target, allies, enemies) {
         let adjacent = this.get_buildable_squares();
         if (adjacent.length === 0) { return null; }
 
-        if (!this.is_passable(target) || this.distance_to(target) > 400) {
-            return this.get_closest_square_by_distance_from(target, adjacent); }
+        if (unit === SPECS.PILGRIM) {
+            return this.get_buildable_square_closest_to(target, adjacent);
+        } else {
+            if (target == null) {
+                return this.get_defensive_buildable_square(allies);
+            } else {
+                return this.get_offensive_buildable_square(
+                    unit, target, adjacent, enemies);
+            }
+        }
+    }
 
-        if (this.me.x === target[0] && this.me.y === target[1]) {
-            return this.get_buildable_square_closest_to(this.objective); }
+    get_buildable_square_closest_to(target, adjacent) {
+        if (!this.is_passable(target) || this.distance_to(target) > 400) {
+            return this.get_closest_square_to(target, adjacent); }
 
         let steps = [];
         for (let i = 0; i < adjacent.length; i++) {
@@ -1775,32 +1751,29 @@ class MyRobot extends BCAbstractRobot {
         return adjacent[this.index_of_minimum_element_in(steps)];
     }
 
-    get_buildable_square_supporting(allies) {
+    get_defensive_buildable_square(allies, adjacent) {
         let direction = (allies.length < 10)
             ? this.get_aligned_compass_direction_from(
                 this.get_vector_sum_of_metric_weighted_directions(allies))
             : this.get_aligned_compass_direction_from(
                 [this.objective[0] - this.me.x, this.objective[1] - this.me.y]);
 
-        return this.get_buildable_square_closest_to(
-            this.step_towards(direction));
+        return this.get_buildable_square_closest_to(direction, adjacent);
     }
 
-    get_buildable_square_for_attacking(unit, target, enemies) {
-        let adjacent = this.get_buildable_squares();
-        if (adjacent.length === 0) { return null; }
-
+    get_offensive_buildable_square(unit, target, adjacent, enemies) {
         if (this.is_square_visible(target)) {
             let candidates = [];
             for (let i = 0; i < adjacent.length; i++) {
                 let square = adjacent[i];
-                if (this.is_unit_on_square_able_to_attack(unit, square, target)) {
-                    candidates.push(square);
-                }
+                if (this.is_unit_on_square_able_to_attack(
+                        unit, square, target)) {
+                    candidates.push(square); }
             }
 
             if (candidates.length === 0) {
-                return this.get_buildable_square_closest_to(target); }
+                return this.get_closest_square_to(
+                    target, adjacent); }
 
             let predamage = [];
             for (let i = 0; i < candidates.length; i++) {
@@ -1811,7 +1784,7 @@ class MyRobot extends BCAbstractRobot {
             return candidates[this.index_of_minimum_element_in(predamage)];
         }
 
-        return this.get_buildable_square_closest_to(target);
+        return this.get_buildable_square_closest_to(target, adjacent);
     }
 
     get_optimal_square_by_adjacent_resources(square) {
@@ -1881,10 +1854,10 @@ class MyRobot extends BCAbstractRobot {
             if (this.is_adjacent(target)) { return null; }
 
             let adjacent = this.get_adjacent_passable_empty_squares_at(target);
-            let closest = this.get_closest_square_by_distance(adjacent);
+            let closest = this.get_closest_square(adjacent);
             if (closest != null) { return closest; }
 
-            return this.get_closest_square_by_distance(
+            return this.get_closest_square(
                 this.get_next_to_adjacent_passable_empty_squares_at(target));
         }
 
@@ -1977,8 +1950,7 @@ class MyRobot extends BCAbstractRobot {
 
         // TODO: different modes: brave, braver
 
-        let closest = this.get_closest_squares_by_distance_from(
-            target, forward);
+        let closest = this.get_closest_squares_to(target, forward);
         let damage = this.total_damage_on_squares_from(closest, enemies);
 
         return closest[this.index_of_minimum_element_in(damage)];
@@ -2040,8 +2012,7 @@ class MyRobot extends BCAbstractRobot {
             return adjacent[this.index_of_minimum_element_in(damage)];
         }
 
-        let closest = this.get_closest_squares_by_distance_from(
-            target, forward);
+        let closest = this.get_closest_squares_to(target, forward);
         let damage = this.total_damage_on_squares_from(closest, enemies);
 
         return closest[this.index_of_minimum_element_in(damage)];
@@ -2816,14 +2787,14 @@ class MyRobot extends BCAbstractRobot {
 
             if (candidate == null) { return; }
 
-            let index = this.index_of_closest_target_by_distance_from(
+            let index = this.index_of_closest_square_to(
                 candidate, this.deposit_points);
             if (index === 0) {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate, 1);
                 this.patience = 15;
             } else if (index > this.castles) {
                 // send signal to church
-                let near_castle = this.get_closest_square_by_distance_from(
+                let near_castle = this.get_closest_square_to(
                     this.deposit_points[index], this.castle_points);
                 if (this.me.x === near_castle[0]
                         && this.me.y === near_castle[1]) {
