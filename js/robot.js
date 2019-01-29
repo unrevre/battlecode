@@ -2434,13 +2434,18 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_weighted_unit_count_around(square) {
+        let x = square[0];
+        let y = square[1];
+
         let robot_map = this.get_visible_robot_map();
 
-        let count = this.weighted_unit_count(square, robot_map);
-
-        let adjacent = this.get_adjacent_passable_squares_at(square);
-        for (let i = 0; i < adjacent.length; i++) {
-            count += this.weighted_unit_count(adjacent[i], robot_map); }
+        let count = 0;
+        for (let i = -1; i < 2; i++) {
+            for (let j = -1; j < 2; j++) {
+                let target = [x + j, y + i];
+                count += this.weighted_unit_count(target, robot_map);
+            }
+        }
 
         return count;
     }
