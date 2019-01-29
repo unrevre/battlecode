@@ -835,7 +835,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // don't stray too far
-            if (this.target != null && this.is_square_visible(this.target)) {
+            if (this.target != null && this.distance_to(this.target) < 5) {
                 this.target = null; }
 
             // clear target after arrival
