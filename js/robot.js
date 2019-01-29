@@ -865,9 +865,9 @@ class MyRobot extends BCAbstractRobot {
                 // TODO: implement daisy chaining resources back to base
             }
 
-            this.target = this.get_preacher_target_for(this.target, enemies);
             this.path = this.get_path_to(
-                this.target, this.get_two_onion_rings_around.bind(this));
+                this.get_preacher_target_for(this.target, enemies),
+                this.get_two_onion_rings_around.bind(this));
 
             this.log('  target: ' + this.target);
 
