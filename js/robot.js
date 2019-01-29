@@ -2281,6 +2281,18 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
+    filter_immobile_robots(robots) {
+        let filtered = [];
+
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (robot.unit < 2) {
+                filtered.push(robot); }
+        }
+
+        return filtered;
+    }
+
     filter_robots_attacking_square(square, robots) {
         let filtered = [];
 
@@ -2467,6 +2479,19 @@ class MyRobot extends BCAbstractRobot {
         return [robots[index], minimum];
     }
 
+    get_distance_to_closest_robot(robots) {
+        if (robots.length === 0) { return null; }
+
+        let minimum = 100;
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            let distance = this.distance_to([robot.x, robot.y]);
+            if (distance < minimum) { minimum = distance; }
+        }
+
+        return minimum;
+    }
+
     get_coordinates_of_closest_robot(robots) {
         let robot = this.get_closest_robot(robots);
         if (robot == null) { return null; }
@@ -2483,6 +2508,14 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return grouped;
+    }
+
+    distance_to_nearest_deposit_point(visibles) {
+        let allies = this.filter_allied_robots(visibles);
+        let deposit_points = this.filter_immobile_robots(allies);
+        if (deposit_points.length === 0) { return 16384; }
+
+        return this.get_distance_to_closest_robot(deposit_points);
     }
 
     get_reachable_squares_for_crusaders() {
@@ -2846,20 +2879,6 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return index;
-    }
-
-    /*
-     * other
-     */
-
-    distance_to_nearest_deposit_point(visibles) {
-        let allies = this.filter_allied_robots(visibles);
-        let allied_units = this.group_by_unit_types(allies);
-
-        let deposit_points = allied_units[0].concat(allied_units[1]);
-        if (deposit_points.length === 0) { return 16384; }
-
-        return this.get_closest_robot_with_distance(deposit_points)[1];
     }
 }
 
