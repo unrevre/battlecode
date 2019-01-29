@@ -110,8 +110,7 @@ class MyRobot extends BCAbstractRobot {
             let castling = this.filter_castling_robots(visibles);
             for (let i = 0; i < castling.length; i++) {
                 let robot = castling[i];
-                if (robot.id !== this.me.id) {
-                    this.process_castle_talk(robot, robot.castle_talk); }
+                this.process_castle_talk(robot, robot.castle_talk);
             }
 
             switch (step) {
@@ -298,7 +297,7 @@ class MyRobot extends BCAbstractRobot {
                     this.memory = this.target;
                     this.local_resources[0].occupied[message[0]] = true;
                     break;
-                } else if (message[2] === 1 && robot.id !== this.me.id
+                } else if (message[2] === 1
                         && robot.signal_radius == this.distance_to(
                             [robot.x, robot.y])) {
                     this.mark = message[1];
@@ -2165,7 +2164,8 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (robot.team === this.me.team && robot.castle_talk !== 0) {
+            if (robot.team === this.me.team && robot.id !== this.me.id
+                    && robot.castle_talk !== 0) {
                 filtered.push(robot); }
         }
 
@@ -2177,7 +2177,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (this.is_radioing(robot)) {
+            if (this.is_radioing(robot) && robot.id !== this.me.id) {
                 filtered.push(robot); }
         }
 
