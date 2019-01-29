@@ -2047,25 +2047,6 @@ class MyRobot extends BCAbstractRobot {
         return closest[this.index_of_minimum_element_in(damage)];
     }
 
-    get_final_target_for(target) {
-        if (target != null && !this.is_passable_and_empty(target)) {
-            target = this.smear_centred(target); }
-
-        return target;
-    }
-
-    smear_centred(square) {
-        let squares = this.get_adjacent_passable_empty_squares_at(square);
-        if (squares.length === 0) {
-            squares = this.get_next_to_adjacent_passable_empty_squares_at(
-                square); }
-
-        if (squares.length > 0) {
-            return squares[Math.floor(Math.random() * squares.length)]; }
-
-        return null;
-    }
-
     get_path_to(target, layering) {
         if (target == null) { return null; }
 
