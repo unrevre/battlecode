@@ -687,7 +687,8 @@ class MyRobot extends BCAbstractRobot {
             // TODO: consider using pilgrims for vision
 
             this.path = this.get_path_to(
-                this.target, this.get_three_onion_rings_around.bind(this));
+                this.get_crusader_target_for(this.target, enemies),
+                this.get_three_onion_rings_around.bind(this));
 
             this.log('  target: ' + this.target);
 
@@ -1187,6 +1188,18 @@ class MyRobot extends BCAbstractRobot {
         return squares[index];
     }
 
+    get_concave_squares_on(target, squares) {
+        let concave = [];
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            if (this.is_unit_on_square_able_to_attack(
+                    this.me.unit, square, target)) {
+                concave.push(square); }
+        }
+
+        return this.get_closest_square(concave);
+    }
+
     get_closest_squares_to(target, squares) {
         // assume squares has nonzero length
         let closest = [];
@@ -1427,6 +1440,36 @@ class MyRobot extends BCAbstractRobot {
             let rngx = x + ring_one[i][0];
             let rngy = y + ring_one[i][1];
             if (this.is_passable_and_empty([rngx, rngy])) {
+                adjacent.push([rngx, rngy]); }
+        }
+
+        return adjacent;
+    }
+
+    get_three_raw_onion_rings_around(square) {
+        let x = square[0];
+        let y = square[1];
+
+        let adjacent = [];
+
+        for (let i = 0; i < 16; i++) {
+            let rngx = x + ring_three[i][0];
+            let rngy = y + ring_three[i][1];
+            if (this.is_passable([rngx, rngy])) {
+                adjacent.push([rngx, rngy]); }
+        }
+
+        for (let i = 0; i < 8; i++) {
+            let rngx = x + ring_two[i][0];
+            let rngy = y + ring_two[i][1];
+            if (this.is_passable([rngx, rngy])) {
+                adjacent.push([rngx, rngy]); }
+        }
+
+        for (let i = 0; i < 4; i++) {
+            let rngx = x + ring_one[i][0];
+            let rngy = y + ring_one[i][1];
+            if (this.is_passable([rngx, rngy])) {
                 adjacent.push([rngx, rngy]); }
         }
 
@@ -1927,17 +1970,14 @@ class MyRobot extends BCAbstractRobot {
     get_crusader_target_for(target, enemies) {
         if (target == null) { return null; }
 
-        if (this.distance_to(target) > 121) { return target; }
+        if (!this.is_square_visible(target)) { return target; }
 
-        // TODO: special targeting for rushes
         // TODO: attempt to position itself directly between enemy units in a
         // line if preachers exist (or next to the castle)
 
-        if (this.is_square_safe(target, enemies)) { return target; }
-
         let movable = this.get_reachable_squares_for_crusaders();
-        let forward = this.filter_by_distance_less_than(
-            movable, this.distance_to(target));
+        let forward = this.filter_by_distance_to_target_less_than(
+            target, movable, this.distance_to(target));
 
         if (forward.length === 0) {
             if (this.is_safe(enemies)) { return null; }
@@ -1949,7 +1989,17 @@ class MyRobot extends BCAbstractRobot {
             return adjacent[this.index_of_minimum_element_in(damage)];
         }
 
-        // TODO: different modes: brave, braver
+        if (this.is_square_a_robot(target)) {
+            let concave = this.get_concave_squares_on(target, forward);
+            if (concave !== null) { return concave; }
+        }
+
+        if (!this.is_passable(target)) {
+            let path = this.reverse_raw_onion_search(
+                target, [this.me.x, this.me.y],
+                this.get_three_raw_onion_rings_around.bind(this));
+            return path[path.length - 2];
+        }
 
         let closest = this.get_closest_squares_to(target, forward);
         let damage = this.total_damage_on_squares_from(closest, enemies);
@@ -1997,11 +2047,11 @@ class MyRobot extends BCAbstractRobot {
     get_preacher_target_for(target, enemies) {
         if (target == null) { return null; }
 
-        if (this.distance_to(target) > 16) { return target; }
+        if (!this.is_square_visible(target)) { return target; }
 
         let movable = this.get_reachable_squares_for_preachers();
-        let forward = this.filter_by_distance_less_than(
-            movable, this.distance_to(target));
+        let forward = this.filter_by_distance_to_target_less_than(
+            target, movable, this.distance_to(target));
 
         if (forward.length === 0) {
             if (this.is_safe(enemies)) { return null; }
@@ -2011,6 +2061,13 @@ class MyRobot extends BCAbstractRobot {
 
             let damage = this.total_damage_on_squares_from(adjacent, enemies);
             return adjacent[this.index_of_minimum_element_in(damage)];
+        }
+
+        if (!this.is_passable(target)) {
+            let path = this.reverse_raw_onion_search(
+                target, [this.me.x, this.me.y],
+                this.get_two_raw_onion_rings_around.bind(this));
+            return path[path.length - 2];
         }
 
         let closest = this.get_closest_squares_to(target, forward);
@@ -2119,6 +2176,18 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
             if (this.distance_to(square) < value) {
+                filtered.push(square); }
+        }
+
+        return filtered;
+    }
+
+    filter_by_distance_to_target_less_than(target, squares, value) {
+        let filtered = [];
+
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            if (this.distance(square, target) < value) {
                 filtered.push(square); }
         }
 
@@ -2412,6 +2481,12 @@ class MyRobot extends BCAbstractRobot {
                 return false; } }
 
         return true;
+    }
+
+    is_square_a_robot(square) {
+        let robot_map = this.get_visible_robot_map();
+
+        return robot_map[square[1]][square[0]] > 0;
     }
 
     count_attacks_on(square, enemies) {
