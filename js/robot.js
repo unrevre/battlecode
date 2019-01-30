@@ -1865,13 +1865,18 @@ class MyRobot extends BCAbstractRobot {
         let adjacent = this.get_buildable_squares();
         if (adjacent.length === 0) { return null; }
 
-        let counts = [];
-
+        let scores = [];
         for (let i = 0; i < adjacent.length; i++) {
-            counts.push(this.score_resource_squares_around(adjacent[i]) * 10
-                - this.count_adjacent_impassable_squares_around(adjacent[i])); }
+            let square = adjacent[i];
+            let score = this.score_resource_squares_around(square) * 10
+                - this.count_adjacent_impassable_squares_around(square);
+            if (this.is_resource(square, this.karbonite_map)
+                    || this.is_resource(square, this.fuel_map)) {
+                score -= 30; }
+            scores.push(score);
+        }
 
-        return adjacent[this.index_of_maximum_element_in(counts)];
+        return adjacent[this.index_of_maximum_element_in(scores)];
     }
 
     get_pilgrimage_path_to(target) {
