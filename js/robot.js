@@ -437,17 +437,19 @@ class MyRobot extends BCAbstractRobot {
                     && this.distance_to(this.memory) <= 100
                     && this.distance_to(this.fountain) > 49) {
                 let nearest = this.get_closest_robot(enemies);
-                if (enemies.length === 1
-                        || (attacking_units.length < 4
-                            && this.only_close_range_units(attacking_units))
-                        || (this.is_available(300, 500))) {
-                    this.mode = 3;
-                    this.target = [this.me.x, this.me.y];
-                } else if (nearest.turn - 20 > this.me.turn) {
-                    this.castle_talk(0x0F);
-                    this.mission = 0;
-                    this.memory = null;
-                    this.mode = 1;
+                if (this.is_visible_to(enemies)) {
+                    if (enemies.length === 1
+                            || (attacking_units.length < 4
+                                && this.only_close_range_units(attacking_units))
+                            || (this.is_available(300, 500))) {
+                        this.mode = 3;
+                        this.target = [this.me.x, this.me.y];
+                    } else if (nearest.turn - 20 > this.me.turn) {
+                        this.castle_talk(0x0F);
+                        this.mission = 0;
+                        this.memory = null;
+                        this.mode = 1;
+                    }
                 }
             }
 
@@ -2449,6 +2451,19 @@ class MyRobot extends BCAbstractRobot {
         if (robot_id < 1) { return false; }
 
         return this.get_robot(robot_id).team === this.me.team;
+    }
+
+    is_visible_to(robots) {
+        const vision_range = [100, 100, 100, 49, 64, 16];
+
+        for (let i = 0; i < robots.length; i++) {
+            let robot = robots[i];
+            if (this.distance_to([robot.x, robot.y])
+                    < vision_range[robot.unit]) {
+                return true; }
+        }
+
+        return false;
     }
 
     is_in_attack_range(robot) {
