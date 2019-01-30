@@ -2885,8 +2885,23 @@ class MyRobot extends BCAbstractRobot {
         let priority = this.evaluate_priority_for_each(
             resources, allied_bases, enemy_bases);
 
-        let index = this.index_of_maximum_element_in(priority);
-        if (index != null) { return resources[index]; }
+        let indices = this.indices_of_maximum_elements_in(priority);
+        if (indices.length > 0) {
+            if (indices.length > 1) {
+                let prioritised = [];
+                let distances = [];
+                for (let i = 0; i < indices.length; i++) {
+                    let index = indices[i];
+                    prioritised.push(resources[index]);
+                    distances.push(this.get_closest_distance(
+                        resources[index], allied_bases));
+                }
+
+                return prioritised[this.index_of_minimum_element_in(distances)];
+            } else {
+                return resources[indices[0]];
+            }
+        }
 
         return null;
     }
@@ -2961,6 +2976,21 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return index;
+    }
+
+    indices_of_maximum_elements_in(values) {
+        let indices = [];
+
+        let maximum = -16384;
+        for (let i = 0; i < values.length; i++) {
+            let value = values[i];
+            if (value >= maximum) {
+                maximum = value;
+                indices.push(i);
+            }
+        }
+
+        return indices;
     }
 }
 
