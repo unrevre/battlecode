@@ -36,6 +36,8 @@ class MyRobot extends BCAbstractRobot {
         this.deposit_points = [];
         this.objectives = [];
 
+        this.confirmation = {};
+
         this.objective = null;
 
         this.local_resources = [];
@@ -2114,6 +2116,7 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < this.deposit_points.length; i++) {
             if (this.distance(coordinates, this.deposit_points[i]) < 9) {
                 this.deposit_points[i] = coordinates.slice();
+                this.confirmation[this.deposit_points[i]] = true;
                 return;
             }
         }
@@ -2928,15 +2931,27 @@ class MyRobot extends BCAbstractRobot {
                 this.enqueue_unit(SPECS.PILGRIM, candidate, candidate, 1);
                 this.patience = 15;
             } else if (index > this.castles) {
-                // send signal to church
-                let near_castle = this.get_closest_square_to(
-                    this.deposit_points[index], this.castle_points);
-                if (this.me.x === near_castle[0]
-                        && this.me.y === near_castle[1]) {
-                    this.patience = 15;
-                    this.signal(this.encode_coordinates(
-                            candidate, this.mark, 1),
-                        this.distance_to(this.deposit_points[index]));
+                let delegate = this.deposit_points[index];
+                // check if church is even alive
+                if (this.confirmation[delegate] === true) {
+                    // send signal to church
+                    let near_castle = this.get_closest_square_to(
+                        delegate, this.castle_points);
+                    if (this.me.x === near_castle[0]
+                            && this.me.y === near_castle[1]) {
+                        this.patience = 15;
+                        this.signal(this.encode_coordinates(
+                                candidate, this.mark, 1),
+                            this.distance_to(delegate));
+                    }
+                } else {
+                    let index = this.index_of_closest_square_to(
+                        candidate, this.castle_points);
+                    if (index === 0) {
+                        this.enqueue_unit(SPECS.PILGRIM,
+                            candidate, candidate, 1);
+                        this.patience = 15;
+                    }
                 }
             }
 
