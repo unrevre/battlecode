@@ -344,7 +344,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             if (this.unit_queue.length === 0) {
-                if (Math.abs(this.me.x - this.size / 2) <= 18
+                if (Math.abs(this.me.x - this.size / 2) > 18
                         && this.is_available(200, 400)) {
                     this.enqueue_unit(SPECS.PROPHET, null, null, 0);
                 } else if (this.is_available(110, 250)) {
