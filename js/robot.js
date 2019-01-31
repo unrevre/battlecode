@@ -11,8 +11,15 @@ const ring_two = [
 const ring_one = [
     [0, -1], [1, 0], [0, 1], [-1, 0]];
 
+const karbonite_costs = [0, 50, 10, 15, 25, 30];
+const fuel_costs = [0, 200, 50, 50, 50, 50];
+
+const vision_range = [100, 100, 100, 49, 64, 16];
+
 const min_attack_range = [1, 0, 0, 1, 16, 1];
 const max_attack_range = [64, 0, 0, 16, 64, 26];
+
+const attack_damage = [10, 0, 0, 10, 10, 20];
 
 let step = -1;
 
@@ -945,8 +952,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_square_visible(square) {
-        const vision_range = [100, 100, 100, 49, 64, 16];
-
         return this.distance_to(square) < vision_range[this.me.unit];
     }
 
@@ -1314,9 +1319,6 @@ class MyRobot extends BCAbstractRobot {
      */
 
     enqueue_unit(unit, signal, target, tag) {
-        const karbonite_costs = [0, 50, 10, 15, 25, 30];
-        const fuel_costs = [0, 200, 50, 50, 50, 50];
-
         // FIXME: signals fuel cost not taken into account
         if (this.is_available(karbonite_costs[unit], fuel_costs[unit])) {
             this.unit_queue.push({
@@ -2449,8 +2451,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_visible_to(robots) {
-        const vision_range = [100, 100, 100, 49, 64, 16];
-
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (this.distance_to([robot.x, robot.y])
@@ -2667,8 +2667,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     total_damage_from(robots) {
-        const attack_damage = [10, 0, 0, 10, 10, 20];
-
         let total = 0;
 
         for (let i = 0; i < robots.length; i++) {
@@ -2688,9 +2686,6 @@ class MyRobot extends BCAbstractRobot {
     }
 
     appropriate_replacement(unit) {
-        const karbonite_costs = [0, 50, 10, 15, 25, 30];
-        const fuel_costs = [0, 200, 50, 50, 50, 50];
-
         if (this.karbonite >= karbonite_costs[unit]
                 && this.fuel >= fuel_costs[unit]) { return unit; }
 
