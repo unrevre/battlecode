@@ -108,9 +108,6 @@ class MyRobot extends BCAbstractRobot {
 
             let visibles = this.get_visible_robots();
 
-            // clear castle talk by default
-            let castle_talk_value = 0x00;
-
             // check castle talk - abuse all information available
             let castling = this.filter_castling_robots(visibles);
             for (let i = 0; i < castling.length; i++) {
@@ -118,33 +115,26 @@ class MyRobot extends BCAbstractRobot {
                 this.process_castle_talk(robot, robot.castle_talk);
             }
 
-            switch (step) {
-                case 0:
-                    this.mark = this.castles;
-                    break;
-                case 2:
-                    this.castles /= 2;
-                    for (let key in this.messages) {
-                        let coords = this.messages[key];
-                        this.castle_points.push(coords.slice());
-                        this.deposit_points.push(coords.slice());
-                        this.objectives.push(
-                            this.reflect_about_symmetry_axis(coords));
-                    }
+            if (step === 0) { this.mark = this.castles; }
+            if (step === 2) {
+                this.castles /= 2;
+                for (let key in this.messages) {
+                    let coords = this.messages[key];
+                    this.castle_points.push(coords.slice());
+                    this.deposit_points.push(coords.slice());
+                    this.objectives.push(
+                        this.reflect_about_symmetry_axis(coords));
+                }
 
-                    this.messages.length = 0;
-                    break;
+                this.messages.length = 0;
             }
+
+            // clear castle talk by default
+            this.castle_talk(0x00);
 
             // broadcast coordinates at the beginning of the game
-            switch (step) {
-                case 0:
-                    castle_talk_value = this.me.x;
-                    break;
-                case 1:
-                    castle_talk_value = this.me.y;
-                    break;
-            }
+            if (step === 0) { this.castle_talk(this.me.x); }
+            if (step === 1) { this.castle_talk(this.me.y); }
 
             // check radioing units - team available for castles
             let radioing = this.filter_allied_radioing_robots(visibles);
@@ -168,13 +158,10 @@ class MyRobot extends BCAbstractRobot {
                 let tag = message[2];
                 if (tag === 2 && this.objectives.length > 1
                         && this.is_equal_to(this.objective, coordinates)) {
-                    castle_talk_value = this.mark + 0xF0;
+                    this.castle_talk(this.mark + 0xF0);
                     this.update_objectives(this.mark);
                 }
             }
-
-            // send castle talk
-            this.castle_talk(castle_talk_value);
 
             let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
@@ -193,27 +180,28 @@ class MyRobot extends BCAbstractRobot {
                     if (prey != null) {
                         this.log('  - attack unit [' + prey.id + '], type ('
                             + prey.unit + ') at ' + prey.x + ', ' + prey.y);
-                        return this.attack(prey.x - this.me.x, prey.y - this.me.y);
+                        return this.attack(prey.x - this.me.x,
+                                           prey.y - this.me.y);
                     }
                     break;
                 }
                 case SPECS.CRUSADER:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.CRUSADER, null, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
                 case SPECS.PROPHET:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
                 case SPECS.PREACHER:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, immediate, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
             }
 
@@ -264,9 +252,6 @@ class MyRobot extends BCAbstractRobot {
             this.log('Church [' + this.me.id + '] health: ' + this.me.health
                 + ' at (' + this.me.x + ', ' + this.me.y + ')');
 
-            // clear castle talk by default
-            let castle_talk_value = 0x00;
-
             let visibles = this.get_visible_robots();
 
             if (step === 0) {
@@ -308,16 +293,11 @@ class MyRobot extends BCAbstractRobot {
             if (step === 0 && this.distance_to(this.memory) > 16) {
                 this.objective = this.memory; }
 
-            switch (step) {
-                case 0:
-                    castle_talk_value = this.me.x + 0x80;
-                    break;
-                case 1:
-                    castle_talk_value = this.me.y + 0x80;
-                    break;
-            }
+            // clear castle talk by default
+            this.castle_talk(0x00);
 
-            this.castle_talk(castle_talk_value);
+            if (step === 0) { this.castle_talk(this.me.x + 0x80); }
+            if (step === 1) { this.castle_talk(this.me.y + 0x80); }
 
             let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
@@ -330,22 +310,22 @@ class MyRobot extends BCAbstractRobot {
                     this.consider_church_expansion();
                     break;
                 case SPECS.CRUSADER:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.CRUSADER, null, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
                 case SPECS.PROPHET:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PROPHET, null, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
                 case SPECS.PREACHER:
-                    this.save_and_release_resources();
+                    this.release_reserves();
                     this.unit_queue.length = 0;
                     this.enqueue_unit(SPECS.PREACHER, immediate, immediate, 0);
-                    this.restore_resources();
+                    this.restore_reserves();
                     break;
             }
 
@@ -398,8 +378,8 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_allied_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.signal_radius == 2 && robot.team == this.me.team
-                        && robot.unit < 2 && this.memory == null) {
+                if (robot.unit < 2 && robot.signal_radius == 2
+                        && this.memory == null) {
                     let message = this.decode_coordinates(robot.signal);
                     this.target = message[0];
                     this.mark = message[1];
@@ -1239,6 +1219,11 @@ class MyRobot extends BCAbstractRobot {
         return resource_map[square[1]][square[0]];
     }
 
+    is_any_resource(square) {
+        return this.karbonite_map[square[1]][square[0]]
+            || this.fuel_map[square[1]][square[0]];
+    }
+
     get_resources(resource_map) {
         let resources = [];
 
@@ -1300,14 +1285,14 @@ class MyRobot extends BCAbstractRobot {
         this.reserved = [0, 0];
     }
 
-    save_and_release_resources() {
+    release_reserves() {
         this.backlog[0] = this.reserved[0];
         this.backlog[1] = this.reserved[1];
 
         this.reserved = [0, 0];
     }
 
-    restore_resources() {
+    restore_reserves() {
         this.reserved[0] = this.backlog[0];
         this.reserved[1] = this.backlog[1];
 
@@ -1843,8 +1828,7 @@ class MyRobot extends BCAbstractRobot {
                         - this.count_adjacent_impassable_squares_around(head)
                         - 0.01 * Math.abs(((this.size - 1) / 2)
                             - head[this.symmetry]);
-                    if (this.is_resource(head, this.karbonite_map)
-                            || this.is_resource(head, this.fuel_map)) {
+                    if (this.is_any_resource(head)) {
                         score -= 30; }
 
                     if (score > maximum) {
@@ -1867,9 +1851,9 @@ class MyRobot extends BCAbstractRobot {
             let square = adjacent[i];
             let score = this.score_resource_squares_around(square) * 10
                 - this.count_adjacent_impassable_squares_around(square);
-            if (this.is_resource(square, this.karbonite_map)
-                    || this.is_resource(square, this.fuel_map)) {
+            if (this.is_any_resource(square)) {
                 score -= 30; }
+
             scores.push(score);
         }
 
@@ -1877,10 +1861,9 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_pilgrimage_path_to(target) {
-        if (target == null || (target[0] === this.me.x
-                && target[1] === this.me.y)) { return null; }
+        if (target == null || this.is_at(target)) { return null; }
 
-        if (target[0] === this.fountain[0] && target[1] === this.fountain[1]) {
+        if (this.is_equal_to(target, this.fountain)) {
             return this.reverse_raw_onion_search(
                 this.fountain, [this.me.x, this.me.y],
                 this.get_two_raw_onion_rings_around.bind(this));
@@ -2014,12 +1997,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_adjacent_lattice_point() {
-        if (this.is_on_lattice_point()) {
-            return [this.me.x, this.me.y]; }
-
         let position = [this.me.x, this.me.y];
-        position[this.symmetry]
-            += (position[this.symmetry] > ((this.size - 1) / 2)) ? -1 : 1;
+
+        if (!this.is_on_lattice_point()) {
+            position[this.symmetry]
+                += (position[this.symmetry] > ((this.size - 1) / 2)) ? -1 : 1; }
 
         return position;
     }
@@ -2164,6 +2146,7 @@ class MyRobot extends BCAbstractRobot {
         let side = (current[this.symmetry] > this.map.length / 2);
 
         let filtered = [];
+
         for (let i = 0; i < squares.length; i++) {
             let square = squares[i];
             if ((square[this.symmetry] > this.map.length / 2) === side) {
