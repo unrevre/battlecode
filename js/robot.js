@@ -160,8 +160,7 @@ class MyRobot extends BCAbstractRobot {
                 let coordinates = message[0];
                 let tag = message[2];
                 if (tag === 2 && this.objectives.length > 1
-                        && coordinates[0] === this.objective[0]
-                        && coordinates[1] === this.objective[1]) {
+                        && this.is_equal_to(this.objective, coordinates)) {
                     castle_talk_value = this.mark + 0xF0;
                     this.update_objectives(this.mark);
                 }
@@ -173,6 +172,7 @@ class MyRobot extends BCAbstractRobot {
             let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
+            let immediate = this.get_coordinates_of_closest_robot(enemies);
 
             let safety = this.evaluate_castle_safety(visibles, enemies);
 
@@ -193,23 +193,19 @@ class MyRobot extends BCAbstractRobot {
                 case SPECS.CRUSADER:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.CRUSADER, null,
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.CRUSADER, null, immediate, 0);
                     this.restore_resources();
                     break;
                 case SPECS.PROPHET:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PROPHET, null,
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.PROPHET, null, immediate, 0);
                     this.restore_resources();
                     break;
                 case SPECS.PREACHER:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PREACHER,
-                        this.get_coordinates_of_closest_robot(enemies),
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.PREACHER, immediate, immediate, 0);
                     this.restore_resources();
                     break;
             }
@@ -318,6 +314,7 @@ class MyRobot extends BCAbstractRobot {
 
             let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
+            let immediate = this.get_coordinates_of_closest_robot(enemies);
 
             let safety = this.evaluate_church_safety(visibles, enemies);
 
@@ -328,23 +325,19 @@ class MyRobot extends BCAbstractRobot {
                 case SPECS.CRUSADER:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.CRUSADER, null,
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.CRUSADER, null, immediate, 0);
                     this.restore_resources();
                     break;
                 case SPECS.PROPHET:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PROPHET, null,
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.PROPHET, null, immediate, 0);
                     this.restore_resources();
                     break;
                 case SPECS.PREACHER:
                     this.save_and_release_resources();
                     this.unit_queue.length = 0;
-                    this.enqueue_unit(SPECS.PREACHER,
-                        this.get_coordinates_of_closest_robot(enemies),
-                        this.get_coordinates_of_closest_robot(enemies), 0);
+                    this.enqueue_unit(SPECS.PREACHER, immediate, immediate, 0);
                     this.restore_resources();
                     break;
             }
@@ -444,13 +437,11 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // clear target destination after arrival
-            if (this.target != null && this.target[0] === this.me.x
-                    && this.target[1] === this.me.y) {
+            if (this.target != null && this.is_at(this.target)) {
                 this.target = null;
 
                 if (this.mission === 1) {
-                    let church = (this.me.x !== this.objective[0]
-                        || this.me.y !== this.objective[1])
+                    let church = (!this.is_at(this.objective))
                         ? this.get_safe_buildable_square_closest_to(enemies)
                         : this.get_buildable_square_by_adjacent_resources();
 
@@ -602,8 +593,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.x === this.fountain[0]
-                        && robot.y === this.fountain[1]) {
+                if (this.is_robot_at(robot, this.fountain)) {
                     let signal = this.decode_coordinates(robot.signal);
                     this.memory = signal[0];
                     this.mark = signal[1];
@@ -635,8 +625,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // clear target after arrival
-            if (this.target != null && this.me.x === this.target[0]
-                    && this.me.y === this.target[1]) {
+            if (this.target != null && this.is_at(this.target)) {
                 this.target = null; }
 
             if (this.target != null && this.is_allied_unit_at(this.target)) {
@@ -670,8 +659,7 @@ class MyRobot extends BCAbstractRobot {
 
             // move off buildable squares, resources
             if (this.target == null && (this.is_adjacent(this.fountain)
-                    || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map))) {
+                    || this.is_on_any_resource())) {
                 this.target = this.get_closest_square(
                     this.get_next_to_adjacent_passable_empty_squares_at(
                         this.fountain)); }
@@ -705,8 +693,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.x === this.fountain[0]
-                        && robot.y === this.fountain[1]) {
+                if (this.is_robot_at(robot, this.fountain)) {
                     let signal = this.decode_coordinates(robot.signal);
                     this.memory = signal[0];
                     this.mark = signal[1];
@@ -747,8 +734,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             // clear target after arrival
-            if (this.target != null && this.me.x === this.target[0]
-                    && this.me.y === this.target[1]) {
+            if (this.target != null && this.is_at(this.target)) {
                 this.target = null; }
 
             if (this.target != null && this.is_allied_unit_at(this.target)) {
@@ -756,8 +742,7 @@ class MyRobot extends BCAbstractRobot {
 
             // move off buildable squares, resources
             if (this.target == null && (this.is_adjacent(this.fountain)
-                    || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map)
+                    || this.is_on_any_resource()
                     || !this.is_on_lattice_point())) {
                 this.target = this.get_next_lattice_point(); }
 
@@ -807,8 +792,7 @@ class MyRobot extends BCAbstractRobot {
             let radioing = this.filter_radioing_robots(visibles);
             for (let i = 0; i < radioing.length; i++) {
                 let robot = radioing[i];
-                if (robot.x === this.fountain[0]
-                        && robot.y === this.fountain[1]) {
+                if (this.is_robot_at(robot, this.fountain)) {
                     let signal = this.decode_coordinates(robot.signal);
                     this.memory = signal[0];
                     this.mark = signal[1];
@@ -834,13 +818,11 @@ class MyRobot extends BCAbstractRobot {
                 this.target = null; }
 
             // clear target after arrival
-            if (this.target != null && this.me.x === this.target[0]
-                    && this.me.y === this.target[1]) {
+            if (this.target != null && this.is_at(this.target)) {
                 this.target = null; }
 
             if (this.target == null && (this.is_adjacent(this.fountain)
-                    || this.is_on_resource(this.karbonite_map)
-                    || this.is_on_resource(this.fuel_map))) {
+                    || this.is_on_any_resource())) {
                 // move off buildable squares, resources
                 // TODO: move in current direction away from fountain
                 this.target = this.get_closest_square(
@@ -946,6 +928,14 @@ class MyRobot extends BCAbstractRobot {
     /*
      * map
      */
+
+    is_at(square) {
+        return this.me.x === square[0] && this.me.y === square[1];
+    }
+
+    is_equal_to(square, target) {
+        return square[0] === target[0] && square[1] === target[1];
+    }
 
     is_out_of_bounds(square) {
         let x = square[0];
@@ -1233,6 +1223,11 @@ class MyRobot extends BCAbstractRobot {
 
     is_on_resource(resource_map) {
         return resource_map[this.me.y][this.me.x];
+    }
+
+    is_on_any_resource() {
+        return this.karbonite_map[this.me.y][this.me.x]
+            || this.fuel_map[this.me.y][this.me.x];
     }
 
     is_resource(square, resource_map) {
@@ -1784,7 +1779,7 @@ class MyRobot extends BCAbstractRobot {
         let steps = [];
         for (let i = 0; i < adjacent.length; i++) {
             let square = adjacent[i];
-            if (square[0] === target[0] && square[1] === target[1]) {
+            if (this.is_equal_to(square, target)) {
                 return target; }
 
             steps.push(this.reverse_fresh_onion_search(square, target,
@@ -2439,6 +2434,10 @@ class MyRobot extends BCAbstractRobot {
         return this.get_robot(robot.id) != null;
     }
 
+    is_robot_at(robot, square) {
+        return robot.x === square[0] && robot.y === square[1];
+    }
+
     is_allied_unit_at(square) {
         if (!this.is_square_visible(square)) { return false; }
 
@@ -2948,8 +2947,7 @@ class MyRobot extends BCAbstractRobot {
                     // send signal to church
                     let near_castle = this.get_closest_square_to(
                         delegate, this.castle_points);
-                    if (this.me.x === near_castle[0]
-                            && this.me.y === near_castle[1]) {
+                    if (this.is_at(near_castle)) {
                         this.patience = 15;
                         this.signal(this.encode_coordinates(
                                 candidate, this.mark, 1),
