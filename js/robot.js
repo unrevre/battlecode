@@ -82,14 +82,10 @@ class MyRobot extends BCAbstractRobot {
             if (step === 0) {
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
-                    locations: this.order_by_onion_path_length(
-                        this.filter_by_distance_less_than(
-                            this.get_resources(this.karbonite_map), 26)),
+                    locations: this.get_local_resources(this.karbonite_map, 26),
                     occupied: [] });
                 this.local_resources.push({
-                    locations: this.order_by_onion_path_length(
-                        this.filter_by_distance_less_than(
-                            this.get_resources(this.fuel_map), 26)),
+                    locations: this.get_local_resources(this.fuel_map, 26),
                     occupied: [] });
 
                 this.objective = this.reflect_about_symmetry_axis(
@@ -174,13 +170,13 @@ class MyRobot extends BCAbstractRobot {
             // send castle talk
             this.castle_talk(castle_talk_value);
 
-            let allies = this.filter_attacking_allied_robots(visibles);
+            let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
             let attackables = this.filter_attackable_robots(enemies);
 
-            let castle_safety = this.evaluate_castle_safety(visibles, enemies);
+            let safety = this.evaluate_castle_safety(visibles, enemies);
 
-            switch (castle_safety) {
+            switch (safety) {
                 case 0:
                     this.consider_church_expansion();
                     break;
@@ -273,14 +269,10 @@ class MyRobot extends BCAbstractRobot {
             if (step === 0) {
                 // TODO: contingency for when no resources are found
                 this.local_resources.push({
-                    locations: this.order_by_onion_path_length(
-                        this.filter_by_distance_less_than(
-                            this.get_resources(this.karbonite_map), 26)),
+                    locations: this.get_local_resources(this.karbonite_map, 26),
                     occupied: [] });
                 this.local_resources.push({
-                    locations: this.order_by_onion_path_length(
-                        this.filter_by_distance_less_than(
-                            this.get_resources(this.fuel_map), 26)),
+                    locations: this.get_local_resources(this.fuel_map, 26),
                     occupied: [] });
 
                 this.objective = this.reflect_about_symmetry_axis(
@@ -324,12 +316,12 @@ class MyRobot extends BCAbstractRobot {
 
             this.castle_talk(castle_talk_value);
 
-            let allies = this.filter_attacking_allied_robots(visibles);
+            let allies = this.filter_armed_allied_robots(visibles);
             let enemies = this.filter_visible_enemy_robots(visibles);
 
-            let church_safety = this.evaluate_church_safety(visibles, enemies);
+            let safety = this.evaluate_church_safety(visibles, enemies);
 
-            switch (church_safety) {
+            switch (safety) {
                 case 0:
                     this.consider_church_expansion();
                     break;
@@ -429,7 +421,7 @@ class MyRobot extends BCAbstractRobot {
             }
 
             let enemies = this.filter_visible_enemy_robots(visibles);
-            let attacking = this.filter_attack_capable_robots(enemies);
+            let attacking = this.filter_armed_robots(enemies);
             let attacking_units = this.group_by_unit_types(attacking);
 
             if (this.mission === 1 && enemies.length > 0
@@ -1258,6 +1250,12 @@ class MyRobot extends BCAbstractRobot {
                     resources.push([j, i]); } } }
 
         return resources;
+    }
+
+    get_local_resources(resource_map, radius) {
+        return this.order_by_onion_path_length(
+            this.filter_by_distance_less_than(
+                this.get_resources(resource_map), radius));
     }
 
     score_resource_squares_around(square) {
@@ -2290,7 +2288,7 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
-    filter_attacking_allied_robots(robots) {
+    filter_armed_allied_robots(robots) {
         let filtered = [];
 
         for (let i = 0; i < robots.length; i++) {
@@ -2350,7 +2348,7 @@ class MyRobot extends BCAbstractRobot {
         return filtered;
     }
 
-    filter_attack_capable_robots(robots) {
+    filter_armed_robots(robots) {
         let filtered = [];
 
         for (let i = 0; i < robots.length; i++) {
@@ -2708,7 +2706,7 @@ class MyRobot extends BCAbstractRobot {
     evaluate_castle_safety(visibles, enemies) {
         if (enemies.length === 0) { return 0; }
 
-        let allies = this.filter_attacking_allied_robots(visibles);
+        let allies = this.filter_armed_allied_robots(visibles);
         let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
 
@@ -2748,7 +2746,7 @@ class MyRobot extends BCAbstractRobot {
     evaluate_church_safety(visibles, enemies) {
         if (enemies.length === 0) { return 0; }
 
-        let allies = this.filter_attacking_allied_robots(visibles);
+        let allies = this.filter_armed_allied_robots(visibles);
         let comrades = this.filter_robots_by_distance_less_than(allies, 10);
         let enemy_units = this.group_by_unit_types(enemies);
 
