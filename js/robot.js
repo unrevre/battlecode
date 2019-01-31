@@ -95,12 +95,13 @@ class MyRobot extends BCAbstractRobot {
                     locations: this.get_local_resources(this.fuel_map, 26),
                     occupied: [] });
 
-                this.objective = this.reflect_about_symmetry_axis(
-                    [this.me.x, this.me.y]);
-                this.objectives.push(this.objective);
+                let current = [this.me.x, this.me.y];
+                this.castle_points.push(current);
+                this.deposit_points.push(current);
 
-                this.castle_points.push([this.me.x, this.me.y]);
-                this.deposit_points.push([this.me.x, this.me.y]);
+                this.objective = this.reflect_about_symmetry_axis(
+                    current.slice());
+                this.objectives.push(this.objective);
             }
 
             if (this.patience === 1) { this.release_resources(); }
@@ -119,11 +120,11 @@ class MyRobot extends BCAbstractRobot {
             if (step === 2) {
                 this.castles /= 2;
                 for (let key in this.messages) {
-                    let coords = this.messages[key];
-                    this.castle_points.push(coords.slice());
-                    this.deposit_points.push(coords.slice());
-                    this.objectives.push(
-                        this.reflect_about_symmetry_axis(coords));
+                    let coordinates = this.messages[key];
+                    this.castle_points.push(coordinates);
+                    this.deposit_points.push(coordinates);
+                    this.objectives.push(this.reflect_about_symmetry_axis(
+                        coordinates.slice()));
                 }
 
                 this.messages.length = 0;
@@ -281,8 +282,7 @@ class MyRobot extends BCAbstractRobot {
                     this.local_resources[0].occupied[message[0]] = true;
                     break;
                 } else if (message[2] === 1
-                        && robot.signal_radius == this.distance_to(
-                            [robot.x, robot.y])) {
+                        && robot.signal_radius == this.distance_to_(robot)) {
                     this.mark = message[1];
                     let candidate = message[0];
                     if (this.is_resource(candidate, this.karbonite_map)) {
@@ -985,6 +985,10 @@ class MyRobot extends BCAbstractRobot {
         return this.is_passable_and_empty(square);
     }
 
+    is_on_lattice_point() {
+        return (this.me.x + this.me.y) % 2 === 0;
+    }
+
     count_adjacent_impassable_squares_around(square) {
         return 8 - this.get_adjacent_passable_squares_at(square).length;
     }
@@ -1092,6 +1096,16 @@ class MyRobot extends BCAbstractRobot {
         return [Math.round(x / max), Math.round(y / max)];
     }
 
+    get_adjacent_lattice_point() {
+        let position = [this.me.x, this.me.y];
+
+        if (!this.is_on_lattice_point()) {
+            position[this.symmetry]
+                += (position[this.symmetry] > ((this.size - 1) / 2)) ? -1 : 1; }
+
+        return position;
+    }
+
     /*
      * metric/distance
      */
@@ -1156,18 +1170,6 @@ class MyRobot extends BCAbstractRobot {
         }
 
         return squares[index];
-    }
-
-    get_concave_squares_on(target, squares) {
-        let concave = [];
-        for (let i = 0; i < squares.length; i++) {
-            let square = squares[i];
-            if (this.is_unit_on_square_able_to_attack(
-                    this.me.unit, square, target)) {
-                concave.push(square); }
-        }
-
-        return this.get_closest_square(concave);
     }
 
     get_closest_squares_to(target, squares) {
@@ -1774,11 +1776,11 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_defensive_buildable_square(allies, adjacent) {
-        let direction = (allies.length < 10)
-            ? this.get_aligned_compass_direction_from(
-                this.get_vector_sum_of_metric_weighted_directions(allies))
-            : this.get_aligned_compass_direction_from(
-                [this.objective[0] - this.me.x, this.objective[1] - this.me.y]);
+        let direction = this.get_aligned_compass_direction_from(
+            (allies.length < 10)
+                ? this.get_vector_sum_of_metric_weighted_directions(allies)
+                : [this.objective[0] - this.me.x,
+                   this.objective[1] - this.me.y]);
 
         return this.get_buildable_square_closest_to(
             [this.me.x + direction[0], this.me.y + direction[1]], adjacent);
@@ -1941,6 +1943,18 @@ class MyRobot extends BCAbstractRobot {
         return target;
     }
 
+    get_concave_squares_on(target, squares) {
+        let concave = [];
+        for (let i = 0; i < squares.length; i++) {
+            let square = squares[i];
+            if (this.is_unit_on_square_able_to_attack(
+                    this.me.unit, square, target)) {
+                concave.push(square); }
+        }
+
+        return this.get_closest_square(concave);
+    }
+
     get_crusader_target_for(target, enemies) {
         if (target == null) { return null; }
 
@@ -1963,7 +1977,7 @@ class MyRobot extends BCAbstractRobot {
             return adjacent[this.index_of_minimum_element_in(damage)];
         }
 
-        if (this.is_square_a_robot(target)) {
+        if (this.is_robot_on_square(target)) {
             let concave = this.get_concave_squares_on(target, forward);
             if (concave !== null) { return concave; }
         }
@@ -1979,20 +1993,6 @@ class MyRobot extends BCAbstractRobot {
         let damage = this.total_damage_on_squares_from(closest, enemies);
 
         return closest[this.index_of_minimum_element_in(damage)];
-    }
-
-    is_on_lattice_point() {
-        return (this.me.x + this.me.y) % 2 === 0;
-    }
-
-    get_adjacent_lattice_point() {
-        let position = [this.me.x, this.me.y];
-
-        if (!this.is_on_lattice_point()) {
-            position[this.symmetry]
-                += (position[this.symmetry] > ((this.size - 1) / 2)) ? -1 : 1; }
-
-        return position;
     }
 
     get_next_lattice_point() {
@@ -2198,7 +2198,7 @@ class MyRobot extends BCAbstractRobot {
 
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (this.distance_to([robot.x, robot.y]) < value) {
+            if (this.distance_to_(robot) < value) {
                 filtered.push(robot); }
         }
 
@@ -2261,30 +2261,6 @@ class MyRobot extends BCAbstractRobot {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
             if (robot.team === this.me.team && robot.unit > 2) {
-                filtered.push(robot); }
-        }
-
-        return filtered;
-    }
-
-    filter_allied_pilgrim_coordinates(robots) {
-        let filtered = [];
-
-        for (let i = 0; i < robots.length; i++) {
-            let robot = robots[i];
-            if (robot.team === this.me.team && robot.unit === SPECS.PILGRIM) {
-                filtered.push([robot.x, robot.y]); }
-        }
-
-        return filtered;
-    }
-
-    filter_enemy_robots(robots) {
-        let filtered = [];
-
-        for (let i = 0; i < robots.length; i++) {
-            let robot = robots[i];
-            if (robot.team !== this.me.team) {
                 filtered.push(robot); }
         }
 
@@ -2425,7 +2401,7 @@ class MyRobot extends BCAbstractRobot {
     is_visible_to(robots) {
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            if (this.distance_to([robot.x, robot.y])
+            if (this.distance_to_(robot)
                     < vision_range[robot.unit]) {
                 return true; }
         }
@@ -2434,13 +2410,13 @@ class MyRobot extends BCAbstractRobot {
     }
 
     is_in_attack_range(robot) {
-        let range = this.distance_to([robot.x, robot.y]);
+        let range = this.distance_to_(robot);
         return ((range <= max_attack_range[this.me.unit])
             && (range >= min_attack_range[this.me.unit]));
     }
 
     is_in_attack_range_of(robot) {
-        let range = this.distance_to([robot.x, robot.y]);
+        let range = this.distance_to_(robot);
         return ((range <= max_attack_range[robot.unit])
             && (range >= min_attack_range[robot.unit]));
     }
@@ -2473,10 +2449,15 @@ class MyRobot extends BCAbstractRobot {
         return true;
     }
 
-    is_square_a_robot(square) {
+    is_robot_on_square(square) {
         let robot_map = this.get_visible_robot_map();
 
         return robot_map[square[1]][square[0]] > 0;
+    }
+
+    distance_to_(robot) {
+        return (this.me.x - robot.x) * (this.me.x - robot.x)
+            + (this.me.y - robot.y) * (this.me.y - robot.y);
     }
 
     count_attacks_on(square, enemies) {
@@ -2524,7 +2505,7 @@ class MyRobot extends BCAbstractRobot {
         let minimum = 100;
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            let distance = this.distance_to([robot.x, robot.y]);
+            let distance = this.distance_to_(robot);
             if (distance < minimum) {
                 index = i;
                 minimum = distance;
@@ -2541,7 +2522,7 @@ class MyRobot extends BCAbstractRobot {
         let minimum = 100;
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            let distance = this.distance_to([robot.x, robot.y]);
+            let distance = this.distance_to_(robot);
             if (distance < minimum) {
                 index = i;
                 minimum = distance;
@@ -2557,7 +2538,7 @@ class MyRobot extends BCAbstractRobot {
         let minimum = 100;
         for (let i = 0; i < robots.length; i++) {
             let robot = robots[i];
-            let distance = this.distance_to([robot.x, robot.y]);
+            let distance = this.distance_to_(robot);
             if (distance < minimum) { minimum = distance; }
         }
 
@@ -2837,7 +2818,7 @@ class MyRobot extends BCAbstractRobot {
         return this.distance(square, centre);
     }
 
-    evaluate_priority_for_each(squares, comrades, enemies) {
+    evaluate_priority_of(squares, comrades, enemies) {
         let priority = [];
 
         for (let i = 0; i < squares.length; i++) {
@@ -2853,7 +2834,7 @@ class MyRobot extends BCAbstractRobot {
     }
 
     get_church_candidate(resources, allied_bases, enemy_bases) {
-        let priority = this.evaluate_priority_for_each(
+        let priority = this.evaluate_priority_of(
             resources, allied_bases, enemy_bases);
 
         let indices = this.indices_of_maximum_elements_in(priority);
