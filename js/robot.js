@@ -430,10 +430,8 @@ class MyRobot extends BCAbstractRobot {
                     && this.distance_to(this.fountain) > 49) {
                 let nearest = this.get_closest_robot(enemies);
                 if (this.is_visible_to(enemies)) {
-                    if (enemies.length === 1
-                            || (attacking_units.length < 4
-                                && this.only_close_range_units(attacking_units))
-                            || (this.is_available(300, 500))) {
+                    if (enemies.length === 1 || (attacking.length < 3
+                            && this.is_available(150, 300))) {
                         this.mode = 3;
                         this.target = [this.me.x, this.me.y];
                     } else if (nearest.turn - 20 > this.me.turn) {
